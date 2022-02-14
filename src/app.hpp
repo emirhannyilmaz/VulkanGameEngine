@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <algorithm>
 
+#define VK_ENABLE_BETA_EXTENSIONS
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
@@ -22,8 +23,7 @@ const std::vector<const char*> validationLayers = {
 
 const std::vector<const char*> deviceExtensions = {
     VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-    //VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME
-    "VK_KHR_portability_subset"
+    VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME
 };
 
 #ifdef NDEBUG
@@ -60,6 +60,10 @@ private:
     VkSurfaceKHR surface;
     VkQueue presentQueue;
     VkSwapchainKHR swapChain;
+    std::vector<VkImage> swapChainImages;
+    VkFormat swapChainImageFormat;
+    VkExtent2D swapChainExtent;
+    std::vector<VkImageView> swapChainImageViews;
     void initWindow();
     void initVulkan();
     void createInstance();
@@ -68,6 +72,7 @@ private:
     void pickPhysicalDevice();
     void createLogicalDevice();
     void createSwapChain();
+    void createImageViews();
     bool checkValidationLayerSupport();
     std::vector<const char*> getRequiredExtensions();
     void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
