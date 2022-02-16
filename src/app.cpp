@@ -258,6 +258,59 @@ void App::createGraphicsPipeline() {
         fragmentShaderStageCreateInfo
     };
 
+    VkPipelineVertexInputStateCreateInfo vertexInputStateCreateInfo{};
+    vertexInputStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+    vertexInputStateCreateInfo.vertexBindingDescriptionCount = 0;
+    vertexInputStateCreateInfo.pVertexBindingDescriptions = nullptr;
+    vertexInputStateCreateInfo.vertexAttributeDescriptionCount = 0;
+    vertexInputStateCreateInfo.pVertexAttributeDescriptions = nullptr;
+
+    VkPipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo{};
+    inputAssemblyStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+    inputAssemblyStateCreateInfo.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+    inputAssemblyStateCreateInfo.primitiveRestartEnable = VK_FALSE;
+
+    VkViewport viewport{};
+    viewport.x = 0.0f;
+    viewport.y = 0.0f;
+    viewport.width = (float) swapChainExtent.width;
+    viewport.height = (float) swapChainExtent.height;
+    viewport.minDepth = 0.0f;
+    viewport.maxDepth = 1.0f;
+
+    VkRect2D scissor{};
+    scissor.offset = {0, 0};
+    scissor.extent = swapChainExtent;
+
+    VkPipelineViewportStateCreateInfo viewportStateCreateInfo{};
+    viewportStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+    viewportStateCreateInfo.viewportCount = 1;
+    viewportStateCreateInfo.pViewports = &viewport;
+    viewportStateCreateInfo.scissorCount = 1;
+    viewportStateCreateInfo.pScissors = &scissor;
+
+    VkPipelineRasterizationStateCreateInfo rasterizationStateCreateInfo{};
+    rasterizationStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+    rasterizationStateCreateInfo.depthClampEnable = VK_FALSE;
+    rasterizationStateCreateInfo.rasterizerDiscardEnable = VK_FALSE;
+    rasterizationStateCreateInfo.polygonMode = VK_POLYGON_MODE_FILL;
+    rasterizationStateCreateInfo.lineWidth = 1.0f;
+    rasterizationStateCreateInfo.cullMode = VK_CULL_MODE_BACK_BIT;
+    rasterizationStateCreateInfo.frontFace = VK_FRONT_FACE_CLOCKWISE;
+    rasterizationStateCreateInfo.depthBiasEnable = VK_FALSE;
+    rasterizationStateCreateInfo.depthBiasConstantFactor = 0.0f;
+    rasterizationStateCreateInfo.depthBiasClamp = 0.0f;
+    rasterizationStateCreateInfo.depthBiasSlopeFactor = 0.0f;
+
+    VkPipelineMultisampleStateCreateInfo multisampleStateCreateInfo{};
+    multisampleStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+    multisampleStateCreateInfo.sampleShadingEnable = VK_FALSE;
+    multisampleStateCreateInfo.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+    multisampleStateCreateInfo.minSampleShading = 1.0f;
+    multisampleStateCreateInfo.pSampleMask = nullptr;
+    multisampleStateCreateInfo.alphaToCoverageEnable = VK_FALSE;
+    multisampleStateCreateInfo.alphaToOneEnable = VK_FALSE;
+
     vkDestroyShaderModule(device, vertexShaderModule, nullptr);
     vkDestroyShaderModule(device, fragmentShaderModule, nullptr);
 }
