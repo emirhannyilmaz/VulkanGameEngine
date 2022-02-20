@@ -68,6 +68,7 @@ private:
     VkRenderPass renderPass;
     VkPipelineLayout pipelineLayout;
     VkPipeline graphicsPipeline;
+    std::vector<VkFramebuffer> swapChainFramebuffers;
     void initWindow();
     void initVulkan();
     void createInstance();
@@ -79,6 +80,7 @@ private:
     void createImageViews();
     void createRenderPass();
     void createGraphicsPipeline();
+    void createFramebuffers();
     bool checkValidationLayerSupport();
     std::vector<const char*> getRequiredExtensions();
     void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);

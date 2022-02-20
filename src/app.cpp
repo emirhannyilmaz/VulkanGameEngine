@@ -26,6 +26,7 @@ void App::initVulkan() {
     createImageViews();
     createRenderPass();
     createGraphicsPipeline();
+    createFramebuffers();
 }
 
 void App::createInstance() {
@@ -412,6 +413,29 @@ void App::createGraphicsPipeline() {
     vkDestroyShaderModule(device, fragmentShaderModule, nullptr);
 }
 
+void App::createFramebuffers() {
+    swapChainFramebuffers.resize(swapChainImageViews.size());
+
+    for (size_t i = 0; i < swapChainImageViews.size(); i++) {
+        VkImageView attachments[] = {
+            swapChainImageViews[i]
+        };
+
+        VkFramebufferCreateInfo framebufferCreateInfo{};
+        framebufferCreateInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+        framebufferCreateInfo.renderPass = renderPass;
+        framebufferCreateInfo.attachmentCount = 1;
+        framebufferCreateInfo.pAttachments = attachments;
+        framebufferCreateInfo.width = swapChainExtent.width;
+        framebufferCreateInfo.height = swapChainExtent.height;
+        framebufferCreateInfo.layers = 1;
+
+        if (vkCreateFramebuffer(device, &framebufferCreateInfo, nullptr, &swapChainFramebuffers[i]) != VK_SUCCESS) {
+            throw std::runtime_error("Failed to create framebuffer!");
+        }
+    }
+}
+
 bool App::checkValidationLayerSupport() {
     uint32_t layerCount;
     vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
@@ -647,6 +671,10 @@ void App::mainLoop() {
 }
 
 void App::cleanUp() {
+    for (auto framebuffer : swapChainFramebuffers) {
+        vkDestroyFramebuffer(device, framebuffer, nullptr);
+    }
+
     vkDestroyPipeline(device, graphicsPipeline, nullptr);
 
     vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
