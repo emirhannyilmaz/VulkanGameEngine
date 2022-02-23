@@ -48,6 +48,8 @@ struct SwapChainSupportDetails {
     std::vector<VkPresentModeKHR> presentModes;
 };
 
+const int MAX_FRAMES_IN_FLIGHT = 2;
+
 class App {
 public:
     void run();
@@ -70,10 +72,11 @@ private:
     VkPipeline graphicsPipeline;
     std::vector<VkFramebuffer> swapChainFramebuffers;
     VkCommandPool commandPool;
-    VkCommandBuffer commandBuffer;
-    VkSemaphore imageAvailableSemaphore;
-    VkSemaphore renderFinishedSemaphore;
-    VkFence inFlightFence;
+    std::vector<VkCommandBuffer> commandBuffers;
+    std::vector<VkSemaphore> imageAvailableSemaphores;
+    std::vector<VkSemaphore> renderFinishedSemaphores;
+    std::vector<VkFence> inFlightFences;
+    uint32_t currentFrame = 0;
     void initWindow();
     void initVulkan();
     void createInstance();
@@ -87,7 +90,7 @@ private:
     void createGraphicsPipeline();
     void createFramebuffers();
     void createCommandPool();
-    void createCommandBuffer();
+    void createCommandBuffers();
     void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
     void createSyncObjects();
     bool checkValidationLayerSupport();
