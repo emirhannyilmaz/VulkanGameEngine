@@ -53,6 +53,7 @@ const int MAX_FRAMES_IN_FLIGHT = 2;
 class App {
 public:
     void run();
+    static void framebufferResizeCallback(GLFWwindow* window, int width, int height);
 private:
     GLFWwindow* window;
     VkInstance instance;
@@ -77,6 +78,7 @@ private:
     std::vector<VkSemaphore> renderFinishedSemaphores;
     std::vector<VkFence> inFlightFences;
     uint32_t currentFrame = 0;
+    bool framebufferResized = false;
     void initWindow();
     void initVulkan();
     void createInstance();
