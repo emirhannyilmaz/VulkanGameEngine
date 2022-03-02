@@ -5,6 +5,12 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
+#ifdef NDEBUG
+const bool enableValidationLayers = false;
+#else
+const bool enableValidationLayers = true;
+#endif
+
 const std::vector<const char*> validationLayers = {
     "VK_LAYER_KHRONOS_validation",
 };
@@ -23,7 +29,7 @@ struct QueueFamilyIndices {
     }
 };
 
-struct SwapChainSupportDetails {
+struct SwapchainSupportDetails {
     VkSurfaceCapabilitiesKHR capabilities;
     std::vector<VkSurfaceFormatKHR> formats;
     std::vector<VkPresentModeKHR> presentModes;
@@ -40,7 +46,7 @@ private:
     bool isDeviceSuitable(VkPhysicalDevice device, VkSurfaceKHR surface);
     QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
     bool checkDeviceExtensionSupport(VkPhysicalDevice device);
-    SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device, VkSurfaceKHR surface);
+    SwapchainSupportDetails querySwapchainSupport(VkPhysicalDevice device, VkSurfaceKHR surface);
 };
 
 #endif

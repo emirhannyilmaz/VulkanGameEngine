@@ -16,12 +16,6 @@ class App {
 public:
     void run();
 private:
-    VkSwapchainKHR swapChain;
-    std::vector<VkImage> swapChainImages;
-    VkFormat swapChainImageFormat;
-    VkExtent2D swapChainExtent;
-    std::vector<VkImageView> swapChainImageViews;
-    VkRenderPass renderPass;
     VkPipelineLayout pipelineLayout;
     VkPipeline graphicsPipeline;
     std::vector<VkFramebuffer> swapChainFramebuffers;
@@ -32,9 +26,6 @@ private:
     std::vector<VkFence> inFlightFences;
     uint32_t currentFrame = 0;
     void initVulkan();
-    void createSwapChain();
-    void createImageViews();
-    void createRenderPass();
     void createGraphicsPipeline();
     void createFramebuffers();
     void createCommandPool();
@@ -43,9 +34,6 @@ private:
     void createSyncObjects();
     void cleanUpSwapChain();
     void recreateSwapChain();
-    VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
-    VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
-    VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
     std::vector<char> readFile(const std::string& fileName);
     VkShaderModule createShaderModule(const std::vector<char>& code);
     void mainLoop();

@@ -76,13 +76,13 @@ bool Device::isDeviceSuitable(VkPhysicalDevice device, VkSurfaceKHR surface) {
 
     bool extensionsSupported = checkDeviceExtensionSupport(device);
 
-    bool swapChainAdequate = false;
+    bool swapchainAdequate = false;
     if (extensionsSupported) {
-        SwapChainSupportDetails swapChainSupport = querySwapChainSupport(device, surface);
-        swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
+        SwapchainSupportDetails swapchainSupport = querySwapchainSupport(device, surface);
+        swapchainAdequate = !swapchainSupport.formats.empty() && !swapchainSupport.presentModes.empty();
     }
 
-    return indices.isComplete() && extensionsSupported && swapChainAdequate;
+    return indices.isComplete() && extensionsSupported && swapchainAdequate;
 }
 
 QueueFamilyIndices Device::findQueueFamilies(VkPhysicalDevice device) {
@@ -132,8 +132,8 @@ bool Device::checkDeviceExtensionSupport(VkPhysicalDevice device) {
     return requiredExtensions.empty();
 }
 
-SwapChainSupportDetails Device::querySwapChainSupport(VkPhysicalDevice device, VkSurfaceKHR surface) {
-    SwapChainSupportDetails details;
+SwapchainSupportDetails Device::querySwapchainSupport(VkPhysicalDevice device, VkSurfaceKHR surface) {
+    SwapchainSupportDetails details;
 
     vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &details.capabilities);
 
