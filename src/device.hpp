@@ -5,6 +5,8 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
+#include <optional>
+
 #ifdef NDEBUG
 const bool enableValidationLayers = false;
 #else
@@ -38,6 +40,8 @@ struct SwapchainSupportDetails {
 class Device {
 public:
     VkDevice device;
+    QueueFamilyIndices indices;
+    SwapchainSupportDetails swapchainSupportDetails;
     VkQueue graphicsQueue;
     VkQueue presentQueue;
     Device(VkInstance instance, VkSurfaceKHR surface);

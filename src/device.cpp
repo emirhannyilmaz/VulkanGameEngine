@@ -24,8 +24,6 @@ Device::Device(VkInstance instance, VkSurfaceKHR surface) {
         throw std::runtime_error("Failed to find a suitable GPU!");
     }
 
-    QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
-
     std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
     std::set<uint32_t> uniqueQueueFamilies = {
         indices.graphicsFamily.value(),
@@ -72,14 +70,14 @@ Device::~Device() {
 }
 
 bool Device::isDeviceSuitable(VkPhysicalDevice device, VkSurfaceKHR surface) {
-    QueueFamilyIndices indices = findQueueFamilies(device);
+    indices = findQueueFamilies(device);
 
     bool extensionsSupported = checkDeviceExtensionSupport(device);
 
     bool swapchainAdequate = false;
     if (extensionsSupported) {
-        SwapchainSupportDetails swapchainSupport = querySwapchainSupport(device, surface);
-        swapchainAdequate = !swapchainSupport.formats.empty() && !swapchainSupport.presentModes.empty();
+        swapchainSupportDetails = querySwapchainSupport(device, surface);
+        swapchainAdequate = !swapchainSupportDetails.formats.empty() && !swapchainSupportDetails.presentModes.empty();
     }
 
     return indices.isComplete() && extensionsSupported && swapchainAdequate;

@@ -11,8 +11,6 @@ class CommandBuffers {
 public:
     std::vector<VkCommandBuffer> commandBuffers;
     CommandBuffers(VkDevice device, VkCommandPool commandPool, uint32_t count);
-    void BeginRecordingCommandBuffer(uint32_t index);
-    void EndRecordingCommandBuffer(uint32_t index);
 };
 
 #endif

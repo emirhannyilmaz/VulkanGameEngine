@@ -14,7 +14,7 @@ const bool enableValidationLayers = true;
 class Messenger {
 public:
     VkDebugUtilsMessengerEXT messenger;
-    Messenger();
+    Messenger(VkInstance instance);
     ~Messenger();
 private:
     VkInstance instance;
