@@ -14,13 +14,13 @@ Instance::Instance() {
     appInfo.apiVersion = VK_API_VERSION_1_0;
     
     VkInstanceCreateInfo instanceCreateInfo{};
-    createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-    createInfo.pApplicationInfo = &appInfo;
+    instanceCreateInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+    instanceCreateInfo.pApplicationInfo = &appInfo;
     
     auto extensions = getRequiredExtensions();
     extensions.push_back("VK_KHR_get_physical_device_properties2");
-    createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
-    createInfo.ppEnabledExtensionNames = extensions.data();
+    instanceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
+    instanceCreateInfo.ppEnabledExtensionNames = extensions.data();
     
     VkDebugUtilsMessengerCreateInfoEXT messengerCreateInfo{};
     if (enableValidationLayers) {

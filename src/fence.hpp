@@ -1,9 +1,8 @@
 #ifndef fence_hpp
 #define fence_hpp
 
-#define VK_ENABLE_BETA_EXTENSIONS
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
+#include <vulkan/vulkan.h>
+#include <stdexcept>
 
 class Fence {
 public:

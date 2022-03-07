@@ -1,9 +1,8 @@
 #ifndef render_pass_hpp
 #define render_pass_hpp
 
-#define VK_ENABLE_BETA_EXTENSIONS
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
+#include <vulkan/vulkan.h>
+#include <stdexcept>
 
 class RenderPass {
 public:
@@ -13,3 +12,5 @@ public:
 private:
     VkDevice device;
 };
+
+#endif

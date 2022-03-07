@@ -1,15 +1,10 @@
 #ifndef messenger_hpp
 #define messenger_hpp
 
-#define VK_ENABLE_BETA_EXTENSIONS
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
-
-#ifdef NDEBUG
-const bool enableValidationLayers = false;
-#else
-const bool enableValidationLayers = true;
-#endif
+#include <vulkan/vulkan.h>
+#include <stdexcept>
+#include "app_info.hpp"
+#include <iostream>
 
 class Messenger {
 public:

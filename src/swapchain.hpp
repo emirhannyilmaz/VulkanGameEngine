@@ -1,12 +1,11 @@
 #ifndef swapchain_hpp
 #define swapchain_hpp
 
-#define VK_ENABLE_BETA_EXTENSIONS
-#define GLFW_INCLUDE_VULKAN
+#include <vulkan/vulkan.h>
 #include <GLFW/glfw3.h>
-
-struct SwapchainSupportDetails;
-struct QueueFamilyIndices;
+#include <stdexcept>
+#include <vector>
+#include "device.hpp"
 
 class Swapchain {
 public:

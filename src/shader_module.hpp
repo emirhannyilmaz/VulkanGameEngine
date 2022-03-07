@@ -1,13 +1,11 @@
 #ifndef shader_module_hpp
 #define shader_module_hpp
 
-#define VK_ENABLE_BETA_EXTENSIONS
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
-
+#include <vulkan/vulkan.h>
 #include <string>
 #include <vector>
 #include <fstream>
+#include <stdexcept>
 
 class ShaderModule {
 public:

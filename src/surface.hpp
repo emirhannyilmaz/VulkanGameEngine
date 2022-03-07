@@ -1,9 +1,9 @@
 #ifndef surface_hpp
 #define surface_hpp
 
-#define VK_ENABLE_BETA_EXTENSIONS
-#define GLFW_INCLUDE_VULKAN
+#include <vulkan/vulkan.h>
 #include <GLFW/glfw3.h>
+#include <stdexcept>
 
 class Surface {
 public:

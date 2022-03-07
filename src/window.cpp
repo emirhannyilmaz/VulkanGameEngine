@@ -16,6 +16,6 @@ Window::~Window() {
 }
 
 void Window::framebufferResizeCallback(GLFWwindow* window, int width, int height) {
-    auto window = reinterpret_cast<Window*>(glfwGetWindowUserPointer(window));
-    window->framebufferResized = true;
+    auto windowClass = reinterpret_cast<Window*>(glfwGetWindowUserPointer(window));
+    windowClass->framebufferResized = true;
 }

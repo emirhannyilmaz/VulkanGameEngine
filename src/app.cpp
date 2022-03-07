@@ -13,15 +13,20 @@ void App::initWindow() {
 
 void App::initVulkan() {
     instance = new Instance();
-    messenger = new Messenger(instance->instance);
+    if (enableValidationLayers) {
+        messenger = new Messenger(instance->instance);
+    }
     surface = new Surface(instance->instance, window->window);
     device = new Device(instance->instance, surface->surface);
     swapchain = new Swapchain(device->device, surface->surface, device->swapchainSupportDetails, window->window, device->indices);
-    renderPass = new RenderPass(device, swapchain->swapchainImageFormat);
-    graphicsPipeline = new GraphicsPipeline(device, swapchain->swapchainExtent);
+    renderPass = new RenderPass(device->device, swapchain->swapchainImageFormat);
+    graphicsPipeline = new GraphicsPipeline(device->device, swapchain->swapchainExtent, renderPass->renderPass);
     framebuffers.resize(swapchain->swapchainImageViews.size());
     for (size_t i = 0; i < framebuffers.size(); i++) {
-        framebuffers[i] = new Framebuffer(device->device, renderPass->renderPass, swapchain->swapchainImageViews[i], swapchain->swapchainExtent);
+        VkImageView attachments[] = {
+            swapchain->swapchainImageViews[i]
+        };
+        framebuffers[i] = new Framebuffer(device->device, renderPass->renderPass, attachments, swapchain->swapchainExtent);
     }
     commandPool = new CommandPool(device->device, device->indices.graphicsFamily.value(), VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
     commandBuffers = new CommandBuffers(device->device, commandPool->commandPool, MAX_FRAMES_IN_FLIGHT);
@@ -36,12 +41,12 @@ void App::initVulkan() {
 }
 
 void App::mainLoop() {
-    while (!glfwWindowShouldClose(window)) {
+    while (!glfwWindowShouldClose(window->window)) {
         glfwPollEvents();
         drawFrame();
     }
 
-    vkDeviceWaitIdle(device);
+    vkDeviceWaitIdle(device->device);
 }
 
 void App::drawFrame() {
@@ -126,9 +131,29 @@ void App::recreateSwapchain() {
     }
 
     vkDeviceWaitIdle(device->device);
+
+    cleanUpSwapchain();
+
+    swapchain = new Swapchain(device->device, surface->surface, device->swapchainSupportDetails, window->window, device->indices);
+    renderPass = new RenderPass(device->device, swapchain->swapchainImageFormat);
+    graphicsPipeline = new GraphicsPipeline(device->device, swapchain->swapchainExtent, renderPass->renderPass);
+    framebuffers.resize(swapchain->swapchainImageViews.size());
+    for (size_t i = 0; i < framebuffers.size(); i++) {
+        VkImageView attachments[] = {
+            swapchain->swapchainImageViews[i]
+        };
+        framebuffers[i] = new Framebuffer(device->device, renderPass->renderPass, attachments, swapchain->swapchainExtent);
+    }
 }
 
 void App::cleanUpSwapchain() {
+    for (auto framebuffer : framebuffers) {
+        delete framebuffer;
+    }
+    framebuffers.clear();
+    delete graphicsPipeline;
+    delete renderPass;
+    delete swapchain;
 }
 
 void App::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex) {
@@ -144,7 +169,7 @@ void App::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex
     renderPassBeginInfo.renderPass = renderPass->renderPass;
     renderPassBeginInfo.framebuffer = framebuffers[imageIndex]->framebuffer;
     renderPassBeginInfo.renderArea.offset = {0, 0};
-    renderPassBeginInfo.renderArea.extent = swapChainExtent;
+    renderPassBeginInfo.renderArea.extent = swapchain->swapchainExtent;
     VkClearValue clearColor = {{{0.0f, 0.0f, 0.0f, 1.0f}}};
     renderPassBeginInfo.clearValueCount = 1;
     renderPassBeginInfo.pClearValues = &clearColor;
@@ -162,4 +187,25 @@ void App::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex
 }
 
 void App::cleanUp() {
+    cleanUpSwapchain();
+
+    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+        delete imageAvailableSemaphores[i];
+        delete renderFinishedSemaphores[i];
+        delete inFlightFences[i];
+    }
+    imageAvailableSemaphores.clear();
+    renderFinishedSemaphores.clear();
+    inFlightFences.clear();
+
+    delete commandPool;
+    delete device;
+
+    if (enableValidationLayers) {
+        delete messenger;
+    }
+
+    delete surface;
+    delete instance;
+    delete window;
 }

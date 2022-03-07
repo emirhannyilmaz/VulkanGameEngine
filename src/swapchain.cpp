@@ -85,7 +85,7 @@ Swapchain::~Swapchain() {
     vkDestroySwapchainKHR(device, swapchain, nullptr);
 }
 
-VkSurfaceFormatKHR App::chooseSwapchainSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats) {
+VkSurfaceFormatKHR Swapchain::chooseSwapchainSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats) {
     for (const auto& availableFormat : availableFormats) {
         if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
             return availableFormat;
@@ -95,17 +95,17 @@ VkSurfaceFormatKHR App::chooseSwapchainSurfaceFormat(const std::vector<VkSurface
     return availableFormats[0];
 }
 
-VkPresentModeKHR App::chooseSwapchainPresentMode(const std::vector<VkPresentModeKHR>& availableModes) {
+VkPresentModeKHR Swapchain::chooseSwapchainPresentMode(const std::vector<VkPresentModeKHR>& availableModes) {
     for (const auto& availableMode : availableModes) {
         if (availableMode == VK_PRESENT_MODE_MAILBOX_KHR) {
-            return availablePresentMode;
+            return availableMode;
         }
     }
 
     return VK_PRESENT_MODE_FIFO_KHR;
 }
     
-VkExtent2D App::chooseSwapchainExtent(const VkSurfaceCapabilitiesKHR& capabilities, GLFWwindow* window) {
+VkExtent2D Swapchain::chooseSwapchainExtent(const VkSurfaceCapabilitiesKHR& capabilities, GLFWwindow* window) {
     if (capabilities.currentExtent.width != UINT32_MAX) {
         return capabilities.currentExtent;
     } else {

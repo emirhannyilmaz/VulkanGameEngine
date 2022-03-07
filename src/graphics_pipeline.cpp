@@ -1,10 +1,10 @@
 #include "graphics_pipeline.hpp"
 
-GraphicsPipeline::GraphicsPipeline(VkDevice device, VkExtent2D swapchainExtent) {
+GraphicsPipeline::GraphicsPipeline(VkDevice device, VkExtent2D swapchainExtent, VkRenderPass renderPass) {
     this->device = device;
 
-    ShaderModule vertexShader("res/shaders/shader.vert.spv");
-    ShaderModule fragmentShader("res/shaders/shader.frag.spv");
+    ShaderModule vertexShader(device, "res/shaders/shader.vert.spv");
+    ShaderModule fragmentShader(device, "res/shaders/shader.frag.spv");
 
     VkPipelineShaderStageCreateInfo vertexShaderStageCreateInfo{};
     vertexShaderStageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;

@@ -1,23 +1,12 @@
 #ifndef instance_hpp
 #define instance_hpp
 
-#define VK_ENABLE_BETA_EXTENSIONS
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
-
+#include <vulkan/vulkan.h>
 #include "window.hpp"
-
 #include <vector>
-
-#ifdef NDEBUG
-const bool enableValidationLayers = false;
-#else
-const bool enableValidationLayers = true;
-#endif
-
-const std::vector<const char*> validationLayers = {
-    "VK_LAYER_KHRONOS_validation",
-};
+#include <stdexcept>
+#include "app_info.hpp"
+#include <iostream>
 
 class Instance {
 public:
