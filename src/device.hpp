@@ -25,6 +25,7 @@ struct SwapchainSupportDetails {
 
 class Device {
 public:
+    VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
     VkDevice device;
     QueueFamilyIndices indices;
     SwapchainSupportDetails swapchainSupportDetails;

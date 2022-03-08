@@ -11,8 +11,6 @@ Device::Device(VkInstance instance, VkSurfaceKHR surface) {
     std::vector<VkPhysicalDevice> devices(deviceCount);
     vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
 
-    VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
-
     for (const auto& device : devices) {
         if (isDeviceSuitable(device, surface)) {
             physicalDevice = device;

@@ -15,6 +15,7 @@
 #include "semaphore.hpp"
 #include "fence.hpp"
 #include "vertex.hpp"
+#include "vertex_buffer.hpp"
 
 const int MAX_FRAMES_IN_FLIGHT = 2;
 
@@ -47,6 +48,7 @@ private:
     GraphicsPipeline* graphicsPipeline;
     std::vector<Framebuffer*> framebuffers;
     CommandPool* commandPool;
+    VertexBuffer* vertexBuffer;
     CommandBuffers* commandBuffers;
     std::vector<Semaphore*> imageAvailableSemaphores;
     std::vector<Semaphore*> renderFinishedSemaphores;
