@@ -1,6 +1,9 @@
 #include "command_buffers.hpp"
 
 CommandBuffers::CommandBuffers(VkDevice device, VkCommandPool commandPool, uint32_t count) {
+    this->device = device;
+    this->commandPool = commandPool;
+
     commandBuffers.resize(count);
 
     VkCommandBufferAllocateInfo commandBufferAllocateInfo{};
@@ -12,4 +15,8 @@ CommandBuffers::CommandBuffers(VkDevice device, VkCommandPool commandPool, uint3
     if (vkAllocateCommandBuffers(device, &commandBufferAllocateInfo, commandBuffers.data()) != VK_SUCCESS) {
         throw std::runtime_error("Failed to allocate command buffers!");
     }
+}
+
+CommandBuffers::~CommandBuffers() {
+    vkFreeCommandBuffers(device, commandPool, commandBuffers.size(), commandBuffers.data());
 }

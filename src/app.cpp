@@ -13,14 +13,17 @@ void App::initWindow() {
 
 void App::initVulkan() {
     instance = new Instance();
+
     if (enableValidationLayers) {
         messenger = new Messenger(instance->instance);
     }
+
     surface = new Surface(instance->instance, window->window);
     device = new Device(instance->instance, surface->surface);
     swapchain = new Swapchain(device->device, surface->surface, device->swapchainSupportDetails, window->window, device->indices);
     renderPass = new RenderPass(device->device, swapchain->swapchainImageFormat);
     graphicsPipeline = new GraphicsPipeline(device->device, swapchain->swapchainExtent, renderPass->renderPass);
+
     framebuffers.resize(swapchain->swapchainImageViews.size());
     for (size_t i = 0; i < framebuffers.size(); i++) {
         VkImageView attachments[] = {
@@ -28,9 +31,22 @@ void App::initVulkan() {
         };
         framebuffers[i] = new Framebuffer(device->device, renderPass->renderPass, attachments, swapchain->swapchainExtent);
     }
+
     commandPool = new CommandPool(device->device, device->indices.graphicsFamily.value(), VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
-    vertexBuffer = new VertexBuffer(device->physicalDevice, device->device, vertices);
+
+    VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
+    stagingBuffer = new Buffer(device->physicalDevice, device->device, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+    void* data;
+    vkMapMemory(device->device, stagingBuffer->bufferMemory, 0, bufferSize, 0, &data);
+    memcpy(data, vertices.data(), (size_t) bufferSize);
+    vkUnmapMemory(device->device, stagingBuffer->bufferMemory);
+
+    vertexBuffer = new Buffer(device->physicalDevice, device->device, bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    Buffer::Copy(device->device, commandPool->commandPool, device->graphicsQueue, stagingBuffer->buffer, vertexBuffer->buffer, bufferSize);
+    delete stagingBuffer;
+
     commandBuffers = new CommandBuffers(device->device, commandPool->commandPool, MAX_FRAMES_IN_FLIGHT);
+
     imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
     renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
     inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
@@ -180,7 +196,7 @@ void App::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex
     vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline->graphicsPipeline);
 
     VkBuffer vertexBuffers[] = {
-        vertexBuffer->vertexBuffer
+        vertexBuffer->buffer
     };
     VkDeviceSize offsets[] = {
         0
@@ -210,6 +226,7 @@ void App::cleanUp() {
     renderFinishedSemaphores.clear();
     inFlightFences.clear();
 
+    delete commandBuffers;
     delete commandPool;
     delete device;
 
