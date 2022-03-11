@@ -21,17 +21,25 @@ const int MAX_FRAMES_IN_FLIGHT = 2;
 
 const std::vector<Vertex> vertices = {
     {
-        {0.0f, -0.5f},
+        {-0.5f, -0.5f},
         {1.0f, 0.0f, 0.0f}
     },
     {
-        {0.5f, 0.5f},
+        {0.5f, -0.5f},
         {0.0f, 1.0f, 0.0f}
     },
     {
-        {-0.5f, 0.5f},
+        {0.5f, 0.5f},
         {0.0f, 0.0f, 1.0f}
+    },
+    {
+        {-0.5f, 0.5f},
+        {1.0f, 1.0f, 1.0f}
     }
+};
+
+const std::vector<uint16_t> indices = {
+    0, 1, 2, 2, 3, 0
 };
 
 class App {
@@ -48,8 +56,8 @@ private:
     GraphicsPipeline* graphicsPipeline;
     std::vector<Framebuffer*> framebuffers;
     CommandPool* commandPool;
-    Buffer* stagingBuffer;
     Buffer* vertexBuffer;
+    Buffer* indexBuffer;
     CommandBuffers* commandBuffers;
     std::vector<Semaphore*> imageAvailableSemaphores;
     std::vector<Semaphore*> renderFinishedSemaphores;

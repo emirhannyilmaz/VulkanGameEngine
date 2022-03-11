@@ -34,16 +34,29 @@ void App::initVulkan() {
 
     commandPool = new CommandPool(device->device, device->indices.graphicsFamily.value(), VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
 
-    VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
-    stagingBuffer = new Buffer(device->physicalDevice, device->device, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-    void* data;
-    vkMapMemory(device->device, stagingBuffer->bufferMemory, 0, bufferSize, 0, &data);
-    memcpy(data, vertices.data(), (size_t) bufferSize);
-    vkUnmapMemory(device->device, stagingBuffer->bufferMemory);
+    // Vertex buffer
+    VkDeviceSize vertexBufferSize = sizeof(vertices[0]) * vertices.size();
+    Buffer* stagingBufferForVertexBuffer = new Buffer(device->physicalDevice, device->device, vertexBufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+    void* stagingBufferForVertexBufferData;
+    vkMapMemory(device->device, stagingBufferForVertexBuffer->bufferMemory, 0, vertexBufferSize, 0, &stagingBufferForVertexBufferData);
+    memcpy(stagingBufferForVertexBufferData, vertices.data(), (size_t) vertexBufferSize);
+    vkUnmapMemory(device->device, stagingBufferForVertexBuffer->bufferMemory);
 
-    vertexBuffer = new Buffer(device->physicalDevice, device->device, bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-    Buffer::Copy(device->device, commandPool->commandPool, device->graphicsQueue, stagingBuffer->buffer, vertexBuffer->buffer, bufferSize);
-    delete stagingBuffer;
+    vertexBuffer = new Buffer(device->physicalDevice, device->device, vertexBufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    Buffer::Copy(device->device, commandPool->commandPool, device->graphicsQueue, stagingBufferForVertexBuffer->buffer, vertexBuffer->buffer, vertexBufferSize);
+    delete stagingBufferForVertexBuffer;
+
+    // Index buffer
+    VkDeviceSize indexBufferSize = sizeof(indices[0]) * indices.size();
+    Buffer* stagingBufferForIndexBuffer = new Buffer(device->physicalDevice, device->device, indexBufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+    void* stagingBufferForIndexBufferData;
+    vkMapMemory(device->device, stagingBufferForIndexBuffer->bufferMemory, 0, indexBufferSize, 0, &stagingBufferForIndexBufferData);
+    memcpy(stagingBufferForIndexBufferData, indices.data(), (size_t) indexBufferSize);
+    vkUnmapMemory(device->device, stagingBufferForIndexBuffer->bufferMemory);
+
+    indexBuffer = new Buffer(device->physicalDevice, device->device, indexBufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+    Buffer::Copy(device->device, commandPool->commandPool, device->graphicsQueue, stagingBufferForIndexBuffer->buffer, indexBuffer->buffer, indexBufferSize);
+    delete stagingBufferForIndexBuffer;
 
     commandBuffers = new CommandBuffers(device->device, commandPool->commandPool, MAX_FRAMES_IN_FLIGHT);
 
@@ -203,7 +216,9 @@ void App::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex
     };
     vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
 
-    vkCmdDraw(commandBuffer, static_cast<uint32_t>(vertices.size()), 1, 0, 0);
+    vkCmdBindIndexBuffer(commandBuffer, indexBuffer->buffer, 0, VK_INDEX_TYPE_UINT16);
+
+    vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
 
     vkCmdEndRenderPass(commandBuffer);
 
@@ -215,6 +230,7 @@ void App::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex
 void App::cleanUp() {
     cleanUpSwapchain();
 
+    delete indexBuffer;
     delete vertexBuffer;
 
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
