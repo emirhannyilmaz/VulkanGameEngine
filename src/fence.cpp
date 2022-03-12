@@ -1,6 +1,6 @@
 #include "fence.hpp"
 
-Fence::Fence(VkDevice device, VkFenceCreateFlags flags) {
+Fence::Fence(VkDevice& device, VkFenceCreateFlags flags) {
     this->device = device;
 
     VkFenceCreateInfo fenceCreateInfo{};

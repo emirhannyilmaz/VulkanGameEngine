@@ -1,6 +1,6 @@
 #include "device.hpp"
 
-Device::Device(VkInstance instance, VkSurfaceKHR surface) {
+Device::Device(VkInstance& instance, VkSurfaceKHR& surface) {
     uint32_t deviceCount = 0;
     vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
 

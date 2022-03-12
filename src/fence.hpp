@@ -7,7 +7,7 @@
 class Fence {
 public:
     VkFence fence;
-    Fence(VkDevice device, VkFenceCreateFlags flags);
+    Fence(VkDevice& device, VkFenceCreateFlags flags);
     ~Fence();
 private:
     VkDevice device;

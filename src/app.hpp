@@ -16,6 +16,12 @@
 #include "fence.hpp"
 #include "vertex.hpp"
 #include "buffer.hpp"
+#include "descriptor_set_layout.hpp"
+
+#define GLM_FORCE_RADIANS
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <chrono>
 
 const int MAX_FRAMES_IN_FLIGHT = 2;
 
@@ -42,6 +48,12 @@ const std::vector<uint16_t> indices = {
     0, 1, 2, 2, 3, 0
 };
 
+struct UniformBufferObject {
+    glm::mat4 model;
+    glm::mat4 view;
+    glm::mat4 projection;
+};
+
 class App {
 public:
     void run();
@@ -53,11 +65,13 @@ private:
     Device* device;
     Swapchain* swapchain;
     RenderPass* renderPass;
+    DescriptorSetLayout* descriptorSetLayout;
     GraphicsPipeline* graphicsPipeline;
     std::vector<Framebuffer*> framebuffers;
     CommandPool* commandPool;
     Buffer* vertexBuffer;
     Buffer* indexBuffer;
+    std::vector<Buffer*> uniformBuffers;
     CommandBuffers* commandBuffers;
     std::vector<Semaphore*> imageAvailableSemaphores;
     std::vector<Semaphore*> renderFinishedSemaphores;
@@ -68,6 +82,7 @@ private:
     void mainLoop();
     void drawFrame();
     void recreateSwapchain();
+    void updateUniformBuffer(uint32_t currentImage);
     void cleanUpSwapchain();
     void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
     void cleanUp();

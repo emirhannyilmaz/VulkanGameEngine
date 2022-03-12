@@ -1,6 +1,6 @@
 #include "graphics_pipeline.hpp"
 
-GraphicsPipeline::GraphicsPipeline(VkDevice device, VkExtent2D swapchainExtent, VkRenderPass renderPass) {
+GraphicsPipeline::GraphicsPipeline(VkDevice& device, VkDescriptorSetLayout& descriptorSetLayout, VkExtent2D& swapchainExtent, VkRenderPass& renderPass) {
     this->device = device;
 
     ShaderModule vertexShader(device, "res/shaders/shader.vert.spv");
@@ -113,8 +113,8 @@ GraphicsPipeline::GraphicsPipeline(VkDevice device, VkExtent2D swapchainExtent, 
 
     VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo{};
     pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    pipelineLayoutCreateInfo.setLayoutCount = 0;
-    pipelineLayoutCreateInfo.pSetLayouts = nullptr;
+    pipelineLayoutCreateInfo.setLayoutCount = 1;
+    pipelineLayoutCreateInfo.pSetLayouts = &descriptorSetLayout;
     pipelineLayoutCreateInfo.pushConstantRangeCount = 0;
     pipelineLayoutCreateInfo.pPushConstantRanges = nullptr;
 

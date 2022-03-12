@@ -1,6 +1,6 @@
 #include "swapchain.hpp"
 
-Swapchain::Swapchain(VkDevice device, VkSurfaceKHR surface, SwapchainSupportDetails swapchainSupportDetails, GLFWwindow* window, QueueFamilyIndices indices) {
+Swapchain::Swapchain(VkDevice& device, VkSurfaceKHR& surface, SwapchainSupportDetails& swapchainSupportDetails, GLFWwindow* window, QueueFamilyIndices& indices) {
     this->device = device;
 
     VkSurfaceFormatKHR surfaceFormat = chooseSwapchainSurfaceFormat(swapchainSupportDetails.formats);

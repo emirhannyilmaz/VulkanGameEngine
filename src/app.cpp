@@ -22,7 +22,8 @@ void App::initVulkan() {
     device = new Device(instance->instance, surface->surface);
     swapchain = new Swapchain(device->device, surface->surface, device->swapchainSupportDetails, window->window, device->indices);
     renderPass = new RenderPass(device->device, swapchain->swapchainImageFormat);
-    graphicsPipeline = new GraphicsPipeline(device->device, swapchain->swapchainExtent, renderPass->renderPass);
+    descriptorSetLayout = new DescriptorSetLayout(device->device);
+    graphicsPipeline = new GraphicsPipeline(device->device, descriptorSetLayout->descriptorSetLayout, swapchain->swapchainExtent, renderPass->renderPass);
 
     framebuffers.resize(swapchain->swapchainImageViews.size());
     for (size_t i = 0; i < framebuffers.size(); i++) {
@@ -58,6 +59,13 @@ void App::initVulkan() {
     Buffer::Copy(device->device, commandPool->commandPool, device->graphicsQueue, stagingBufferForIndexBuffer->buffer, indexBuffer->buffer, indexBufferSize);
     delete stagingBufferForIndexBuffer;
 
+    // Uniform buffers
+    VkDeviceSize uniformBufferSize = sizeof(UniformBufferObject);
+    uniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
+    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+        uniformBuffers[i] = new Buffer(device->physicalDevice, device->device, uniformBufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+    }
+
     commandBuffers = new CommandBuffers(device->device, commandPool->commandPool, MAX_FRAMES_IN_FLIGHT);
 
     imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
@@ -91,6 +99,8 @@ void App::drawFrame() {
     } else if (acquireNextImageResult != VK_SUCCESS && acquireNextImageResult != VK_SUBOPTIMAL_KHR) {
         throw std::runtime_error("Failed to acquire swap chain image!");
     }
+
+    updateUniformBuffer(imageIndex);
 
     vkResetFences(device->device, 1, &inFlightFences[currentFrame]->fence);
 
@@ -166,7 +176,8 @@ void App::recreateSwapchain() {
 
     swapchain = new Swapchain(device->device, surface->surface, device->swapchainSupportDetails, window->window, device->indices);
     renderPass = new RenderPass(device->device, swapchain->swapchainImageFormat);
-    graphicsPipeline = new GraphicsPipeline(device->device, swapchain->swapchainExtent, renderPass->renderPass);
+    graphicsPipeline = new GraphicsPipeline(device->device, descriptorSetLayout->descriptorSetLayout, swapchain->swapchainExtent, renderPass->renderPass);
+
     framebuffers.resize(swapchain->swapchainImageViews.size());
     for (size_t i = 0; i < framebuffers.size(); i++) {
         VkImageView attachments[] = {
@@ -174,6 +185,29 @@ void App::recreateSwapchain() {
         };
         framebuffers[i] = new Framebuffer(device->device, renderPass->renderPass, attachments, swapchain->swapchainExtent);
     }
+
+    VkDeviceSize uniformBufferSize = sizeof(UniformBufferObject);
+    uniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
+    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+        uniformBuffers[i] = new Buffer(device->physicalDevice, device->device, uniformBufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+    }
+}
+
+void App::updateUniformBuffer(uint32_t currentImage) {
+    static auto startTime = std::chrono::high_resolution_clock::now();
+    auto currentTime = std::chrono::high_resolution_clock::now();
+    float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+
+    UniformBufferObject ubo{};
+    ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+    ubo.view = glm::mat4(1.0f);
+    ubo.projection = glm::perspective(glm::radians(45.0f), swapchain->swapchainExtent.width / (float) swapchain->swapchainExtent.height, 0.1f, 10.0f);
+    ubo.projection[1][1] *= -1;
+
+    void* data;
+    vkMapMemory(device->device, uniformBuffers[currentImage]->bufferMemory, 0, sizeof(ubo), 0, &data);
+    memcpy(data, &ubo, sizeof(ubo));
+    vkUnmapMemory(device->device, uniformBuffers[currentImage]->bufferMemory);
 }
 
 void App::cleanUpSwapchain() {
@@ -181,9 +215,15 @@ void App::cleanUpSwapchain() {
         delete framebuffer;
     }
     framebuffers.clear();
+
     delete graphicsPipeline;
     delete renderPass;
     delete swapchain;
+
+    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+        delete uniformBuffers[i];
+    }
+    uniformBuffers.clear();
 }
 
 void App::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex) {
@@ -230,6 +270,7 @@ void App::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex
 void App::cleanUp() {
     cleanUpSwapchain();
 
+    delete descriptorSetLayout;
     delete indexBuffer;
     delete vertexBuffer;
 

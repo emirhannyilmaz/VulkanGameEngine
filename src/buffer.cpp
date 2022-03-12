@@ -1,6 +1,6 @@
 #include "buffer.hpp"
 
-Buffer::Buffer(VkPhysicalDevice physicalDevice, VkDevice device, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties) {
+Buffer::Buffer(VkPhysicalDevice& physicalDevice, VkDevice& device, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties) {
     this->device = device;
 
     VkBufferCreateInfo bufferCreateInfo{};
@@ -33,7 +33,7 @@ Buffer::~Buffer() {
     vkFreeMemory(device, bufferMemory, nullptr);
 }
 
-void Buffer::Copy(VkDevice device, VkCommandPool commandPool, VkQueue graphicsQueue, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) {
+void Buffer::Copy(VkDevice& device, VkCommandPool& commandPool, VkQueue& graphicsQueue, VkBuffer& srcBuffer, VkBuffer& dstBuffer, VkDeviceSize size) {
     CommandBuffers commandBuffers(device, commandPool, 1);
 
     VkCommandBufferBeginInfo commandBufferBeginInfo{};

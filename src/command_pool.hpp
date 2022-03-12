@@ -7,7 +7,7 @@
 class CommandPool {
 public:
     VkCommandPool commandPool;
-    CommandPool(VkDevice device, uint32_t queueFamilyIndex, VkCommandPoolCreateFlags flags);
+    CommandPool(VkDevice& device, uint32_t queueFamilyIndex, VkCommandPoolCreateFlags flags);
     ~CommandPool();
 private:
     VkDevice device;

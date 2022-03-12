@@ -10,7 +10,7 @@ class GraphicsPipeline {
 public:
     VkPipelineLayout pipelineLayout;
     VkPipeline graphicsPipeline;
-    GraphicsPipeline(VkDevice device, VkExtent2D swapchainExtent, VkRenderPass renderPass);
+    GraphicsPipeline(VkDevice& device, VkDescriptorSetLayout& descriptorSetLayout, VkExtent2D& swapchainExtent, VkRenderPass& renderPass);
     ~GraphicsPipeline();
 private:
     VkDevice device;

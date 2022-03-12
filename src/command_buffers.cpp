@@ -1,6 +1,6 @@
 #include "command_buffers.hpp"
 
-CommandBuffers::CommandBuffers(VkDevice device, VkCommandPool commandPool, uint32_t count) {
+CommandBuffers::CommandBuffers(VkDevice& device, VkCommandPool& commandPool, uint32_t count) {
     this->device = device;
     this->commandPool = commandPool;
 

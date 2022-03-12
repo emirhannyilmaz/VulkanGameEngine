@@ -7,7 +7,7 @@
 class Semaphore {
 public:
     VkSemaphore semaphore;
-    Semaphore(VkDevice device);
+    Semaphore(VkDevice& device);
     ~Semaphore();
 private:
     VkDevice device;

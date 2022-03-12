@@ -13,7 +13,7 @@ public:
     VkFormat swapchainImageFormat;
     VkExtent2D swapchainExtent;
     std::vector<VkImageView> swapchainImageViews;
-    Swapchain(VkDevice device, VkSurfaceKHR surface, SwapchainSupportDetails swapchainSupportDetails, GLFWwindow* window, QueueFamilyIndices indices);
+    Swapchain(VkDevice& device, VkSurfaceKHR& surface, SwapchainSupportDetails& swapchainSupportDetails, GLFWwindow* window, QueueFamilyIndices& indices);
     ~Swapchain();
 private:
     VkDevice device;

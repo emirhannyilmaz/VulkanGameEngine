@@ -1,6 +1,6 @@
 #include "surface.hpp"
 
-Surface::Surface(VkInstance instance, GLFWwindow* window) {
+Surface::Surface(VkInstance& instance, GLFWwindow* window) {
     this->instance = instance;
 
     if (glfwCreateWindowSurface(instance, window, nullptr, &surface) != VK_SUCCESS) {

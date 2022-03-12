@@ -1,6 +1,6 @@
 #include "command_pool.hpp"
 
-CommandPool::CommandPool(VkDevice device, uint32_t queueFamilyIndex, VkCommandPoolCreateFlags flags) {
+CommandPool::CommandPool(VkDevice& device, uint32_t queueFamilyIndex, VkCommandPoolCreateFlags flags) {
     this->device = device;
 
     VkCommandPoolCreateInfo commandPoolCreateInfo{};

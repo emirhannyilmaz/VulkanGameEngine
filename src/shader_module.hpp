@@ -10,7 +10,7 @@
 class ShaderModule {
 public:
     VkShaderModule shaderModule;
-    ShaderModule(VkDevice device, const std::string& fileName);
+    ShaderModule(VkDevice& device, const std::string& fileName);
     ~ShaderModule();
 private:
     VkDevice device;

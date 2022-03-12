@@ -31,7 +31,7 @@ public:
     SwapchainSupportDetails swapchainSupportDetails;
     VkQueue graphicsQueue;
     VkQueue presentQueue;
-    Device(VkInstance instance, VkSurfaceKHR surface);
+    Device(VkInstance& instance, VkSurfaceKHR& surface);
     ~Device();
 private:
     bool isDeviceSuitable(VkPhysicalDevice device, VkSurfaceKHR surface);

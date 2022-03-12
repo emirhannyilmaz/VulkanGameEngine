@@ -1,6 +1,6 @@
 #include "semaphore.hpp"
 
-Semaphore::Semaphore(VkDevice device) {
+Semaphore::Semaphore(VkDevice& device) {
     this->device = device;
 
     VkSemaphoreCreateInfo semaphoreCreateInfo{};

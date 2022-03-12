@@ -1,6 +1,6 @@
 #include "shader_module.hpp"
 
-ShaderModule::ShaderModule(VkDevice device, const std::string& fileName) {
+ShaderModule::ShaderModule(VkDevice& device, const std::string& fileName) {
     this->device = device;
 
     std::ifstream file(fileName, std::ios::ate | std::ios::binary);

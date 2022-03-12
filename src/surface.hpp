@@ -8,7 +8,7 @@
 class Surface {
 public:
     VkSurfaceKHR surface;
-    Surface(VkInstance instance, GLFWwindow* window);
+    Surface(VkInstance& instance, GLFWwindow* window);
     ~Surface();
 private:
     VkInstance instance;

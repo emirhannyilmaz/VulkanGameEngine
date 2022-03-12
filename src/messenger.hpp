@@ -9,7 +9,7 @@
 class Messenger {
 public:
     VkDebugUtilsMessengerEXT messenger;
-    Messenger(VkInstance instance);
+    Messenger(VkInstance& instance);
     ~Messenger();
 private:
     VkInstance instance;

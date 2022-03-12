@@ -1,6 +1,6 @@
 #include "framebuffer.hpp"
 
-Framebuffer::Framebuffer(VkDevice device, VkRenderPass renderPass, VkImageView* attachments, VkExtent2D extent) {
+Framebuffer::Framebuffer(VkDevice& device, VkRenderPass& renderPass, VkImageView* attachments, VkExtent2D& extent) {
     this->device = device;
 
     VkFramebufferCreateInfo framebufferCreateInfo{};

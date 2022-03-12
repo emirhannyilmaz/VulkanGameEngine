@@ -8,7 +8,7 @@
 class CommandBuffers {
 public:
     std::vector<VkCommandBuffer> commandBuffers;
-    CommandBuffers(VkDevice device, VkCommandPool commandPool, uint32_t count);
+    CommandBuffers(VkDevice& device, VkCommandPool& commandPool, uint32_t count);
     ~CommandBuffers();
 private:
     VkDevice device;

@@ -1,6 +1,6 @@
 #include "messenger.hpp"
 
-Messenger::Messenger(VkInstance instance) {
+Messenger::Messenger(VkInstance& instance) {
     this->instance = instance;
 
     if (!enableValidationLayers) {

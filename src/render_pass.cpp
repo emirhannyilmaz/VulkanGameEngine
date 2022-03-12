@@ -1,6 +1,6 @@
 #include "render_pass.hpp"
 
-RenderPass::RenderPass(VkDevice device, VkFormat swapchainImageFormat) {
+RenderPass::RenderPass(VkDevice& device, VkFormat swapchainImageFormat) {
     this->device = device;
 
     VkAttachmentDescription colorAttachmentDescription{};
