@@ -23,4 +23,6 @@ const std::vector<const char*> deviceExtensions = {
     "VK_KHR_portability_subset"
 };
 
+const int MAX_FRAMES_IN_FLIGHT = 2;
+
 #endif

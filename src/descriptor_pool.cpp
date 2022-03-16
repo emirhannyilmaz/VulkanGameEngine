@@ -13,7 +13,7 @@ DescriptorPool::DescriptorPool(VkDevice& device) {
     createInfo.pPoolSizes = &poolSize;
     createInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
 
-    if (vkCreateDesriptorPool(device, &createInfo, nullptr, &descriptorPool) != VK_SUCCESS) {
+    if (vkCreateDescriptorPool(device, &createInfo, nullptr, &descriptorPool) != VK_SUCCESS) {
         throw std::runtime_error("Failed to create descriptor pool!");
     }
 }

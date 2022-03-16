@@ -17,13 +17,13 @@
 #include "vertex.hpp"
 #include "buffer.hpp"
 #include "descriptor_set_layout.hpp"
-
-#define GLM_FORCE_RADIANS
+#include "descriptor_pool.hpp"
+#include "descriptor_sets.hpp"
+#include "uniform_buffer_object.hpp"
+#include "app_info.hpp"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <chrono>
-
-const int MAX_FRAMES_IN_FLIGHT = 2;
 
 const std::vector<Vertex> vertices = {
     {
@@ -48,12 +48,6 @@ const std::vector<uint16_t> indices = {
     0, 1, 2, 2, 3, 0
 };
 
-struct UniformBufferObject {
-    glm::mat4 model;
-    glm::mat4 view;
-    glm::mat4 projection;
-};
-
 class App {
 public:
     void run();
@@ -72,6 +66,8 @@ private:
     Buffer* vertexBuffer;
     Buffer* indexBuffer;
     std::vector<Buffer*> uniformBuffers;
+    DescriptorPool* descriptorPool;
+    DescriptorSets* descriptorSets;
     CommandBuffers* commandBuffers;
     std::vector<Semaphore*> imageAvailableSemaphores;
     std::vector<Semaphore*> renderFinishedSemaphores;

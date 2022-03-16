@@ -66,6 +66,14 @@ void App::initVulkan() {
         uniformBuffers[i] = new Buffer(device->physicalDevice, device->device, uniformBufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
     }
 
+    descriptorPool = new DescriptorPool(device->device);
+
+    std::vector<VkBuffer> ub;
+    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+        ub.push_back(uniformBuffers[i]->buffer);
+    }
+    descriptorSets = new DescriptorSets(device->device, descriptorPool->descriptorPool, descriptorSetLayout->descriptorSetLayout, ub);
+
     commandBuffers = new CommandBuffers(device->device, commandPool->commandPool, MAX_FRAMES_IN_FLIGHT);
 
     imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
@@ -100,7 +108,7 @@ void App::drawFrame() {
         throw std::runtime_error("Failed to acquire swap chain image!");
     }
 
-    updateUniformBuffer(imageIndex);
+    updateUniformBuffer(currentFrame);
 
     vkResetFences(device->device, 1, &inFlightFences[currentFrame]->fence);
 
@@ -185,12 +193,6 @@ void App::recreateSwapchain() {
         };
         framebuffers[i] = new Framebuffer(device->device, renderPass->renderPass, attachments, swapchain->swapchainExtent);
     }
-
-    VkDeviceSize uniformBufferSize = sizeof(UniformBufferObject);
-    uniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
-    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-        uniformBuffers[i] = new Buffer(device->physicalDevice, device->device, uniformBufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-    }
 }
 
 void App::updateUniformBuffer(uint32_t currentImage) {
@@ -200,7 +202,7 @@ void App::updateUniformBuffer(uint32_t currentImage) {
 
     UniformBufferObject ubo{};
     ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-    ubo.view = glm::mat4(1.0f);
+    ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
     ubo.projection = glm::perspective(glm::radians(45.0f), swapchain->swapchainExtent.width / (float) swapchain->swapchainExtent.height, 0.1f, 10.0f);
     ubo.projection[1][1] *= -1;
 
@@ -219,11 +221,6 @@ void App::cleanUpSwapchain() {
     delete graphicsPipeline;
     delete renderPass;
     delete swapchain;
-
-    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-        delete uniformBuffers[i];
-    }
-    uniformBuffers.clear();
 }
 
 void App::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex) {
@@ -258,6 +255,8 @@ void App::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex
 
     vkCmdBindIndexBuffer(commandBuffer, indexBuffer->buffer, 0, VK_INDEX_TYPE_UINT16);
 
+    vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline->pipelineLayout, 0, 1, &descriptorSets->descriptorSets[currentFrame], 0, nullptr);
+
     vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
 
     vkCmdEndRenderPass(commandBuffer);
@@ -270,6 +269,12 @@ void App::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex
 void App::cleanUp() {
     cleanUpSwapchain();
 
+    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+        delete uniformBuffers[i];
+    }
+    uniformBuffers.clear();
+
+    delete descriptorPool;
     delete descriptorSetLayout;
     delete indexBuffer;
     delete vertexBuffer;
@@ -283,7 +288,6 @@ void App::cleanUp() {
     renderFinishedSemaphores.clear();
     inFlightFences.clear();
 
-    delete commandBuffers;
     delete commandPool;
     delete device;
 
