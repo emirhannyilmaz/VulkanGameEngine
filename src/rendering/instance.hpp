@@ -2,10 +2,10 @@
 #define instance_hpp
 
 #include <vulkan/vulkan.h>
-#include "window.hpp"
+#include <GLFW/glfw3.h>
 #include <vector>
 #include <stdexcept>
-#include "app_info.hpp"
+#include "renderer_info.hpp"
 #include <iostream>
 
 class Instance {

@@ -1,12 +1,11 @@
 #ifndef device_hpp
 #define device_hpp
 
-#define VK_ENABLE_BETA_EXTENSIONS
 #include <vulkan/vulkan.h>
 #include <optional>
 #include <set>
 #include <stdexcept>
-#include "app_info.hpp"
+#include "renderer_info.hpp"
 
 struct QueueFamilyIndices {
     std::optional<uint32_t> graphicsFamily;

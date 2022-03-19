@@ -3,16 +3,12 @@
 
 #include <GLFW/glfw3.h>
 #include <string>
-#include "app_info.hpp"
-
-const uint32_t WIDTH = 800;
-const uint32_t HEIGHT = 600;
 
 class Window {
 public:
     GLFWwindow* window;
     bool framebufferResized = false;
-    Window();
+    Window(int width, int height, std::string title);
     ~Window();
 private:
     static void framebufferResizeCallback(GLFWwindow* window, int width, int height);

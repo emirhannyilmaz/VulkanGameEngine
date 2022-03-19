@@ -1,12 +1,9 @@
-#ifndef app_info_hpp
-#define app_info_hpp
+#ifndef renderer_info_hpp
+#define renderer_info_hpp
 
-#define VK_ENABLE_BETA_EXTENSIONS
 #include <vulkan/vulkan.h>
 #include <string>
 #include <vector>
-
-const std::string TITLE = "Vulkan Game Engine";
 
 #ifdef NDEBUG
 const bool enableValidationLayers = false;

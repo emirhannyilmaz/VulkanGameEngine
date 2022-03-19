@@ -3,7 +3,7 @@
 
 #include <vulkan/vulkan.h>
 #include <stdexcept>
-#include "app_info.hpp"
+#include "renderer_info.hpp"
 
 class DescriptorPool {
 public:

@@ -5,7 +5,7 @@
 #include <stdexcept>
 #include <vector>
 #include "uniform_buffer_object.hpp"
-#include "app_info.hpp"
+#include "renderer_info.hpp"
 
 class DescriptorSets {
 public:

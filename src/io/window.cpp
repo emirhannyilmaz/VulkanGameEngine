@@ -1,11 +1,11 @@
 #include "window.hpp"
 
-Window::Window() {
+Window::Window(int width, int height, std::string title) {
     glfwInit();
     
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     
-    window = glfwCreateWindow(WIDTH, HEIGHT, TITLE.c_str(), nullptr, nullptr);
+    window = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
     glfwSetWindowUserPointer(window, this);
     glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
 }
