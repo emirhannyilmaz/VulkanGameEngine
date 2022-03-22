@@ -11,7 +11,7 @@
 class Instance {
 public:
     VkInstance instance;
-    Instance();
+    Instance(std::string applicationName);
     ~Instance();
 private:
     bool checkValidationLayerSupport();

@@ -33,6 +33,7 @@ public:
     void run();
 private:
     Window* window;
+    Camera* camera;
     Renderer* renderer;
 };
 

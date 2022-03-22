@@ -6,6 +6,9 @@
 
 class Window {
 public:
+    int width;
+    int height;
+    std::string title;
     GLFWwindow* window;
     bool framebufferResized = false;
     Window(int width, int height, std::string title);

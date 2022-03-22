@@ -1,9 +1,12 @@
 #include "renderer.hpp"
 
-Renderer::Renderer(Window* window) {
+Renderer::Renderer(Window* window, Camera* camera) {
     this->window = window;
+    this->camera = camera;
 
-    instance = new Instance();
+    ubo.projectionMatrix = camera->createProjectionMatrix();
+
+    instance = new Instance(window->title);
 
     if (enableValidationLayers) {
         messenger = new Messenger(instance->instance);
@@ -89,6 +92,8 @@ void Renderer::render(Entity* entity) {
 
     vkWaitForFences(device->device, 1, &inFlightFences[currentFrame]->fence, VK_TRUE, UINT64_MAX);
 
+    calculateDeltaTime();
+
     uint32_t imageIndex;
     VkResult acquireNextImageResult = vkAcquireNextImageKHR(device->device, swapchain->swapchain, UINT64_MAX, imageAvailableSemaphores[currentFrame]->semaphore, VK_NULL_HANDLE, &imageIndex);
 
@@ -98,6 +103,8 @@ void Renderer::render(Entity* entity) {
     } else if (acquireNextImageResult != VK_SUCCESS && acquireNextImageResult != VK_SUBOPTIMAL_KHR) {
         throw std::runtime_error("Failed to acquire swap chain image!");
     }
+
+    ubo.viewMatrix = camera->createViewMatrix();
 
     updateUniformBuffer(entity, currentFrame);
 
@@ -160,6 +167,15 @@ void Renderer::render(Entity* entity) {
     currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
 
+void Renderer::calculateDeltaTime() {
+    static auto renderStartTime = std::chrono::system_clock::now();
+    auto renderFinishTime = std::chrono::system_clock::now();
+
+    deltaTime = std::chrono::duration<float, std::chrono::seconds::period>(renderFinishTime - renderStartTime).count();
+
+    renderStartTime = std::chrono::system_clock::now();
+}
+
 void Renderer::recreateSwapchain() {
     int width = 0;
     int height = 0;
@@ -184,6 +200,9 @@ void Renderer::recreateSwapchain() {
         };
         framebuffers[i] = new Framebuffer(device->device, renderPass->renderPass, attachments, swapchain->swapchainExtent);
     }
+
+    camera->aspectRatio = (float) swapchain->swapchainExtent.width / (float) swapchain->swapchainExtent.height;
+    ubo.projectionMatrix = camera->createProjectionMatrix();
 }
 
 void Renderer::cleanUpSwapchain() {
@@ -198,14 +217,7 @@ void Renderer::cleanUpSwapchain() {
 }
 
 void Renderer::updateUniformBuffer(Entity* entity, uint32_t currentFrame) {
-    UniformBufferObject ubo{};
-    ubo.model = glm::translate(glm::mat4(1.0f), entity->position);
-    if (entity->rotation != 0.0f) {
-        ubo.model = glm::rotate(ubo.model, glm::radians(entity->rotation), entity->rotationAxis);
-    }
-    ubo.model = glm::scale(ubo.model, entity->scale);
-    ubo.view = glm::mat4(1.0f);
-    ubo.projection = glm::perspectiveLH_ZO(glm::radians(45.0f), swapchain->swapchainExtent.width / (float) swapchain->swapchainExtent.height, 0.1f, 10.0f);
+    ubo.modelMatrix = entity->createModelMatrix();
 
     void* data;
     vkMapMemory(device->device, uniformBuffers[currentFrame]->bufferMemory, 0, sizeof(ubo), 0, &data);

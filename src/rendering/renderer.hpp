@@ -25,6 +25,7 @@
 #include <chrono>
 #include "../io/window.hpp"
 #include "../entities/entity.hpp"
+#include "../entities/camera.hpp"
 
 class Renderer {
 public:
@@ -45,11 +46,15 @@ public:
     std::vector<Semaphore*> imageAvailableSemaphores;
     std::vector<Semaphore*> renderFinishedSemaphores;
     std::vector<Fence*> inFlightFences;
-    Renderer(Window* window);
+    float deltaTime = 0.0f;
+    Renderer(Window* window, Camera* camera);
     ~Renderer();
     void render(Entity* entity);
 private:
     Window* window;
+    Camera* camera;
+    UniformBufferObject ubo{};
+    void calculateDeltaTime();
     void recreateSwapchain();
     void cleanUpSwapchain();
     void updateUniformBuffer(Entity* entity, uint32_t currentFrame);
