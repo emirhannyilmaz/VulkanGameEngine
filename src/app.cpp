@@ -3,7 +3,7 @@
 void App::run() {
     window = new Window(800, 600, "Vulkan Game Engine");
     Input::window = window->window;
-    Input::sensitivity = 2.0f;
+    Input::sensitivity = 20.0f;
     camera = new Camera(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), 45.0f, (float) window->width / (float) window->height, 0.1f, 100.0f);
     renderer = new Renderer(window, camera);
 

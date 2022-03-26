@@ -10,40 +10,35 @@ Camera::Camera(glm::vec3 position, glm::vec3 rotation, float fieldOfView, float 
 }
 
 void Camera::update(float deltaTime) {
+    rotation.x += (float) Input::getMouseDy() * deltaTime;
+    rotation.y += (float) Input::getMouseDx() * deltaTime;
+
+    glm::vec3 direction = glm::normalize(glm::vec3(glm::sin(glm::radians(rotation.y)), glm::sin(glm::radians(rotation.x)) * -1.0f, glm::cos(glm::radians(rotation.y))));
+    glm::vec3 right = glm::cross(direction, glm::vec3(0.0f, -1.0f, 0.0f));
+
     if (Input::getKey(GLFW_KEY_W)) {
-        position.z += 5.0f * deltaTime;
+        position += direction * 5.0f * deltaTime;
     }
 
     if (Input::getKey(GLFW_KEY_S)) {
-        position.z -= 5.0f * deltaTime;
+        position -= direction * 5.0f * deltaTime;
     }
 
     if (Input::getKey(GLFW_KEY_A)) {
-        position.x -= 5.0f * deltaTime;
+        position -= right * 5.0f * deltaTime;
     }
 
     if (Input::getKey(GLFW_KEY_D)) {
-        position.x += 5.0f * deltaTime;
+        position += right * 5.0f * deltaTime;
     }
-
-    rotation.x += (float) Input::getMouseDy() * deltaTime;
-    rotation.y += (float) Input::getMouseDx() * deltaTime;
 }
 
 glm::mat4 Camera::createViewMatrix() {
     glm::mat4 matrix(1.0f);
+    matrix = glm::rotate(matrix, glm::radians(rotation.x * -1.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+    matrix = glm::rotate(matrix, glm::radians(rotation.y * -1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    matrix = glm::rotate(matrix, glm::radians(rotation.z * -1.0f), glm::vec3(0.0f, 0.0f, 1.0f));
     matrix = glm::translate(matrix, position * -1.0f);
-    if (rotation.x != 0.0f) {
-        matrix = glm::rotate(matrix, rotation.x * -1.0f, glm::vec3(1.0f, 0.0f, 0.0f));
-    }
-
-    if (rotation.y != 0.0f) {
-        matrix = glm::rotate(matrix, rotation.y * -1.0f, glm::vec3(0.0f, 1.0f, 0.0f));
-    }
-
-    if (rotation.z != 0.0f) {
-        matrix = glm::rotate(matrix, rotation.z * -1.0f, glm::vec3(0.0f, 0.0f, 1.0f));
-    }
 
     return matrix;
 }
