@@ -2,7 +2,7 @@
 #define texture_hpp
 
 #define STB_IMAGE_IMPLEMENTATION
-#include "../tools/stb_image.h"
+#include <stb_image.h>
 
 #include <string>
 #include "renderer.hpp"

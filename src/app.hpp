@@ -4,6 +4,7 @@
 #include "io/window.hpp"
 #include "rendering/renderer.hpp"
 #include "rendering/vertex.hpp"
+#include "rendering/texture.hpp"
 
 const std::vector<Vertex> vertices = {
     {
