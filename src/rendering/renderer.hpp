@@ -20,12 +20,14 @@
 #include "descriptor_pool.hpp"
 #include "descriptor_sets.hpp"
 #include "uniform_buffer_object.hpp"
+#include "sampler.hpp"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <chrono>
 #include "../io/window.hpp"
 #include "../entities/entity.hpp"
 #include "../entities/camera.hpp"
+#include "texture.hpp"
 
 class Renderer {
 public:
@@ -43,6 +45,7 @@ public:
     DescriptorPool* descriptorPool;
     DescriptorSets* descriptorSets;
     CommandBuffers* commandBuffers;
+    Sampler* sampler;
     std::vector<Semaphore*> imageAvailableSemaphores;
     std::vector<Semaphore*> renderFinishedSemaphores;
     std::vector<Fence*> inFlightFences;

@@ -3,6 +3,7 @@
 
 #include <vulkan/vulkan.h>
 #include <stdexcept>
+#include <array>
 
 class DescriptorSetLayout {
 public:

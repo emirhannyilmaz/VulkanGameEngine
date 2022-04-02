@@ -30,8 +30,6 @@ DescriptorSets::DescriptorSets(VkDevice& device, VkDescriptorPool& pool, VkDescr
         writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         writeDescriptorSet.descriptorCount = 1;
         writeDescriptorSet.pBufferInfo = &bufferInfo;
-        writeDescriptorSet.pImageInfo = nullptr;
-        writeDescriptorSet.pTexelBufferView = nullptr;
 
         vkUpdateDescriptorSets(device, 1, &writeDescriptorSet, 0, nullptr);
     }
@@ -39,4 +37,22 @@ DescriptorSets::DescriptorSets(VkDevice& device, VkDescriptorPool& pool, VkDescr
 
 DescriptorSets::~DescriptorSets() {
     vkFreeDescriptorSets(device, pool, descriptorSets.size(), descriptorSets.data());
+}
+
+void DescriptorSets::updateImageInfo(int descriptorSetIndex, VkImageView& imageView, VkSampler& sampler) {
+    VkDescriptorImageInfo imageInfo{};
+    imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    imageInfo.imageView = imageView;
+    imageInfo.sampler = sampler;
+
+    VkWriteDescriptorSet writeDescriptorSet{};
+    writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    writeDescriptorSet.dstSet = descriptorSets[descriptorSetIndex];
+    writeDescriptorSet.dstBinding = 1;
+    writeDescriptorSet.dstArrayElement = 0;
+    writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    writeDescriptorSet.descriptorCount = 1;
+    writeDescriptorSet.pImageInfo = &imageInfo;
+
+    vkUpdateDescriptorSets(device, 1, &writeDescriptorSet, 0, nullptr);
 }

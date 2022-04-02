@@ -5,13 +5,16 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+class Texture;
+
 class Entity {
 public:
     Mesh* mesh;
+    Texture* texture;
     glm::vec3 position;
     glm::vec3 rotation;
     glm::vec3 scale;
-    Entity(Mesh* mesh, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale);
+    Entity(Mesh* mesh, Texture* texture, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale);
     ~Entity();
     glm::mat4 createModelMatrix();
 };

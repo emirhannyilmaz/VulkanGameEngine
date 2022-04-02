@@ -46,6 +46,8 @@ Renderer::Renderer(Window* window, Camera* camera) {
 
     commandBuffers = new CommandBuffers(device->device, commandPool->commandPool, MAX_FRAMES_IN_FLIGHT);
 
+    sampler = new Sampler(device->physicalDevice, device->device);
+
     imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
     renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
     inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
@@ -63,6 +65,8 @@ Renderer::~Renderer() {
         delete uniformBuffers[i];
     }
     uniformBuffers.clear();
+
+    delete sampler;
 
     delete descriptorPool;
     delete descriptorSetLayout;
@@ -107,6 +111,7 @@ void Renderer::render(Entity* entity) {
     ubo.viewMatrix = camera->createViewMatrix();
 
     updateUniformBuffer(entity, currentFrame);
+    descriptorSets->updateImageInfo(currentFrame, entity->texture->image->imageView, sampler->sampler);
 
     vkResetFences(device->device, 1, &inFlightFences[currentFrame]->fence);
 

@@ -1,7 +1,9 @@
 #include "entity.hpp"
+#include "../rendering/texture.hpp"
 
-Entity::Entity(Mesh* mesh, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale) {
+Entity::Entity(Mesh* mesh, Texture* texture, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale) {
     this->mesh = mesh;
+    this->texture = texture;
     this->position = position;
     this->rotation = rotation;
     this->scale = scale;
@@ -9,6 +11,7 @@ Entity::Entity(Mesh* mesh, glm::vec3 position, glm::vec3 rotation, glm::vec3 sca
 
 Entity::~Entity() {
     delete mesh;
+    delete texture;
 }
 
 glm::mat4 Entity::createModelMatrix() {

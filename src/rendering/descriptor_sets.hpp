@@ -12,6 +12,7 @@ public:
     std::vector<VkDescriptorSet> descriptorSets;
     DescriptorSets(VkDevice& device, VkDescriptorPool& pool, VkDescriptorSetLayout& layout, std::vector<VkBuffer> uniformBuffers);
     ~DescriptorSets();
+    void updateImageInfo(int index, VkImageView& imageView, VkSampler& sampler);
 private:
     VkDevice device;
     VkDescriptorPool pool;

@@ -9,7 +9,6 @@ public:
     VkImage image;
     VkDeviceMemory imageMemory;
     VkImageView imageView;
-    VkSampler sampler;
     Image(VkPhysicalDevice& physicalDevice, VkDevice device, uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties);
     ~Image();
     static void TransitionImageLayout(VkDevice& device, VkCommandPool& commandPool, VkQueue& graphicsQueue, VkImage& image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);

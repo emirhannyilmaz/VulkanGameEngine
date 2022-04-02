@@ -4,20 +4,20 @@ Image::Image(VkPhysicalDevice& physicalDevice, VkDevice device, uint32_t width, 
     this->device = device;
 
     VkImageCreateInfo imageCreateInfo{};
-    createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-    createInfo.imageType = VK_IMAGE_TYPE_2D;
-    createInfo.extent.width = width;
-    createInfo.extent.height = height;
-    createInfo.extent.depth = 1;
-    createInfo.mipLevels = 1;
-    createInfo.arrayLayers = 1;
-    createInfo.format = format;
-    createInfo.tiling = tiling;
-    createInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    createInfo.usage = usage;
-    createInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-    createInfo.samples = VK_SAMPLE_COUNT_1_BIT;
-    createInfo.flags = 0;
+    imageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+    imageCreateInfo.imageType = VK_IMAGE_TYPE_2D;
+    imageCreateInfo.extent.width = width;
+    imageCreateInfo.extent.height = height;
+    imageCreateInfo.extent.depth = 1;
+    imageCreateInfo.mipLevels = 1;
+    imageCreateInfo.arrayLayers = 1;
+    imageCreateInfo.format = format;
+    imageCreateInfo.tiling = tiling;
+    imageCreateInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    imageCreateInfo.usage = usage;
+    imageCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    imageCreateInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+    imageCreateInfo.flags = 0;
 
     if (vkCreateImage(device, &imageCreateInfo, nullptr, &image) != VK_SUCCESS) {
         throw std::runtime_error("Failed to create image!");
@@ -51,36 +51,9 @@ Image::Image(VkPhysicalDevice& physicalDevice, VkDevice device, uint32_t width, 
     if (vkCreateImageView(device, &imageViewCreateInfo, nullptr, &imageView) != VK_SUCCESS) {
         throw std::runtime_error("Failed to create image view!");
     }
-
-    VkSamplerCreateInfo samplerCreateInfo{};
-    samplerCreateInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-    samplerCreateInfo.magFilter = VK_FILTER_LINEAR;
-    samplerCreateInfo.minFilter = VK_FILTER_LINEAR;
-    samplerCreateInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-    samplerCreateInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-    samplerCreateInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-    samplerCreateInfo.anisotropyEnable = VK_TRUE;
-
-    VkPhysicalDeviceProperties physicalDeviceProperties;
-    vkGetPhysicalDeviceProperties(physicalDevice, &physicalDeviceProperties);
-
-    samplerCreateInfo.maxAnisotropy = physicalDeviceProperties.limits.maxSamplerAnisotropy;
-    samplerCreateInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
-    samplerCreateInfo.unnormalizedCoordinates = VK_FALSE;
-    samplerCreateInfo.compareEnable = VK_FALSE;
-    samplerCreateInfo.compareOp = VK_COMPARE_OP_ALWAYS;
-    samplerCreateInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-    samplerCreateInfo.mipLodBias = 0.0f;
-    samplerCreateInfo.minLod = 0.0f;
-    samplerCreateInfo.maxLod = 0.0f;
-
-    if (vkCreateSampler(device, &samplerCreateInfo, nullptr, &sampler) != VK_SUCCESS) {
-        throw std::runtime_error("Failed to create sampler!");
-    }
 }
 
 Image::~Image() {
-    vkDestroySampler(device, sampler, nullptr);
     vkDestroyImageView(device, imageView, nullptr);
     vkDestroyImage(device, image, nullptr);
     vkFreeMemory(device, imageMemory, nullptr);
