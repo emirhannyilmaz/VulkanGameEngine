@@ -7,7 +7,7 @@
 class Framebuffer {
 public:
     VkFramebuffer framebuffer;
-    Framebuffer(VkDevice& device, VkRenderPass& renderPass, VkImageView* attachments, VkExtent2D& extent);
+    Framebuffer(VkDevice& device, VkRenderPass& renderPass, uint32_t attachmentCount, VkImageView* attachments, VkExtent2D& extent);
     ~Framebuffer();
 private:
     VkDevice device;

@@ -1,12 +1,12 @@
 #include "framebuffer.hpp"
 
-Framebuffer::Framebuffer(VkDevice& device, VkRenderPass& renderPass, VkImageView* attachments, VkExtent2D& extent) {
+Framebuffer::Framebuffer(VkDevice& device, VkRenderPass& renderPass, uint32_t attachmentCount, VkImageView* attachments, VkExtent2D& extent) {
     this->device = device;
 
     VkFramebufferCreateInfo framebufferCreateInfo{};
     framebufferCreateInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
     framebufferCreateInfo.renderPass = renderPass;
-    framebufferCreateInfo.attachmentCount = 1;
+    framebufferCreateInfo.attachmentCount = attachmentCount;
     framebufferCreateInfo.pAttachments = attachments;
     framebufferCreateInfo.width = extent.width;
     framebufferCreateInfo.height = extent.height;

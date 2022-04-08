@@ -15,19 +15,20 @@ Renderer::Renderer(Window* window, Camera* camera) {
     surface = new Surface(instance->instance, window->window);
     device = new Device(instance->instance, surface->surface);
     swapchain = new Swapchain(device->device, surface->surface, device->swapchainSupportDetails, window->window, device->indices);
-    renderPass = new RenderPass(device->device, swapchain->swapchainImageFormat);
+    renderPass = new RenderPass(device->device, swapchain->swapchainImageFormat, DepthResources::findDepthFormat(device->physicalDevice));
     descriptorSetLayout = new DescriptorSetLayout(device->device);
     graphicsPipeline = new GraphicsPipeline(device->device, descriptorSetLayout->descriptorSetLayout, swapchain->swapchainExtent, renderPass->renderPass);
+    commandPool = new CommandPool(device->device, device->indices.graphicsFamily.value(), VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
+    depthResources = new DepthResources(device->physicalDevice, device->device, swapchain->swapchainExtent, commandPool->commandPool, device->graphicsQueue);
 
     framebuffers.resize(swapchain->swapchainImageViews.size());
     for (size_t i = 0; i < framebuffers.size(); i++) {
-        VkImageView attachments[] = {
-            swapchain->swapchainImageViews[i]
+        std::array<VkImageView, 2> attachments = {
+            swapchain->swapchainImageViews[i],
+            depthResources->image->imageView
         };
-        framebuffers[i] = new Framebuffer(device->device, renderPass->renderPass, attachments, swapchain->swapchainExtent);
+        framebuffers[i] = new Framebuffer(device->device, renderPass->renderPass, static_cast<uint32_t>(attachments.size()), attachments.data(), swapchain->swapchainExtent);
     }
-
-    commandPool = new CommandPool(device->device, device->indices.graphicsFamily.value(), VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
 
     // Uniform buffers
     VkDeviceSize uniformBufferSize = sizeof(UniformBufferObject);
@@ -195,15 +196,17 @@ void Renderer::recreateSwapchain() {
     cleanUpSwapchain();
 
     swapchain = new Swapchain(device->device, surface->surface, device->swapchainSupportDetails, window->window, device->indices);
-    renderPass = new RenderPass(device->device, swapchain->swapchainImageFormat);
+    renderPass = new RenderPass(device->device, swapchain->swapchainImageFormat, DepthResources::findDepthFormat(device->physicalDevice));
     graphicsPipeline = new GraphicsPipeline(device->device, descriptorSetLayout->descriptorSetLayout, swapchain->swapchainExtent, renderPass->renderPass);
+    depthResources = new DepthResources(device->physicalDevice, device->device, swapchain->swapchainExtent, commandPool->commandPool, device->graphicsQueue);
 
     framebuffers.resize(swapchain->swapchainImageViews.size());
     for (size_t i = 0; i < framebuffers.size(); i++) {
-        VkImageView attachments[] = {
-            swapchain->swapchainImageViews[i]
+        std::array<VkImageView, 2> attachments = {
+            swapchain->swapchainImageViews[i],
+            depthResources->image->imageView
         };
-        framebuffers[i] = new Framebuffer(device->device, renderPass->renderPass, attachments, swapchain->swapchainExtent);
+        framebuffers[i] = new Framebuffer(device->device, renderPass->renderPass, static_cast<uint32_t>(attachments.size()), attachments.data(), swapchain->swapchainExtent);
     }
 
     camera->aspectRatio = (float) swapchain->swapchainExtent.width / (float) swapchain->swapchainExtent.height;
@@ -216,6 +219,7 @@ void Renderer::cleanUpSwapchain() {
     }
     framebuffers.clear();
 
+    delete depthResources;
     delete graphicsPipeline;
     delete renderPass;
     delete swapchain;
@@ -246,9 +250,13 @@ void Renderer::recordCommandBuffer(uint32_t currentFrame, uint32_t imageIndex, M
     renderPassBeginInfo.framebuffer = framebuffers[imageIndex]->framebuffer;
     renderPassBeginInfo.renderArea.offset = {0, 0};
     renderPassBeginInfo.renderArea.extent = swapchain->swapchainExtent;
-    VkClearValue clearColor = {{{0.0f, 0.0f, 0.0f, 1.0f}}};
-    renderPassBeginInfo.clearValueCount = 1;
-    renderPassBeginInfo.pClearValues = &clearColor;
+
+    std::array<VkClearValue, 2> clearValues{};
+    clearValues[0] = {{0.0f, 0.0f, 0.0f, 1.0f}};
+    clearValues[1] = {{1.0f, 0}};
+
+    renderPassBeginInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+    renderPassBeginInfo.pClearValues = clearValues.data();
 
     vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 

@@ -8,10 +8,9 @@ public:
     Image* image;
     DepthResources(VkPhysicalDevice& physicalDevice, VkDevice& device, VkExtent2D& swapchainExtent, VkCommandPool& commandPool, VkQueue& graphicsQueue);
     ~DepthResources();
+    static VkFormat findDepthFormat(VkPhysicalDevice& physicalDevice);
 private:
-    VkFormat findSupportedFormat(VkPhysicalDevice& physicalDevice, const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
-    VkFormat findDepthFormat(VkPhysicalDevice& physicalDevice);
-    bool hasStencilComponent(VkFormat format);
+    static VkFormat findSupportedFormat(VkPhysicalDevice& physicalDevice, const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
 };
 
 #endif

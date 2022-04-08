@@ -8,15 +8,16 @@
 #include "device.hpp"
 #include "swapchain.hpp"
 #include "render_pass.hpp"
+#include "descriptor_set_layout.hpp"
 #include "graphics_pipeline.hpp"
-#include "framebuffer.hpp"
 #include "command_pool.hpp"
+#include "depth_resources.hpp"
+#include "framebuffer.hpp"
 #include "command_buffers.hpp"
 #include "semaphore.hpp"
 #include "fence.hpp"
 #include "vertex.hpp"
 #include "buffer.hpp"
-#include "descriptor_set_layout.hpp"
 #include "descriptor_pool.hpp"
 #include "descriptor_sets.hpp"
 #include "uniform_buffer_object.hpp"
@@ -39,8 +40,9 @@ public:
     RenderPass* renderPass;
     DescriptorSetLayout* descriptorSetLayout;
     GraphicsPipeline* graphicsPipeline;
-    std::vector<Framebuffer*> framebuffers;
     CommandPool* commandPool;
+    DepthResources* depthResources;
+    std::vector<Framebuffer*> framebuffers;
     std::vector<Buffer*> uniformBuffers;
     DescriptorPool* descriptorPool;
     DescriptorSets* descriptorSets;
