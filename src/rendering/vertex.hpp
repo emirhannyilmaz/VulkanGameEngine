@@ -2,8 +2,11 @@
 #define vertex_hpp
 
 #include <vulkan/vulkan.h>
-#include <glm/glm.hpp>
 #include <array>
+#include <glm/glm.hpp>
+
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/hash.hpp>
 
 struct Vertex {
     glm::vec3 position;
@@ -38,6 +41,20 @@ struct Vertex {
 
         return attributeDescriptions;
     }
+
+    bool operator==(const Vertex& other) const {
+        return position == other.position && color == other.color && textureCoordinates == other.textureCoordinates;
+    }
 };
+
+namespace std {
+    template<> struct hash<Vertex> {
+        size_t operator()(Vertex const& vertex) const {
+            return ((hash<glm::vec3>()(vertex.position) ^
+                   (hash<glm::vec3>()(vertex.color) << 1)) >> 1) ^
+                   (hash<glm::vec2>()(vertex.textureCoordinates) << 1);
+        }
+    };
+}
 
 #endif

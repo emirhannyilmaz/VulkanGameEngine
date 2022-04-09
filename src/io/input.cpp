@@ -24,5 +24,5 @@ double Input::getMouseDy() {
 
     double d = position - previousPosition;
     previousPosition = position;
-    return d * (double) sensitivity * -1.0f;
+    return d * (double) sensitivity;
 }

@@ -270,7 +270,7 @@ void Renderer::recordCommandBuffer(uint32_t currentFrame, uint32_t imageIndex, M
     };
     vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
 
-    vkCmdBindIndexBuffer(commandBuffer, mesh->indexBuffer->buffer, 0, VK_INDEX_TYPE_UINT16);
+    vkCmdBindIndexBuffer(commandBuffer, mesh->indexBuffer->buffer, 0, VK_INDEX_TYPE_UINT32);
 
     vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline->pipelineLayout, 0, 1, &descriptorSets->descriptorSets[currentFrame], 0, nullptr);
 

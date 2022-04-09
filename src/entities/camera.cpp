@@ -44,5 +44,8 @@ glm::mat4 Camera::createViewMatrix() {
 }
 
 glm::mat4 Camera::createProjectionMatrix() {
-    return glm::perspectiveLH_ZO(glm::radians(fieldOfView), aspectRatio, nearPlane, farPlane);
+    glm::mat4 matrix = glm::perspectiveLH_ZO(glm::radians(fieldOfView), aspectRatio, nearPlane, farPlane);
+    matrix[1][1] *= -1.0f;
+
+    return matrix;
 }
