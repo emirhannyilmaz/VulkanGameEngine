@@ -1,9 +1,9 @@
 #include "depth_resources.hpp"
 
-DepthResources::DepthResources(VkPhysicalDevice& physicalDevice, VkDevice& device, VkExtent2D& swapchainExtent, VkCommandPool& commandPool, VkQueue& graphicsQueue) {
+DepthResources::DepthResources(VkPhysicalDevice& physicalDevice, VkDevice& device, VkExtent2D& swapchainExtent, VkSampleCountFlagBits msaaSamples, VkCommandPool& commandPool, VkQueue& graphicsQueue) {
     VkFormat format = findDepthFormat(physicalDevice);
 
-    image = new Image(physicalDevice, device, swapchainExtent.width, swapchainExtent.height, 1, format, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, VK_IMAGE_ASPECT_DEPTH_BIT);
+    image = new Image(physicalDevice, device, swapchainExtent.width, swapchainExtent.height, 1, msaaSamples, format, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, VK_IMAGE_ASPECT_DEPTH_BIT);
     Image::TransitionImageLayout(device, commandPool, graphicsQueue, image->image, 1, format, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
 }
 

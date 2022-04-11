@@ -1,6 +1,6 @@
 #include "image.hpp"
 
-Image::Image(VkPhysicalDevice& physicalDevice, VkDevice device, uint32_t width, uint32_t height, uint32_t mipLevels, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImageAspectFlags aspectFlags) {
+Image::Image(VkPhysicalDevice& physicalDevice, VkDevice& device, uint32_t width, uint32_t height, uint32_t mipLevels, VkSampleCountFlagBits numSamples, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImageAspectFlags aspectFlags) {
     this->device = device;
 
     VkImageCreateInfo imageCreateInfo{};
@@ -16,7 +16,7 @@ Image::Image(VkPhysicalDevice& physicalDevice, VkDevice device, uint32_t width, 
     imageCreateInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     imageCreateInfo.usage = usage;
     imageCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-    imageCreateInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+    imageCreateInfo.samples = numSamples;
     imageCreateInfo.flags = 0;
 
     if (vkCreateImage(device, &imageCreateInfo, nullptr, &image) != VK_SUCCESS) {

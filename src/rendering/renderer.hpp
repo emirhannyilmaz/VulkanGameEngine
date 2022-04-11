@@ -11,6 +11,7 @@
 #include "descriptor_set_layout.hpp"
 #include "graphics_pipeline.hpp"
 #include "command_pool.hpp"
+#include "color_resources.hpp"
 #include "depth_resources.hpp"
 #include "framebuffer.hpp"
 #include "command_buffers.hpp"
@@ -41,6 +42,7 @@ public:
     DescriptorSetLayout* descriptorSetLayout;
     GraphicsPipeline* graphicsPipeline;
     CommandPool* commandPool;
+    ColorResources* colorResources;
     DepthResources* depthResources;
     std::vector<Framebuffer*> framebuffers;
     std::vector<Buffer*> uniformBuffers;

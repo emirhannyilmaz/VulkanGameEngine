@@ -30,6 +30,7 @@ public:
     SwapchainSupportDetails swapchainSupportDetails;
     VkQueue graphicsQueue;
     VkQueue presentQueue;
+    VkSampleCountFlagBits msaaSamples = VK_SAMPLE_COUNT_1_BIT;
     Device(VkInstance& instance, VkSurfaceKHR& surface);
     ~Device();
 private:
@@ -37,6 +38,7 @@ private:
     QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR surface);
     bool checkDeviceExtensionSupport(VkPhysicalDevice device);
     SwapchainSupportDetails querySwapchainSupport(VkPhysicalDevice device, VkSurfaceKHR surface);
+    VkSampleCountFlagBits getMaxUsableSampleCount();
 };
 
 #endif

@@ -1,6 +1,6 @@
 #include "graphics_pipeline.hpp"
 
-GraphicsPipeline::GraphicsPipeline(VkDevice& device, VkDescriptorSetLayout& descriptorSetLayout, VkExtent2D& swapchainExtent, VkRenderPass& renderPass) {
+GraphicsPipeline::GraphicsPipeline(VkDevice& device, VkDescriptorSetLayout& descriptorSetLayout, VkExtent2D& swapchainExtent, VkRenderPass& renderPass, VkSampleCountFlagBits msaaSamples) {
     this->device = device;
 
     ShaderModule vertexShader(device, "res/shaders/shader.vert.spv");
@@ -73,9 +73,9 @@ GraphicsPipeline::GraphicsPipeline(VkDevice& device, VkDescriptorSetLayout& desc
 
     VkPipelineMultisampleStateCreateInfo multisampleStateCreateInfo{};
     multisampleStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-    multisampleStateCreateInfo.sampleShadingEnable = VK_FALSE;
-    multisampleStateCreateInfo.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
-    multisampleStateCreateInfo.minSampleShading = 1.0f;
+    multisampleStateCreateInfo.sampleShadingEnable = VK_TRUE;
+    multisampleStateCreateInfo.rasterizationSamples = msaaSamples;
+    multisampleStateCreateInfo.minSampleShading = 0.2f;
     multisampleStateCreateInfo.pSampleMask = nullptr;
     multisampleStateCreateInfo.alphaToCoverageEnable = VK_FALSE;
     multisampleStateCreateInfo.alphaToOneEnable = VK_FALSE;

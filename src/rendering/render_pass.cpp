@@ -1,17 +1,17 @@
 #include "render_pass.hpp"
 
-RenderPass::RenderPass(VkDevice& device, VkFormat colorAttachmentFormat, VkFormat depthAttachmentFormat) {
+RenderPass::RenderPass(VkDevice& device, VkFormat colorAttachmentFormat, VkFormat depthAttachmentFormat, VkSampleCountFlagBits msaaSamples) {
     this->device = device;
 
     VkAttachmentDescription colorAttachmentDescription{};
     colorAttachmentDescription.format = colorAttachmentFormat;
-    colorAttachmentDescription.samples = VK_SAMPLE_COUNT_1_BIT;
+    colorAttachmentDescription.samples = msaaSamples;
     colorAttachmentDescription.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
     colorAttachmentDescription.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
     colorAttachmentDescription.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
     colorAttachmentDescription.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
     colorAttachmentDescription.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    colorAttachmentDescription.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+    colorAttachmentDescription.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
     VkAttachmentReference colorAttachmentReference{};
     colorAttachmentReference.attachment = 0;
@@ -19,7 +19,7 @@ RenderPass::RenderPass(VkDevice& device, VkFormat colorAttachmentFormat, VkForma
 
     VkAttachmentDescription depthAttachmentDescription{};
     depthAttachmentDescription.format = depthAttachmentFormat;
-    depthAttachmentDescription.samples = VK_SAMPLE_COUNT_1_BIT;
+    depthAttachmentDescription.samples = msaaSamples;
     depthAttachmentDescription.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
     depthAttachmentDescription.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
     depthAttachmentDescription.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
@@ -31,15 +31,31 @@ RenderPass::RenderPass(VkDevice& device, VkFormat colorAttachmentFormat, VkForma
     depthAttachmentReference.attachment = 1;
     depthAttachmentReference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
+    VkAttachmentDescription colorAttachmentResolveDescription{};
+    colorAttachmentResolveDescription.format = colorAttachmentFormat;
+    colorAttachmentResolveDescription.samples = VK_SAMPLE_COUNT_1_BIT;
+    colorAttachmentResolveDescription.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+    colorAttachmentResolveDescription.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+    colorAttachmentResolveDescription.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+    colorAttachmentResolveDescription.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+    colorAttachmentResolveDescription.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    colorAttachmentResolveDescription.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+    VkAttachmentReference colorAttachmentResolveReference{};
+    colorAttachmentResolveReference.attachment = 2;
+    colorAttachmentResolveReference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
     VkSubpassDescription subpassDescription{};
     subpassDescription.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
     subpassDescription.colorAttachmentCount = 1;
     subpassDescription.pColorAttachments = &colorAttachmentReference;
     subpassDescription.pDepthStencilAttachment = &depthAttachmentReference;
+    subpassDescription.pResolveAttachments = &colorAttachmentResolveReference;
 
-    std::array<VkAttachmentDescription, 2> attachments = {
+    std::array<VkAttachmentDescription, 3> attachments = {
         colorAttachmentDescription,
-        depthAttachmentDescription
+        depthAttachmentDescription,
+        colorAttachmentResolveDescription
     };
 
     VkRenderPassCreateInfo renderPassCreateInfo{};

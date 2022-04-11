@@ -8,7 +8,7 @@
 class RenderPass {
 public:
     VkRenderPass renderPass;
-    RenderPass(VkDevice& device, VkFormat colorAttachmentFormat, VkFormat depthAttachmentFormat);
+    RenderPass(VkDevice& device, VkFormat colorAttachmentFormat, VkFormat depthAttachmentFormat, VkSampleCountFlagBits msaaSamples);
     ~RenderPass();
 private:
     VkDevice device;

@@ -15,17 +15,19 @@ Renderer::Renderer(Window* window, Camera* camera) {
     surface = new Surface(instance->instance, window->window);
     device = new Device(instance->instance, surface->surface);
     swapchain = new Swapchain(device->device, surface->surface, device->swapchainSupportDetails, window->window, device->indices);
-    renderPass = new RenderPass(device->device, swapchain->swapchainImageFormat, DepthResources::findDepthFormat(device->physicalDevice));
+    renderPass = new RenderPass(device->device, swapchain->swapchainImageFormat, DepthResources::findDepthFormat(device->physicalDevice), device->msaaSamples);
     descriptorSetLayout = new DescriptorSetLayout(device->device);
-    graphicsPipeline = new GraphicsPipeline(device->device, descriptorSetLayout->descriptorSetLayout, swapchain->swapchainExtent, renderPass->renderPass);
+    graphicsPipeline = new GraphicsPipeline(device->device, descriptorSetLayout->descriptorSetLayout, swapchain->swapchainExtent, renderPass->renderPass, device->msaaSamples);
     commandPool = new CommandPool(device->device, device->indices.graphicsFamily.value(), VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
-    depthResources = new DepthResources(device->physicalDevice, device->device, swapchain->swapchainExtent, commandPool->commandPool, device->graphicsQueue);
+    colorResources = new ColorResources(device->physicalDevice, device->device, swapchain->swapchainExtent, device->msaaSamples, swapchain->swapchainImageFormat);
+    depthResources = new DepthResources(device->physicalDevice, device->device, swapchain->swapchainExtent, device->msaaSamples, commandPool->commandPool, device->graphicsQueue);
 
     framebuffers.resize(swapchain->swapchainImageViews.size());
     for (size_t i = 0; i < framebuffers.size(); i++) {
-        std::array<VkImageView, 2> attachments = {
-            swapchain->swapchainImageViews[i],
-            depthResources->image->imageView
+        std::array<VkImageView, 3> attachments = {
+            colorResources->image->imageView,
+            depthResources->image->imageView,
+            swapchain->swapchainImageViews[i]
         };
         framebuffers[i] = new Framebuffer(device->device, renderPass->renderPass, static_cast<uint32_t>(attachments.size()), attachments.data(), swapchain->swapchainExtent);
     }
@@ -196,9 +198,10 @@ void Renderer::recreateSwapchain() {
     cleanUpSwapchain();
 
     swapchain = new Swapchain(device->device, surface->surface, device->swapchainSupportDetails, window->window, device->indices);
-    renderPass = new RenderPass(device->device, swapchain->swapchainImageFormat, DepthResources::findDepthFormat(device->physicalDevice));
-    graphicsPipeline = new GraphicsPipeline(device->device, descriptorSetLayout->descriptorSetLayout, swapchain->swapchainExtent, renderPass->renderPass);
-    depthResources = new DepthResources(device->physicalDevice, device->device, swapchain->swapchainExtent, commandPool->commandPool, device->graphicsQueue);
+    renderPass = new RenderPass(device->device, swapchain->swapchainImageFormat, DepthResources::findDepthFormat(device->physicalDevice), device->msaaSamples);
+    graphicsPipeline = new GraphicsPipeline(device->device, descriptorSetLayout->descriptorSetLayout, swapchain->swapchainExtent, renderPass->renderPass, device->msaaSamples);
+    depthResources = new DepthResources(device->physicalDevice, device->device, swapchain->swapchainExtent, device->msaaSamples, commandPool->commandPool, device->graphicsQueue);
+    colorResources = new ColorResources(device->physicalDevice, device->device, swapchain->swapchainExtent, device->msaaSamples, swapchain->swapchainImageFormat);
 
     framebuffers.resize(swapchain->swapchainImageViews.size());
     for (size_t i = 0; i < framebuffers.size(); i++) {
@@ -219,6 +222,7 @@ void Renderer::cleanUpSwapchain() {
     }
     framebuffers.clear();
 
+    delete colorResources;
     delete depthResources;
     delete graphicsPipeline;
     delete renderPass;
