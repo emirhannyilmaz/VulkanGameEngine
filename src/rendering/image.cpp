@@ -252,6 +252,14 @@ void Image::GenerateMipmaps(VkPhysicalDevice& physicalDevice, VkDevice& device, 
     if (vkEndCommandBuffer(commandBuffers.commandBuffers[0]) != VK_SUCCESS) {
         throw std::runtime_error("Failed to record command buffer!");
     }
+
+    VkSubmitInfo submitInfo{};
+    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submitInfo.commandBufferCount = 1;
+    submitInfo.pCommandBuffers = &commandBuffers.commandBuffers[0];
+
+    vkQueueSubmit(graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
+    vkQueueWaitIdle(graphicsQueue);
 }
 
 uint32_t Image::findMemoryType(VkPhysicalDevice physicalDevice, uint32_t typeFilter, VkMemoryPropertyFlags properties) {
