@@ -11,6 +11,7 @@ public:
 private:
     Window* window;
     Camera* camera;
+    Light* light;
     Renderer* renderer;
 };
 

@@ -29,6 +29,7 @@
 #include "../io/window.hpp"
 #include "../entities/entity.hpp"
 #include "../entities/camera.hpp"
+#include "../entities/light.hpp"
 #include "texture.hpp"
 
 class Renderer {
@@ -56,7 +57,7 @@ public:
     float deltaTime = 0.0f;
     Renderer(Window* window, Camera* camera);
     ~Renderer();
-    void render(Entity* entity);
+    void render(Entity* entity, Light* light);
 private:
     Window* window;
     Camera* camera;
@@ -64,7 +65,7 @@ private:
     void calculateDeltaTime();
     void recreateSwapchain();
     void cleanUpSwapchain();
-    void updateUniformBuffer(Entity* entity, uint32_t currentFrame);
+    void updateUniformBuffer(Entity* entity, Light* light, uint32_t currentFrame);
     void recordCommandBuffer(uint32_t currentFrame, uint32_t imageIndex, Mesh* mesh);
 };
 

@@ -3,7 +3,10 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
-Texture::Texture(const std::string& fileName, Renderer* renderer) {
+Texture::Texture(const std::string& fileName, float reflectivity, float shineDamper, Renderer* renderer) {
+    this->reflectivity = reflectivity;
+    this->shineDamper = shineDamper;
+
     int width;
     int height;
     int channels;

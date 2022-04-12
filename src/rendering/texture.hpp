@@ -8,7 +8,9 @@
 class Texture {
 public:
     Image* image;
-    Texture(const std::string& fileName, Renderer* renderer);
+    float reflectivity;
+    float shineDamper;
+    Texture(const std::string& fileName, float reflectivity, float shineDamper, Renderer* renderer);
     ~Texture();
 };
 

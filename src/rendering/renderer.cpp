@@ -94,7 +94,7 @@ Renderer::~Renderer() {
     delete instance;
 }
 
-void Renderer::render(Entity* entity) {
+void Renderer::render(Entity* entity, Light* light) {
     static uint32_t currentFrame = 0;
 
     vkWaitForFences(device->device, 1, &inFlightFences[currentFrame]->fence, VK_TRUE, UINT64_MAX);
@@ -113,7 +113,7 @@ void Renderer::render(Entity* entity) {
 
     ubo.viewMatrix = camera->createViewMatrix();
 
-    updateUniformBuffer(entity, currentFrame);
+    updateUniformBuffer(entity, light, currentFrame);
     descriptorSets->updateImageInfo(currentFrame, entity->texture->image->imageView, sampler->sampler);
 
     vkResetFences(device->device, 1, &inFlightFences[currentFrame]->fence);
@@ -229,8 +229,12 @@ void Renderer::cleanUpSwapchain() {
     delete swapchain;
 }
 
-void Renderer::updateUniformBuffer(Entity* entity, uint32_t currentFrame) {
+void Renderer::updateUniformBuffer(Entity* entity, Light* light, uint32_t currentFrame) {
     ubo.modelMatrix = entity->createModelMatrix();
+    ubo.lightPosition = light->position;
+    ubo.lightColor = light->color;
+    ubo.reflectivity = entity->texture->reflectivity;
+    ubo.shineDamper = entity->texture->shineDamper;
 
     void* data;
     vkMapMemory(device->device, uniformBuffers[currentFrame]->bufferMemory, 0, sizeof(ubo), 0, &data);
