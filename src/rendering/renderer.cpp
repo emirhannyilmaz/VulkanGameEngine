@@ -94,7 +94,7 @@ Renderer::~Renderer() {
     delete instance;
 }
 
-void Renderer::render(Entity* entity, Light* light) {
+void Renderer::render(std::vector<Entity*> entities, Light* light) {
     static uint32_t currentFrame = 0;
 
     vkWaitForFences(device->device, 1, &inFlightFences[currentFrame]->fence, VK_TRUE, UINT64_MAX);
@@ -103,7 +103,6 @@ void Renderer::render(Entity* entity, Light* light) {
 
     uint32_t imageIndex;
     VkResult acquireNextImageResult = vkAcquireNextImageKHR(device->device, swapchain->swapchain, UINT64_MAX, imageAvailableSemaphores[currentFrame]->semaphore, VK_NULL_HANDLE, &imageIndex);
-
     if (acquireNextImageResult == VK_ERROR_OUT_OF_DATE_KHR) {
         recreateSwapchain();
         return;
@@ -111,39 +110,21 @@ void Renderer::render(Entity* entity, Light* light) {
         throw std::runtime_error("Failed to acquire swap chain image!");
     }
 
-    ubo.viewMatrix = camera->createViewMatrix();
-
-    updateUniformBuffer(entity, light, currentFrame);
-    descriptorSets->updateImageInfo(currentFrame, entity->texture->image->imageView, sampler->sampler);
-
     vkResetFences(device->device, 1, &inFlightFences[currentFrame]->fence);
-
     vkResetCommandBuffer(commandBuffers->commandBuffers[currentFrame], 0);
-    recordCommandBuffer(currentFrame, imageIndex, entity->mesh);
+
+    recordCommandBuffer(currentFrame, imageIndex, entities, light);
 
     VkSubmitInfo submitInfo{};
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-
-    VkSemaphore waitSemaphores[] = {
-        imageAvailableSemaphores[currentFrame]->semaphore
-    };
-
-    VkPipelineStageFlags waitStages[] = {
-        VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT
-    };
-
     submitInfo.waitSemaphoreCount = 1;
-    submitInfo.pWaitSemaphores = waitSemaphores;
-    submitInfo.pWaitDstStageMask = waitStages;
+    submitInfo.pWaitSemaphores = &imageAvailableSemaphores[currentFrame]->semaphore;
+    VkPipelineStageFlags waitStages = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    submitInfo.pWaitDstStageMask = &waitStages;
     submitInfo.commandBufferCount = 1;
     submitInfo.pCommandBuffers = &commandBuffers->commandBuffers[currentFrame];
-
-    VkSemaphore signalSemaphores[] = {
-        renderFinishedSemaphores[currentFrame]->semaphore
-    };
-
     submitInfo.signalSemaphoreCount = 1;
-    submitInfo.pSignalSemaphores = signalSemaphores;
+    submitInfo.pSignalSemaphores = &renderFinishedSemaphores[currentFrame]->semaphore;
 
     if (vkQueueSubmit(device->graphicsQueue, 1, &submitInfo, inFlightFences[currentFrame]->fence) != VK_SUCCESS) {
         throw std::runtime_error("Failed to submit draw command buffer!");
@@ -152,19 +133,13 @@ void Renderer::render(Entity* entity, Light* light) {
     VkPresentInfoKHR presentInfo{};
     presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
     presentInfo.waitSemaphoreCount = 1;
-    presentInfo.pWaitSemaphores = signalSemaphores;
-
-    VkSwapchainKHR swapchains[] = {
-        swapchain->swapchain
-    };
-
+    presentInfo.pWaitSemaphores = &renderFinishedSemaphores[currentFrame]->semaphore;
     presentInfo.swapchainCount = 1;
-    presentInfo.pSwapchains = swapchains;
+    presentInfo.pSwapchains = &swapchain->swapchain;
     presentInfo.pImageIndices = &imageIndex;
     presentInfo.pResults = nullptr;
 
     VkResult queuePresentResult = vkQueuePresentKHR(device->presentQueue, &presentInfo);
-
     if (queuePresentResult == VK_ERROR_OUT_OF_DATE_KHR || queuePresentResult == VK_SUBOPTIMAL_KHR || window->framebufferResized) {
         window->framebufferResized = false;
         recreateSwapchain();
@@ -229,25 +204,14 @@ void Renderer::cleanUpSwapchain() {
     delete swapchain;
 }
 
-void Renderer::updateUniformBuffer(Entity* entity, Light* light, uint32_t currentFrame) {
-    ubo.modelMatrix = entity->createModelMatrix();
+void Renderer::recordCommandBuffer(uint32_t currentFrame, uint32_t imageIndex, std::vector<Entity*> entities, Light* light) {
+    ubo.viewMatrix = camera->createViewMatrix();
     ubo.lightPosition = light->position;
     ubo.lightColor = light->color;
-    ubo.reflectivity = entity->texture->reflectivity;
-    ubo.shineDamper = entity->texture->shineDamper;
 
-    void* data;
-    vkMapMemory(device->device, uniformBuffers[currentFrame]->bufferMemory, 0, sizeof(ubo), 0, &data);
-    memcpy(data, &ubo, sizeof(ubo));
-    vkUnmapMemory(device->device, uniformBuffers[currentFrame]->bufferMemory);
-}
-
-void Renderer::recordCommandBuffer(uint32_t currentFrame, uint32_t imageIndex, Mesh* mesh) {
     VkCommandBuffer commandBuffer = commandBuffers->commandBuffers[currentFrame];
-
     VkCommandBufferBeginInfo commandBufferBeginInfo{};
     commandBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-
     if (vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo) != VK_SUCCESS) {
         throw std::runtime_error("Failed to begin recording command buffer!");
     }
@@ -258,31 +222,33 @@ void Renderer::recordCommandBuffer(uint32_t currentFrame, uint32_t imageIndex, M
     renderPassBeginInfo.framebuffer = framebuffers[imageIndex]->framebuffer;
     renderPassBeginInfo.renderArea.offset = {0, 0};
     renderPassBeginInfo.renderArea.extent = swapchain->swapchainExtent;
-
     std::array<VkClearValue, 2> clearValues{};
     clearValues[0] = {{0.0f, 0.0f, 0.0f, 1.0f}};
     clearValues[1] = {{1.0f, 0}};
-
     renderPassBeginInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
     renderPassBeginInfo.pClearValues = clearValues.data();
-
     vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 
     vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline->graphicsPipeline);
+    for (Entity* entity : entities) {
+        VkDeviceSize offsets = 0;
+        vkCmdBindVertexBuffers(commandBuffer, 0, 1, &entity->mesh->vertexBuffer->buffer, &offsets);
+        vkCmdBindIndexBuffer(commandBuffer, entity->mesh->indexBuffer->buffer, 0, VK_INDEX_TYPE_UINT32);
+        descriptorSets->updateImageInfo(currentFrame, entity->texture->image->imageView, sampler->sampler);
 
-    VkBuffer vertexBuffers[] = {
-        mesh->vertexBuffer->buffer
-    };
-    VkDeviceSize offsets[] = {
-        0
-    };
-    vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+        ubo.modelMatrix = entity->createModelMatrix();
+        ubo.reflectivity = entity->texture->reflectivity;
+        ubo.shineDamper = entity->texture->shineDamper;
 
-    vkCmdBindIndexBuffer(commandBuffer, mesh->indexBuffer->buffer, 0, VK_INDEX_TYPE_UINT32);
+        void* data;
+        vkMapMemory(device->device, uniformBuffers[currentFrame]->bufferMemory, 0, sizeof(ubo), 0, &data);
+        memcpy(data, &ubo, sizeof(ubo));
+        vkUnmapMemory(device->device, uniformBuffers[currentFrame]->bufferMemory);
+
+        vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(entity->mesh->indicesSize), 1, 0, 0, 0);
+    }
 
     vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline->pipelineLayout, 0, 1, &descriptorSets->descriptorSets[currentFrame], 0, nullptr);
-
-    vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(mesh->indicesSize), 1, 0, 0, 0);
 
     vkCmdEndRenderPass(commandBuffer);
 

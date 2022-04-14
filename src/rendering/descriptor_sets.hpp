@@ -4,15 +4,14 @@
 #include <vulkan/vulkan.h>
 #include <stdexcept>
 #include <vector>
-#include "uniform_buffer_object.hpp"
-#include "renderer_info.hpp"
 
 class DescriptorSets {
 public:
     std::vector<VkDescriptorSet> descriptorSets;
-    DescriptorSets(VkDevice& device, VkDescriptorPool& pool, VkDescriptorSetLayout& layout, std::vector<VkBuffer> uniformBuffers);
+    DescriptorSets(const VkDevice& device, const VkDescriptorPool& pool, const VkDescriptorSetLayout* layouts, uint32_t descriptorSetCount);
     ~DescriptorSets();
-    void updateImageInfo(int index, VkImageView& imageView, VkSampler& sampler);
+    void updateBufferInfo(int index, uint32_t binding, uint32_t element, uint32_t count, const VkBuffer& buffer, VkDeviceSize range);
+    void updateImageInfo(int index, uint32_t binding, uint32_t element, uint32_t count, const VkImageView& imageView, const VkSampler& sampler);
 private:
     VkDevice device;
     VkDescriptorPool pool;

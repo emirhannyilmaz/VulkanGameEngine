@@ -3,13 +3,11 @@
 
 #include <vulkan/vulkan.h>
 #include <stdexcept>
-#include "renderer_info.hpp"
-#include <array>
 
 class DescriptorPool {
 public:
     VkDescriptorPool descriptorPool;
-    DescriptorPool(VkDevice& device);
+    DescriptorPool(const VkDevice& device, uint32_t poolSizeCount, const VkDescriptorPoolSize* poolSizes, uint32_t maxSets);
     ~DescriptorPool();
 private:
     VkDevice device;

@@ -3,12 +3,11 @@
 
 #include <vulkan/vulkan.h>
 #include <stdexcept>
-#include <array>
 
 class DescriptorSetLayout {
 public:
     VkDescriptorSetLayout descriptorSetLayout;
-    DescriptorSetLayout(VkDevice& device);
+    DescriptorSetLayout(const VkDevice& device, uint32_t bindingCount, const VkDescriptorSetLayoutBinding* bindings);
     ~DescriptorSetLayout();
 private:
     VkDevice device;
