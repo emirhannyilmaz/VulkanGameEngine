@@ -7,7 +7,7 @@
 class Sampler {
 public:
     VkSampler sampler;
-    Sampler(VkPhysicalDevice& physicalDevice, VkDevice& device);
+    Sampler(VkPhysicalDevice& physicalDevice, VkDevice& device, float maxLod);
     ~Sampler();
 private:
     VkDevice device;

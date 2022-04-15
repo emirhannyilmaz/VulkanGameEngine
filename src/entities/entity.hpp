@@ -5,8 +5,10 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include "../rendering/descriptor_pool.hpp"
-#include "../rendering/descriptor_layout.hpp"
+#include "../rendering/descriptor_set_layout.hpp"
 #include "../rendering/descriptor_sets.hpp"
+#include "../rendering/renderer_info.hpp"
+#include "../rendering/renderer.hpp"
 
 class Texture;
 
@@ -23,17 +25,19 @@ class Entity {
 public:
     Mesh* mesh;
     Texture* texture;
+    static DescriptorSetLayout descriptorSetLayout{};
     DescriptorSets* descriptorSets;
-    std::vector<Buffer*> uniformBuffers;
+    std::vector<Buffer*> vertexUniformBuffers(MAX_FRAMES_IN_FLIGHT);
+    std::vector<Buffer*> fragmentUniformBuffers(MAX_FRAMES_IN_FLIGHT);
     glm::vec3 position;
     glm::vec3 rotation;
     glm::vec3 scale;
-    Entity(Mesh* mesh, Texture* texture, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale);
+    Entity(Mesh* mesh, Texture* texture, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale, Renderer* renderer);
     ~Entity();
-    glm::mat4 createModelMatrix();
+    void updateResources(uint32_t currentFrame);
+    static void CreateDescriptorSetLayout();
 private:
     DescriptorPool* descriptorPool;
-    DescriptorLayout* descriptorSetLayout;
 };
 
 #endif

@@ -32,6 +32,16 @@
 #include "../entities/light.hpp"
 #include "texture.hpp"
 
+struct GeneralVertexUniformBufferObject {
+    alignas(16) glm::mat4 viewMatrix;
+    alignas(16) glm::mat4 projectionMatrix;
+    alignas(16) glm::vec3 lightPosition;
+};
+
+struct GeneralFragmentUniformBufferObject {
+    alignas(16) glm::vec3 lightColor;
+};
+
 class Renderer {
 public:
     Instance* instance;
@@ -46,14 +56,14 @@ public:
     ColorResources* colorResources;
     DepthResources* depthResources;
     std::vector<Framebuffer*> framebuffers;
-    std::vector<Buffer*> uniformBuffers;
+    std::vector<Buffer*> vertexUniformBuffers(MAX_FRAMES_IN_FLIGHT);
+    std::vector<Buffer*> fragmentUniformBuffers(MAX_FRAMES_IN_FLIGHT);
     DescriptorPool* descriptorPool;
     DescriptorSets* descriptorSets;
     CommandBuffers* commandBuffers;
-    Sampler* sampler;
-    std::vector<Semaphore*> imageAvailableSemaphores;
-    std::vector<Semaphore*> renderFinishedSemaphores;
-    std::vector<Fence*> inFlightFences;
+    std::vector<Semaphore*> imageAvailableSemaphores(MAX_FRAMES_IN_FLIGHT);
+    std::vector<Semaphore*> renderFinishedSemaphores(MAX_FRAMES_IN_FLIGHT);
+    std::vector<Fence*> inFlightFences(MAX_FRAMES_IN_FLIGHT);
     float deltaTime = 0.0f;
     Renderer(Window* window, Camera* camera);
     ~Renderer();
@@ -61,7 +71,7 @@ public:
 private:
     Window* window;
     Camera* camera;
-    UniformBufferObject ubo{};
+    GeneralVertexUniformBufferObject vertexUbo{};
     void calculateDeltaTime();
     void recreateSwapchain();
     void cleanUpSwapchain();

@@ -1,6 +1,6 @@
 #include "sampler.hpp"
 
-Sampler::Sampler(VkPhysicalDevice& physicalDevice, VkDevice& device) {
+Sampler::Sampler(VkPhysicalDevice& physicalDevice, VkDevice& device, float maxLod) {
     this->device = device;
 
     VkSamplerCreateInfo samplerCreateInfo{};
@@ -23,7 +23,7 @@ Sampler::Sampler(VkPhysicalDevice& physicalDevice, VkDevice& device) {
     samplerCreateInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
     samplerCreateInfo.mipLodBias = 0.0f;
     samplerCreateInfo.minLod = 0.0f;
-    samplerCreateInfo.maxLod = 20.0f;
+    samplerCreateInfo.maxLod = maxLod;
 
     if (vkCreateSampler(device, &samplerCreateInfo, nullptr, &sampler) != VK_SUCCESS) {
         throw std::runtime_error("Failed to create sampler!");

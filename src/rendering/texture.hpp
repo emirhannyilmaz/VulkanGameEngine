@@ -4,10 +4,12 @@
 #include <string>
 #include "renderer.hpp"
 #include "image.hpp"
+#include "sampler.hpp"
 
 class Texture {
 public:
     Image* image;
+    Sampler* sampler;
     float reflectivity;
     float shineDamper;
     Texture(const std::string& fileName, float reflectivity, float shineDamper, Renderer* renderer);

@@ -4,24 +4,27 @@ Renderer::Renderer(Window* window, Camera* camera) {
     this->window = window;
     this->camera = camera;
 
-    ubo.projectionMatrix = camera->createProjectionMatrix();
-
+    const VkDescriptorSetLayoutBinding[] layoutBindings = {
+        {0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, nullptr},
+        {1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, nullptr},
+    };
+    descriptorSetLayout = new DescriptorSetLayout(device->device, 2, layoutBindings);
+    Entity::CreateDescriptorSetLayout();
     instance = new Instance(window->title);
-
     if (enableValidationLayers) {
         messenger = new Messenger(instance->instance);
     }
-
     surface = new Surface(instance->instance, window->window);
     device = new Device(instance->instance, surface->surface);
     swapchain = new Swapchain(device->device, surface->surface, device->swapchainSupportDetails, window->window, device->indices);
     renderPass = new RenderPass(device->device, swapchain->swapchainImageFormat, DepthResources::findDepthFormat(device->physicalDevice), device->msaaSamples);
-    descriptorSetLayout = new DescriptorSetLayout(device->device);
-    graphicsPipeline = new GraphicsPipeline(device->device, descriptorSetLayout->descriptorSetLayout, swapchain->swapchainExtent, renderPass->renderPass, device->msaaSamples);
+    std::array<VkDescriptorSetLayout, 2> descriptorSetLayouts{};
+    descriptorSetLayouts[0] = descriptorSetLayout->descriptorSetLayout;
+    descriptorSetLayouts[1] = Entity::descriptorSetLayout.descriptorSetLayout;
+    graphicsPipeline = new GraphicsPipeline(device->device, static_cast<uint32_t>(descriptorSetLayouts.size()), descriptorSetLayouts.data(), swapchain->swapchainExtent, renderPass->renderPass, device->msaaSamples);
     commandPool = new CommandPool(device->device, device->indices.graphicsFamily.value(), VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
     colorResources = new ColorResources(device->physicalDevice, device->device, swapchain->swapchainExtent, device->msaaSamples, swapchain->swapchainImageFormat);
     depthResources = new DepthResources(device->physicalDevice, device->device, swapchain->swapchainExtent, device->msaaSamples, commandPool->commandPool, device->graphicsQueue);
-
     framebuffers.resize(swapchain->swapchainImageViews.size());
     for (size_t i = 0; i < framebuffers.size(); i++) {
         std::array<VkImageView, 3> attachments = {
@@ -31,29 +34,18 @@ Renderer::Renderer(Window* window, Camera* camera) {
         };
         framebuffers[i] = new Framebuffer(device->device, renderPass->renderPass, static_cast<uint32_t>(attachments.size()), attachments.data(), swapchain->swapchainExtent);
     }
-
-    // Uniform buffers
-    VkDeviceSize uniformBufferSize = sizeof(UniformBufferObject);
-    uniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
-    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-        uniformBuffers[i] = new Buffer(device->physicalDevice, device->device, uniformBufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-    }
-
     descriptorPool = new DescriptorPool(device->device);
-
-    std::vector<VkBuffer> ub;
+    descriptorSets = new DescriptorSets(device->device, descriptorPool->descriptorPool, descriptorSetLayout->descriptorSetLayout, MAX_FRAMES_IN_FLIGHT);
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-        ub.push_back(uniformBuffers[i]->buffer);
+        vertexUniformBuffers[i] = new Buffer(device->physicalDevice, device->device, sizeof(GeneralVertexUniformBufferObject), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+        descriptorSets->updateBufferInfo(i, 0, 0, 1, vertexUniformBuffers[i]->buffer, sizeof(GeneralVertexUniformBufferObject));
+
+        fragmentUniformBuffers[i] = new Buffer(device->physicalDevice, device->device, sizeof(GeneralFragmentUniformBufferObject), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+        descriptorSets->updateBufferInfo(i, 1, 0, 1, fragmentUniformBuffers[i]->buffer, sizeof(GeneralFragmentUniformBufferObject));
+
+        vertexUbo.projectionMatrix = camera->createProjectionMatrix();
     }
-    descriptorSets = new DescriptorSets(device->device, descriptorPool->descriptorPool, descriptorSetLayout->descriptorSetLayout, ub);
-
     commandBuffers = new CommandBuffers(device->device, commandPool->commandPool, MAX_FRAMES_IN_FLIGHT);
-
-    sampler = new Sampler(device->physicalDevice, device->device);
-
-    imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
-    renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
-    inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         imageAvailableSemaphores[i] = new Semaphore(device->device);
         renderFinishedSemaphores[i] = new Semaphore(device->device);
@@ -63,17 +55,14 @@ Renderer::Renderer(Window* window, Camera* camera) {
 
 Renderer::~Renderer() {
     cleanUpSwapchain();
-
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-        delete uniformBuffers[i];
+        delete vertexUniformBuffers[i];
+        delete fragmentUniformBuffers[i];
     }
-    uniformBuffers.clear();
-
-    delete sampler;
-
+    vertexUniformBuffers.clear();
+    fragmentUniformBuffers.clear();
     delete descriptorPool;
     delete descriptorSetLayout;
-
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         delete imageAvailableSemaphores[i];
         delete renderFinishedSemaphores[i];
@@ -82,14 +71,11 @@ Renderer::~Renderer() {
     imageAvailableSemaphores.clear();
     renderFinishedSemaphores.clear();
     inFlightFences.clear();
-
     delete commandPool;
     delete device;
-
     if (enableValidationLayers) {
         delete messenger;
     }
-
     delete surface;
     delete instance;
 }
@@ -167,7 +153,6 @@ void Renderer::recreateSwapchain() {
         glfwGetFramebufferSize(window->window, &width, &height);
         glfwWaitEvents();
     }
-
     vkDeviceWaitIdle(device->device);
 
     cleanUpSwapchain();
@@ -177,7 +162,6 @@ void Renderer::recreateSwapchain() {
     graphicsPipeline = new GraphicsPipeline(device->device, descriptorSetLayout->descriptorSetLayout, swapchain->swapchainExtent, renderPass->renderPass, device->msaaSamples);
     depthResources = new DepthResources(device->physicalDevice, device->device, swapchain->swapchainExtent, device->msaaSamples, commandPool->commandPool, device->graphicsQueue);
     colorResources = new ColorResources(device->physicalDevice, device->device, swapchain->swapchainExtent, device->msaaSamples, swapchain->swapchainImageFormat);
-
     framebuffers.resize(swapchain->swapchainImageViews.size());
     for (size_t i = 0; i < framebuffers.size(); i++) {
         std::array<VkImageView, 2> attachments = {
@@ -188,7 +172,7 @@ void Renderer::recreateSwapchain() {
     }
 
     camera->aspectRatio = (float) swapchain->swapchainExtent.width / (float) swapchain->swapchainExtent.height;
-    ubo.projectionMatrix = camera->createProjectionMatrix();
+    vertexUbo.projectionMatrix = camera->createProjectionMatrix();
 }
 
 void Renderer::cleanUpSwapchain() {
@@ -196,7 +180,6 @@ void Renderer::cleanUpSwapchain() {
         delete framebuffer;
     }
     framebuffers.clear();
-
     delete colorResources;
     delete depthResources;
     delete graphicsPipeline;
@@ -205,9 +188,19 @@ void Renderer::cleanUpSwapchain() {
 }
 
 void Renderer::recordCommandBuffer(uint32_t currentFrame, uint32_t imageIndex, std::vector<Entity*> entities, Light* light) {
-    ubo.viewMatrix = camera->createViewMatrix();
-    ubo.lightPosition = light->position;
-    ubo.lightColor = light->color;
+    vertexUbo.viewMatrix = camera->createViewMatrix();
+    vertexUbo.lightPosition = light->position;
+    void* vubData;
+    vkMapMemory(device->device, vertexUniformBuffers[currentFrame]->bufferMemory, 0, sizeof(vertexUbo), 0, &vubData);
+    memcpy(vubData, &vertexUbo, sizeof(vertexUbo));
+    vkUnmapMemory(device->device, vertexUniformBuffers[currentFrame]->bufferMemory);
+
+    GeneralFragmentUniformBufferObject fragmentUbo{};
+    fragmentUbo.lightColor = light->color;
+    void* fubData;
+    vkMapMemory(device->device, fragmentUniformBuffers[currentFrame]->bufferMemory, 0, sizeof(fragmentUbo), 0, &fubData);
+    memcpy(fubData, &fragmentUbo, sizeof(fragmentUbo));
+    vkUnmapMemory(device->device, fragmentUniformBuffers[currentFrame]->bufferMemory);
 
     VkCommandBuffer commandBuffer = commandBuffers->commandBuffers[currentFrame];
     VkCommandBufferBeginInfo commandBufferBeginInfo{};
@@ -230,25 +223,19 @@ void Renderer::recordCommandBuffer(uint32_t currentFrame, uint32_t imageIndex, s
     vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 
     vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline->graphicsPipeline);
+    std::array<VkDescriptorSet, 2> descriptorSetsToBind{};
+    descriptorSetsToBind[0] = descriptorSets->descriptorSets[currentFrame];
     for (Entity* entity : entities) {
+        entity->updateResources(currentFrame);
+
         VkDeviceSize offsets = 0;
         vkCmdBindVertexBuffers(commandBuffer, 0, 1, &entity->mesh->vertexBuffer->buffer, &offsets);
         vkCmdBindIndexBuffer(commandBuffer, entity->mesh->indexBuffer->buffer, 0, VK_INDEX_TYPE_UINT32);
-        descriptorSets->updateImageInfo(currentFrame, entity->texture->image->imageView, sampler->sampler);
-
-        ubo.modelMatrix = entity->createModelMatrix();
-        ubo.reflectivity = entity->texture->reflectivity;
-        ubo.shineDamper = entity->texture->shineDamper;
-
-        void* data;
-        vkMapMemory(device->device, uniformBuffers[currentFrame]->bufferMemory, 0, sizeof(ubo), 0, &data);
-        memcpy(data, &ubo, sizeof(ubo));
-        vkUnmapMemory(device->device, uniformBuffers[currentFrame]->bufferMemory);
+        descriptorSetsToBind[1] = entity->descriptorSets->descriptorSets[currentFrame];
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline->pipelineLayout, 0, static_cast<uint32_t>(descriptorSetsToBind.size()), descriptorSetsToBind.data(), 0, nullptr);
 
         vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(entity->mesh->indicesSize), 1, 0, 0, 0);
     }
-
-    vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline->pipelineLayout, 0, 1, &descriptorSets->descriptorSets[currentFrame], 0, nullptr);
 
     vkCmdEndRenderPass(commandBuffer);
 

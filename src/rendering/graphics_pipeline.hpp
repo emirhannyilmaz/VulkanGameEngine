@@ -10,7 +10,7 @@ class GraphicsPipeline {
 public:
     VkPipelineLayout pipelineLayout;
     VkPipeline graphicsPipeline;
-    GraphicsPipeline(VkDevice& device, VkDescriptorSetLayout& descriptorSetLayout, VkExtent2D& swapchainExtent, VkRenderPass& renderPass, VkSampleCountFlagBits msaaSamples);
+    GraphicsPipeline(VkDevice& device, uint32_t descriptorSetLayoutCount, VkDescriptorSetLayout* descriptorSetLayouts, VkExtent2D& swapchainExtent, VkRenderPass& renderPass, VkSampleCountFlagBits msaaSamples);
     ~GraphicsPipeline();
 private:
     VkDevice device;
