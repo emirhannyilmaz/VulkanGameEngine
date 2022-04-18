@@ -21,7 +21,6 @@
 #include "buffer.hpp"
 #include "descriptor_pool.hpp"
 #include "descriptor_sets.hpp"
-#include "uniform_buffer_object.hpp"
 #include "sampler.hpp"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -44,6 +43,7 @@ struct GeneralFragmentUniformBufferObject {
 
 class Renderer {
 public:
+    DescriptorSetLayout* edescriptorSetLayout;
     Instance* instance;
     Messenger* messenger;
     Surface* surface;
@@ -56,14 +56,14 @@ public:
     ColorResources* colorResources;
     DepthResources* depthResources;
     std::vector<Framebuffer*> framebuffers;
-    std::vector<Buffer*> vertexUniformBuffers(MAX_FRAMES_IN_FLIGHT);
-    std::vector<Buffer*> fragmentUniformBuffers(MAX_FRAMES_IN_FLIGHT);
+    std::vector<Buffer*> vertexUniformBuffers;
+    std::vector<Buffer*> fragmentUniformBuffers;
     DescriptorPool* descriptorPool;
     DescriptorSets* descriptorSets;
     CommandBuffers* commandBuffers;
-    std::vector<Semaphore*> imageAvailableSemaphores(MAX_FRAMES_IN_FLIGHT);
-    std::vector<Semaphore*> renderFinishedSemaphores(MAX_FRAMES_IN_FLIGHT);
-    std::vector<Fence*> inFlightFences(MAX_FRAMES_IN_FLIGHT);
+    std::vector<Semaphore*> imageAvailableSemaphores;
+    std::vector<Semaphore*> renderFinishedSemaphores;
+    std::vector<Fence*> inFlightFences;
     float deltaTime = 0.0f;
     Renderer(Window* window, Camera* camera);
     ~Renderer();

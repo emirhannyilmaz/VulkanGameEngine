@@ -4,12 +4,6 @@ Renderer::Renderer(Window* window, Camera* camera) {
     this->window = window;
     this->camera = camera;
 
-    const VkDescriptorSetLayoutBinding[] layoutBindings = {
-        {0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, nullptr},
-        {1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, nullptr},
-    };
-    descriptorSetLayout = new DescriptorSetLayout(device->device, 2, layoutBindings);
-    Entity::CreateDescriptorSetLayout();
     instance = new Instance(window->title);
     if (enableValidationLayers) {
         messenger = new Messenger(instance->instance);
@@ -18,9 +12,14 @@ Renderer::Renderer(Window* window, Camera* camera) {
     device = new Device(instance->instance, surface->surface);
     swapchain = new Swapchain(device->device, surface->surface, device->swapchainSupportDetails, window->window, device->indices);
     renderPass = new RenderPass(device->device, swapchain->swapchainImageFormat, DepthResources::findDepthFormat(device->physicalDevice), device->msaaSamples);
+    std::array<VkDescriptorSetLayoutBinding, 2> layoutBindings{};
+    layoutBindings[0] = {0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, nullptr};
+    layoutBindings[1] = {1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, nullptr};
+    descriptorSetLayout = new DescriptorSetLayout(device->device, static_cast<uint32_t>(layoutBindings.size()), layoutBindings.data());
+    Entity::CreateDesriptorSetLayout(device->device);
     std::array<VkDescriptorSetLayout, 2> descriptorSetLayouts{};
     descriptorSetLayouts[0] = descriptorSetLayout->descriptorSetLayout;
-    descriptorSetLayouts[1] = Entity::descriptorSetLayout.descriptorSetLayout;
+    descriptorSetLayouts[1] = Entity::descriptorSetLayout->descriptorSetLayout;
     graphicsPipeline = new GraphicsPipeline(device->device, static_cast<uint32_t>(descriptorSetLayouts.size()), descriptorSetLayouts.data(), swapchain->swapchainExtent, renderPass->renderPass, device->msaaSamples);
     commandPool = new CommandPool(device->device, device->indices.graphicsFamily.value(), VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
     colorResources = new ColorResources(device->physicalDevice, device->device, swapchain->swapchainExtent, device->msaaSamples, swapchain->swapchainImageFormat);
@@ -34,8 +33,13 @@ Renderer::Renderer(Window* window, Camera* camera) {
         };
         framebuffers[i] = new Framebuffer(device->device, renderPass->renderPass, static_cast<uint32_t>(attachments.size()), attachments.data(), swapchain->swapchainExtent);
     }
-    descriptorPool = new DescriptorPool(device->device);
-    descriptorSets = new DescriptorSets(device->device, descriptorPool->descriptorPool, descriptorSetLayout->descriptorSetLayout, MAX_FRAMES_IN_FLIGHT);
+    std::array<VkDescriptorPoolSize, 1> poolSizes{};
+    poolSizes[0] = {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 2 * MAX_FRAMES_IN_FLIGHT};
+    descriptorPool = new DescriptorPool(device->device, static_cast<uint32_t>(poolSizes.size()), poolSizes.data(), MAX_FRAMES_IN_FLIGHT);
+    std::vector<VkDescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT, descriptorSetLayout->descriptorSetLayout);
+    descriptorSets = new DescriptorSets(device->device, descriptorPool->descriptorPool, layouts.data(), MAX_FRAMES_IN_FLIGHT);
+    vertexUniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
+    fragmentUniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         vertexUniformBuffers[i] = new Buffer(device->physicalDevice, device->device, sizeof(GeneralVertexUniformBufferObject), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
         descriptorSets->updateBufferInfo(i, 0, 0, 1, vertexUniformBuffers[i]->buffer, sizeof(GeneralVertexUniformBufferObject));
@@ -46,6 +50,9 @@ Renderer::Renderer(Window* window, Camera* camera) {
         vertexUbo.projectionMatrix = camera->createProjectionMatrix();
     }
     commandBuffers = new CommandBuffers(device->device, commandPool->commandPool, MAX_FRAMES_IN_FLIGHT);
+    imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
+    renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
+    inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         imageAvailableSemaphores[i] = new Semaphore(device->device);
         renderFinishedSemaphores[i] = new Semaphore(device->device);
@@ -54,6 +61,7 @@ Renderer::Renderer(Window* window, Camera* camera) {
 }
 
 Renderer::~Renderer() {
+    Entity::DeleteDesriptorSetLayout();
     cleanUpSwapchain();
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         delete vertexUniformBuffers[i];
@@ -159,7 +167,10 @@ void Renderer::recreateSwapchain() {
 
     swapchain = new Swapchain(device->device, surface->surface, device->swapchainSupportDetails, window->window, device->indices);
     renderPass = new RenderPass(device->device, swapchain->swapchainImageFormat, DepthResources::findDepthFormat(device->physicalDevice), device->msaaSamples);
-    graphicsPipeline = new GraphicsPipeline(device->device, descriptorSetLayout->descriptorSetLayout, swapchain->swapchainExtent, renderPass->renderPass, device->msaaSamples);
+    std::array<VkDescriptorSetLayout, 2> descriptorSetLayouts{};
+    descriptorSetLayouts[0] = descriptorSetLayout->descriptorSetLayout;
+    descriptorSetLayouts[1] = Entity::descriptorSetLayout->descriptorSetLayout;
+    graphicsPipeline = new GraphicsPipeline(device->device, static_cast<uint32_t>(descriptorSetLayouts.size()), descriptorSetLayouts.data(), swapchain->swapchainExtent, renderPass->renderPass, device->msaaSamples);
     depthResources = new DepthResources(device->physicalDevice, device->device, swapchain->swapchainExtent, device->msaaSamples, commandPool->commandPool, device->graphicsQueue);
     colorResources = new ColorResources(device->physicalDevice, device->device, swapchain->swapchainExtent, device->msaaSamples, swapchain->swapchainImageFormat);
     framebuffers.resize(swapchain->swapchainImageViews.size());
@@ -226,7 +237,7 @@ void Renderer::recordCommandBuffer(uint32_t currentFrame, uint32_t imageIndex, s
     std::array<VkDescriptorSet, 2> descriptorSetsToBind{};
     descriptorSetsToBind[0] = descriptorSets->descriptorSets[currentFrame];
     for (Entity* entity : entities) {
-        entity->updateResources(currentFrame);
+        entity->updateDescriptorSetResources(currentFrame);
 
         VkDeviceSize offsets = 0;
         vkCmdBindVertexBuffers(commandBuffer, 0, 1, &entity->mesh->vertexBuffer->buffer, &offsets);

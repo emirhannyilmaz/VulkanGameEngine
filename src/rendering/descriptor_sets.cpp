@@ -1,6 +1,6 @@
 #include "descriptor_sets.hpp"
 
-DescriptorSets::DescriptorSets(const VkDevice& device, const VkDescriptorPool& pool, const VkDescriptorSetLayout* layouts, uint32_t descriptorSetCount) {
+DescriptorSets::DescriptorSets(VkDevice& device, VkDescriptorPool& pool, VkDescriptorSetLayout* layouts, uint32_t descriptorSetCount) {
     this->device = device;
     this->pool = pool;
 
@@ -20,7 +20,7 @@ DescriptorSets::~DescriptorSets() {
     vkFreeDescriptorSets(device, pool, descriptorSets.size(), descriptorSets.data());
 }
 
-void DescriptorSets::updateBufferInfo(size_t index, uint32_t binding, uint32_t element, uint32_t count, const VkBuffer& buffer, VkDeviceSize range) {
+void DescriptorSets::updateBufferInfo(size_t index, uint32_t binding, uint32_t element, uint32_t count, VkBuffer& buffer, VkDeviceSize range) {
     VkDescriptorBufferInfo bufferInfo{};
     bufferInfo.buffer = buffer;
     bufferInfo.offset = 0;
@@ -38,7 +38,7 @@ void DescriptorSets::updateBufferInfo(size_t index, uint32_t binding, uint32_t e
     vkUpdateDescriptorSets(device, 1, &writeDescriptorSet, 0, nullptr);
 }
 
-void DescriptorSets::updateImageInfo(size_t index, uint32_t binding, uint32_t element, uint32_t count, const VkImageView& imageView, const VkSampler& sampler) {
+void DescriptorSets::updateImageInfo(size_t index, uint32_t binding, uint32_t element, uint32_t count, VkImageView& imageView, VkSampler& sampler) {
     VkDescriptorImageInfo imageInfo{};
     imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
     imageInfo.imageView = imageView;

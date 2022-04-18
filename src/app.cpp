@@ -11,8 +11,8 @@ void App::run() {
     ObjModelData objModelData = ModelLoader::LoadObj("res/models/rocket.obj");
     Mesh* mesh = new Mesh(objModelData.vertices, objModelData.indices, renderer);
     Texture* texture = new Texture("res/textures/rocket.png", 1.0f, 10.0f, renderer);
-    Entity* entity = new Entity(mesh, texture, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.1f, 0.1f, 0.1f));
-    Entity* entity2 = new Entity(mesh, texture, glm::vec3(-50.0f, 10.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.1f, 0.1f, 0.1f));
+    Entity* entity = new Entity(mesh, texture, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.1f, 0.1f, 0.1f), renderer);
+    Entity* entity2 = new Entity(mesh, texture, glm::vec3(-50.0f, 10.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.1f, 0.1f, 0.1f), renderer);
 
     std::vector<Entity*> entities;
     entities.push_back(entity);
@@ -28,7 +28,10 @@ void App::run() {
 
     vkDeviceWaitIdle(renderer->device->device);
 
-    delete entity;
+    for (size_t i = 0; i < entities.size(); i++) {
+        delete entities[i];
+    }
+    entities.clear();
     delete renderer;
     delete light;
     delete camera;

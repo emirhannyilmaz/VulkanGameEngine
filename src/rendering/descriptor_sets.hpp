@@ -8,10 +8,10 @@
 class DescriptorSets {
 public:
     std::vector<VkDescriptorSet> descriptorSets;
-    DescriptorSets(const VkDevice& device, const VkDescriptorPool& pool, const VkDescriptorSetLayout* layouts, uint32_t descriptorSetCount);
+    DescriptorSets(VkDevice& device, VkDescriptorPool& pool, VkDescriptorSetLayout* layouts, uint32_t descriptorSetCount);
     ~DescriptorSets();
-    void updateBufferInfo(size_t index, uint32_t binding, uint32_t element, uint32_t count, const VkBuffer& buffer, VkDeviceSize range);
-    void updateImageInfo(size_t index, uint32_t binding, uint32_t element, uint32_t count, const VkImageView& imageView, const VkSampler& sampler);
+    void updateBufferInfo(size_t index, uint32_t binding, uint32_t element, uint32_t count, VkBuffer& buffer, VkDeviceSize range);
+    void updateImageInfo(size_t index, uint32_t binding, uint32_t element, uint32_t count, VkImageView& imageView, VkSampler& sampler);
 private:
     VkDevice device;
     VkDescriptorPool pool;

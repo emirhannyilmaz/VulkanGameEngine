@@ -7,7 +7,7 @@
 class DescriptorSetLayout {
 public:
     VkDescriptorSetLayout descriptorSetLayout;
-    DescriptorSetLayout(const VkDevice& device, uint32_t bindingCount, const VkDescriptorSetLayoutBinding* bindings);
+    DescriptorSetLayout(VkDevice& device, uint32_t bindingCount, VkDescriptorSetLayoutBinding* bindings);
     ~DescriptorSetLayout();
 private:
     VkDevice device;

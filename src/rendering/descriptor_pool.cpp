@@ -1,6 +1,6 @@
 #include "descriptor_pool.hpp"
 
-DescriptorPool::DescriptorPool(const VkDevice& device, uint32_t poolSizeCount, const VkDescriptorPoolSize* poolSizes, uint32_t maxSets) {
+DescriptorPool::DescriptorPool(VkDevice& device, uint32_t poolSizeCount, VkDescriptorPoolSize* poolSizes, uint32_t maxSets) {
     this->device = device;
 
     VkDescriptorPoolCreateInfo createInfo{};

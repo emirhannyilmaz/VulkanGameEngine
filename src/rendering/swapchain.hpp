@@ -18,9 +18,9 @@ public:
 private:
     VkDevice device;
     std::vector<VkImage> swapchainImages;
-    VkSurfaceFormatKHR chooseSwapchainSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
-    VkPresentModeKHR chooseSwapchainPresentMode(const std::vector<VkPresentModeKHR>& availableModes);
-    VkExtent2D chooseSwapchainExtent(const VkSurfaceCapabilitiesKHR& capabilities, GLFWwindow* window);
+    VkSurfaceFormatKHR chooseSwapchainSurfaceFormat(std::vector<VkSurfaceFormatKHR>& availableFormats);
+    VkPresentModeKHR chooseSwapchainPresentMode(std::vector<VkPresentModeKHR>& availableModes);
+    VkExtent2D chooseSwapchainExtent(VkSurfaceCapabilitiesKHR& capabilities, GLFWwindow* window);
 };
 
 #endif

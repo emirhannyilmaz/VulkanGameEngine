@@ -1,6 +1,6 @@
 #include "descriptor_set_layout.hpp"
 
-DescriptorSetLayout::DescriptorSetLayout(const VkDevice& device, uint32_t bindingCount, const VkDescriptorSetLayoutBinding* bindings) {
+DescriptorSetLayout::DescriptorSetLayout(VkDevice& device, uint32_t bindingCount, VkDescriptorSetLayoutBinding* bindings) {
     this->device = device;
 
     VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo{};

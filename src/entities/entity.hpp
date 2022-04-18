@@ -8,7 +8,6 @@
 #include "../rendering/descriptor_set_layout.hpp"
 #include "../rendering/descriptor_sets.hpp"
 #include "../rendering/renderer_info.hpp"
-#include "../rendering/renderer.hpp"
 
 class Texture;
 
@@ -25,19 +24,21 @@ class Entity {
 public:
     Mesh* mesh;
     Texture* texture;
-    static DescriptorSetLayout descriptorSetLayout{};
+    static DescriptorSetLayout* descriptorSetLayout;
     DescriptorSets* descriptorSets;
-    std::vector<Buffer*> vertexUniformBuffers(MAX_FRAMES_IN_FLIGHT);
-    std::vector<Buffer*> fragmentUniformBuffers(MAX_FRAMES_IN_FLIGHT);
+    std::vector<Buffer*> vertexUniformBuffers;
+    std::vector<Buffer*> fragmentUniformBuffers;
     glm::vec3 position;
     glm::vec3 rotation;
     glm::vec3 scale;
     Entity(Mesh* mesh, Texture* texture, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale, Renderer* renderer);
     ~Entity();
-    void updateResources(uint32_t currentFrame);
-    static void CreateDescriptorSetLayout();
+    void updateDescriptorSetResources(uint32_t currentFrame);
+    static void CreateDesriptorSetLayout(VkDevice& device);
+    static void DeleteDesriptorSetLayout();
 private:
     DescriptorPool* descriptorPool;
+    Renderer* renderer;
 };
 
 #endif
