@@ -26,8 +26,6 @@ public:
     Texture* texture;
     static DescriptorSetLayout* descriptorSetLayout;
     DescriptorSets* descriptorSets;
-    std::vector<Buffer*> vertexUniformBuffers;
-    std::vector<Buffer*> fragmentUniformBuffers;
     glm::vec3 position;
     glm::vec3 rotation;
     glm::vec3 scale;
@@ -39,6 +37,8 @@ public:
 private:
     DescriptorPool* descriptorPool;
     Renderer* renderer;
+    std::vector<Buffer*> vertexUniformBuffers;
+    std::vector<Buffer*> fragmentUniformBuffers;
 };
 
 #endif

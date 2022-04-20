@@ -1,29 +1,45 @@
 #include "renderer.hpp"
+#include "../entities/skybox.hpp"
 
 Renderer::Renderer(Window* window, Camera* camera) {
     this->window = window;
     this->camera = camera;
 
     instance = new Instance(window->title);
+
     if (enableValidationLayers) {
         messenger = new Messenger(instance->instance);
     }
+
     surface = new Surface(instance->instance, window->window);
     device = new Device(instance->instance, surface->surface);
     swapchain = new Swapchain(device->device, surface->surface, device->swapchainSupportDetails, window->window, device->indices);
     renderPass = new RenderPass(device->device, swapchain->swapchainImageFormat, DepthResources::findDepthFormat(device->physicalDevice), device->msaaSamples);
+
     std::array<VkDescriptorSetLayoutBinding, 2> layoutBindings{};
     layoutBindings[0] = {0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, nullptr};
     layoutBindings[1] = {1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, nullptr};
     descriptorSetLayout = new DescriptorSetLayout(device->device, static_cast<uint32_t>(layoutBindings.size()), layoutBindings.data());
+
     Entity::CreateDesriptorSetLayout(device->device);
+
+    auto bindingDescription = Vertex::getBindingDescription();
+    auto attributeDescriptions = Vertex::getAttributeDescriptions();
+
     std::array<VkDescriptorSetLayout, 2> descriptorSetLayouts{};
     descriptorSetLayouts[0] = descriptorSetLayout->descriptorSetLayout;
     descriptorSetLayouts[1] = Entity::descriptorSetLayout->descriptorSetLayout;
-    graphicsPipeline = new GraphicsPipeline(device->device, static_cast<uint32_t>(descriptorSetLayouts.size()), descriptorSetLayouts.data(), swapchain->swapchainExtent, renderPass->renderPass, device->msaaSamples);
+
+    generalGraphicsPipeline = new GraphicsPipeline(device->device, "res/shaders/general_shader.vert.spv", "res/shaders/general_shader.frag.spv", 1, &bindingDescription, static_cast<uint32_t>(attributeDescriptions.size()), attributeDescriptions.data(), static_cast<uint32_t>(descriptorSetLayouts.size()), descriptorSetLayouts.data(), swapchain->swapchainExtent, renderPass->renderPass, device->msaaSamples);
+
+    Skybox::CreateDesriptorSetLayout(device->device);
+
+    skyboxGraphicsPipeline = new GraphicsPipeline(device->device, "res/shaders/skybox_shader.vert.spv", "res/shaders/skybox_shader.frag.spv", 0, nullptr, 0, nullptr, 1, &Skybox::descriptorSetLayout->descriptorSetLayout, swapchain->swapchainExtent, renderPass->renderPass, device->msaaSamples);
+
     commandPool = new CommandPool(device->device, device->indices.graphicsFamily.value(), VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
     colorResources = new ColorResources(device->physicalDevice, device->device, swapchain->swapchainExtent, device->msaaSamples, swapchain->swapchainImageFormat);
     depthResources = new DepthResources(device->physicalDevice, device->device, swapchain->swapchainExtent, device->msaaSamples, commandPool->commandPool, device->graphicsQueue);
+
     framebuffers.resize(swapchain->swapchainImageViews.size());
     for (size_t i = 0; i < framebuffers.size(); i++) {
         std::array<VkImageView, 3> attachments = {
@@ -33,11 +49,14 @@ Renderer::Renderer(Window* window, Camera* camera) {
         };
         framebuffers[i] = new Framebuffer(device->device, renderPass->renderPass, static_cast<uint32_t>(attachments.size()), attachments.data(), swapchain->swapchainExtent);
     }
+
     std::array<VkDescriptorPoolSize, 1> poolSizes{};
     poolSizes[0] = {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 2 * MAX_FRAMES_IN_FLIGHT};
     descriptorPool = new DescriptorPool(device->device, static_cast<uint32_t>(poolSizes.size()), poolSizes.data(), MAX_FRAMES_IN_FLIGHT);
+
     std::vector<VkDescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT, descriptorSetLayout->descriptorSetLayout);
     descriptorSets = new DescriptorSets(device->device, descriptorPool->descriptorPool, layouts.data(), MAX_FRAMES_IN_FLIGHT);
+
     vertexUniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
     fragmentUniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
@@ -49,7 +68,9 @@ Renderer::Renderer(Window* window, Camera* camera) {
 
         vertexUbo.projectionMatrix = camera->createProjectionMatrix();
     }
+
     commandBuffers = new CommandBuffers(device->device, commandPool->commandPool, MAX_FRAMES_IN_FLIGHT);
+
     imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
     renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
     inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
@@ -62,15 +83,20 @@ Renderer::Renderer(Window* window, Camera* camera) {
 
 Renderer::~Renderer() {
     Entity::DeleteDesriptorSetLayout();
+    Skybox::DeleteDesriptorSetLayout();
+
     cleanUpSwapchain();
+
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         delete vertexUniformBuffers[i];
         delete fragmentUniformBuffers[i];
     }
     vertexUniformBuffers.clear();
     fragmentUniformBuffers.clear();
+
     delete descriptorPool;
     delete descriptorSetLayout;
+
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         delete imageAvailableSemaphores[i];
         delete renderFinishedSemaphores[i];
@@ -79,16 +105,19 @@ Renderer::~Renderer() {
     imageAvailableSemaphores.clear();
     renderFinishedSemaphores.clear();
     inFlightFences.clear();
+
     delete commandPool;
     delete device;
+
     if (enableValidationLayers) {
         delete messenger;
     }
+
     delete surface;
     delete instance;
 }
 
-void Renderer::render(std::vector<Entity*> entities, Light* light) {
+void Renderer::render(std::vector<Entity*> entities, Light* light, Skybox* skybox) {
     static uint32_t currentFrame = 0;
 
     vkWaitForFences(device->device, 1, &inFlightFences[currentFrame]->fence, VK_TRUE, UINT64_MAX);
@@ -107,7 +136,7 @@ void Renderer::render(std::vector<Entity*> entities, Light* light) {
     vkResetFences(device->device, 1, &inFlightFences[currentFrame]->fence);
     vkResetCommandBuffer(commandBuffers->commandBuffers[currentFrame], 0);
 
-    recordCommandBuffer(currentFrame, imageIndex, entities, light);
+    recordCommandBuffer(currentFrame, imageIndex, entities, light, skybox);
 
     VkSubmitInfo submitInfo{};
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -167,12 +196,19 @@ void Renderer::recreateSwapchain() {
 
     swapchain = new Swapchain(device->device, surface->surface, device->swapchainSupportDetails, window->window, device->indices);
     renderPass = new RenderPass(device->device, swapchain->swapchainImageFormat, DepthResources::findDepthFormat(device->physicalDevice), device->msaaSamples);
+
+    auto bindingDescription = Vertex::getBindingDescription();
+    auto attributeDescriptions = Vertex::getAttributeDescriptions();
+
     std::array<VkDescriptorSetLayout, 2> descriptorSetLayouts{};
     descriptorSetLayouts[0] = descriptorSetLayout->descriptorSetLayout;
     descriptorSetLayouts[1] = Entity::descriptorSetLayout->descriptorSetLayout;
-    graphicsPipeline = new GraphicsPipeline(device->device, static_cast<uint32_t>(descriptorSetLayouts.size()), descriptorSetLayouts.data(), swapchain->swapchainExtent, renderPass->renderPass, device->msaaSamples);
+
+    generalGraphicsPipeline = new GraphicsPipeline(device->device, "res/shaders/general_shader.vert.spv", "res/shaders/general_shader.frag.spv", 1, &bindingDescription, static_cast<uint32_t>(attributeDescriptions.size()), attributeDescriptions.data(), static_cast<uint32_t>(descriptorSetLayouts.size()), descriptorSetLayouts.data(), swapchain->swapchainExtent, renderPass->renderPass, device->msaaSamples);
+    skyboxGraphicsPipeline = new GraphicsPipeline(device->device, "res/shaders/skybox_shader.vert.spv", "res/shaders/skybox_shader.frag.spv", 0, nullptr, 0, nullptr, 1, &Skybox::descriptorSetLayout->descriptorSetLayout, swapchain->swapchainExtent, renderPass->renderPass, device->msaaSamples);
     depthResources = new DepthResources(device->physicalDevice, device->device, swapchain->swapchainExtent, device->msaaSamples, commandPool->commandPool, device->graphicsQueue);
     colorResources = new ColorResources(device->physicalDevice, device->device, swapchain->swapchainExtent, device->msaaSamples, swapchain->swapchainImageFormat);
+
     framebuffers.resize(swapchain->swapchainImageViews.size());
     for (size_t i = 0; i < framebuffers.size(); i++) {
         std::array<VkImageView, 2> attachments = {
@@ -191,14 +227,16 @@ void Renderer::cleanUpSwapchain() {
         delete framebuffer;
     }
     framebuffers.clear();
+
     delete colorResources;
     delete depthResources;
-    delete graphicsPipeline;
+    delete skyboxGraphicsPipeline;
+    delete generalGraphicsPipeline;
     delete renderPass;
     delete swapchain;
 }
 
-void Renderer::recordCommandBuffer(uint32_t currentFrame, uint32_t imageIndex, std::vector<Entity*> entities, Light* light) {
+void Renderer::recordCommandBuffer(uint32_t currentFrame, uint32_t imageIndex, std::vector<Entity*> entities, Light* light, Skybox* skybox) {
     vertexUbo.viewMatrix = camera->createViewMatrix();
     vertexUbo.lightPosition = light->position;
     void* vubData;
@@ -233,7 +271,7 @@ void Renderer::recordCommandBuffer(uint32_t currentFrame, uint32_t imageIndex, s
     renderPassBeginInfo.pClearValues = clearValues.data();
     vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline->graphicsPipeline);
+    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, generalGraphicsPipeline->graphicsPipeline);
     std::array<VkDescriptorSet, 2> descriptorSetsToBind{};
     descriptorSetsToBind[0] = descriptorSets->descriptorSets[currentFrame];
     for (Entity* entity : entities) {
@@ -243,10 +281,15 @@ void Renderer::recordCommandBuffer(uint32_t currentFrame, uint32_t imageIndex, s
         vkCmdBindVertexBuffers(commandBuffer, 0, 1, &entity->mesh->vertexBuffer->buffer, &offsets);
         vkCmdBindIndexBuffer(commandBuffer, entity->mesh->indexBuffer->buffer, 0, VK_INDEX_TYPE_UINT32);
         descriptorSetsToBind[1] = entity->descriptorSets->descriptorSets[currentFrame];
-        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline->pipelineLayout, 0, static_cast<uint32_t>(descriptorSetsToBind.size()), descriptorSetsToBind.data(), 0, nullptr);
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, generalGraphicsPipeline->pipelineLayout, 0, static_cast<uint32_t>(descriptorSetsToBind.size()), descriptorSetsToBind.data(), 0, nullptr);
 
         vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(entity->mesh->indicesSize), 1, 0, 0, 0);
     }
+
+    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, skyboxGraphicsPipeline->graphicsPipeline);
+    skybox->updateDescriptorSetResources(currentFrame);
+    vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, skyboxGraphicsPipeline->pipelineLayout, 0, 1, &skybox->descriptorSets->descriptorSets[currentFrame], 0, nullptr);
+    vkCmdDraw(commandBuffer, 36, 1, 0, 0);
 
     vkCmdEndRenderPass(commandBuffer);
 

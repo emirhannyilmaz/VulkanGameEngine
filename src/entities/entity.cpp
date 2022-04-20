@@ -23,8 +23,10 @@ Entity::Entity(Mesh* mesh, Texture* texture, glm::vec3 position, glm::vec3 rotat
     EntityFragmentUniformBufferObject ubo{};
     ubo.reflectivity = texture->reflectivity;
     ubo.shineDamper = texture->shineDamper;
+
     vertexUniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
     fragmentUniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
+
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         vertexUniformBuffers[i] = new Buffer(renderer->device->physicalDevice, renderer->device->device, sizeof(EntityVertexUniformBufferObject), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
         descriptorSets->updateBufferInfo(i, 0, 0, 1, vertexUniformBuffers[i]->buffer, sizeof(EntityVertexUniformBufferObject));

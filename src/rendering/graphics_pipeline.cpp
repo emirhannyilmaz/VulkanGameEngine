@@ -1,10 +1,10 @@
 #include "graphics_pipeline.hpp"
 
-GraphicsPipeline::GraphicsPipeline(VkDevice& device, uint32_t descriptorSetLayoutCount, VkDescriptorSetLayout* descriptorSetLayouts, VkExtent2D& swapchainExtent, VkRenderPass& renderPass, VkSampleCountFlagBits msaaSamples) {
+GraphicsPipeline::GraphicsPipeline(VkDevice& device, const std::string& vertexShaderFileName, const std::string& fragmentShaderFileName, uint32_t vertexBindingDescriptionCount, VkVertexInputBindingDescription* vertexBindingDescriptions, uint32_t vertexAttributeDescriptionCount, VkVertexInputAttributeDescription* vertexAttributeDescriptions, uint32_t descriptorSetLayoutCount, VkDescriptorSetLayout* descriptorSetLayouts, VkExtent2D& swapchainExtent, VkRenderPass& renderPass, VkSampleCountFlagBits msaaSamples) {
     this->device = device;
 
-    ShaderModule vertexShader(device, "res/shaders/shader.vert.spv");
-    ShaderModule fragmentShader(device, "res/shaders/shader.frag.spv");
+    ShaderModule vertexShader(device, vertexShaderFileName);
+    ShaderModule fragmentShader(device, fragmentShaderFileName);
 
     VkPipelineShaderStageCreateInfo vertexShaderStageCreateInfo{};
     vertexShaderStageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -26,13 +26,10 @@ GraphicsPipeline::GraphicsPipeline(VkDevice& device, uint32_t descriptorSetLayou
     VkPipelineVertexInputStateCreateInfo vertexInputStateCreateInfo{};
     vertexInputStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 
-    auto bindingDescription = Vertex::getBindingDescription();
-    auto attributeDescriptions = Vertex::getAttributeDescriptions();
-
-    vertexInputStateCreateInfo.vertexBindingDescriptionCount = 1;
-    vertexInputStateCreateInfo.pVertexBindingDescriptions = &bindingDescription;
-    vertexInputStateCreateInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
-    vertexInputStateCreateInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
+    vertexInputStateCreateInfo.vertexBindingDescriptionCount = vertexBindingDescriptionCount;
+    vertexInputStateCreateInfo.pVertexBindingDescriptions = vertexBindingDescriptions;
+    vertexInputStateCreateInfo.vertexAttributeDescriptionCount = vertexAttributeDescriptionCount;
+    vertexInputStateCreateInfo.pVertexAttributeDescriptions = vertexAttributeDescriptions;
 
     VkPipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo{};
     inputAssemblyStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;

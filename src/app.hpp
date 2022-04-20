@@ -4,15 +4,11 @@
 #include "io/window.hpp"
 #include "rendering/renderer.hpp"
 #include "rendering/model_loader.hpp"
+#include "entities/skybox.hpp"
 
 class App {
 public:
     void run();
-private:
-    Window* window;
-    Camera* camera;
-    Light* light;
-    Renderer* renderer;
 };
 
 #endif

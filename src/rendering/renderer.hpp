@@ -31,6 +31,8 @@
 #include "../entities/light.hpp"
 #include "texture.hpp"
 
+class Skybox;
+
 struct GeneralVertexUniformBufferObject {
     alignas(16) glm::mat4 viewMatrix;
     alignas(16) glm::mat4 projectionMatrix;
@@ -51,7 +53,8 @@ public:
     Swapchain* swapchain;
     RenderPass* renderPass;
     DescriptorSetLayout* descriptorSetLayout;
-    GraphicsPipeline* graphicsPipeline;
+    GraphicsPipeline* generalGraphicsPipeline;
+    GraphicsPipeline* skyboxGraphicsPipeline;
     CommandPool* commandPool;
     ColorResources* colorResources;
     DepthResources* depthResources;
@@ -67,7 +70,7 @@ public:
     float deltaTime = 0.0f;
     Renderer(Window* window, Camera* camera);
     ~Renderer();
-    void render(std::vector<Entity*> entities, Light* light);
+    void render(std::vector<Entity*> entities, Light* light, Skybox* skybox);
 private:
     Window* window;
     Camera* camera;
@@ -75,7 +78,7 @@ private:
     void calculateDeltaTime();
     void recreateSwapchain();
     void cleanUpSwapchain();
-    void recordCommandBuffer(uint32_t currentFrame, uint32_t imageIndex, std::vector<Entity*> entities, Light* light);
+    void recordCommandBuffer(uint32_t currentFrame, uint32_t imageIndex, std::vector<Entity*> entities, Light* light, Skybox* skybox);
 };
 
 #endif

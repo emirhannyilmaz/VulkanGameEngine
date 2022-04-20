@@ -13,6 +13,7 @@ public:
     float reflectivity;
     float shineDamper;
     Texture(const std::string& fileName, float reflectivity, float shineDamper, Renderer* renderer);
+    Texture(const std::vector<std::string>& fileNames, Renderer* renderer);
     ~Texture();
 };
 

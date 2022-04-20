@@ -1,6 +1,6 @@
 #include "image.hpp"
 
-Image::Image(VkPhysicalDevice& physicalDevice, VkDevice& device, uint32_t width, uint32_t height, uint32_t mipLevels, VkSampleCountFlagBits numSamples, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImageAspectFlags aspectFlags) {
+Image::Image(VkPhysicalDevice& physicalDevice, VkDevice& device, uint32_t width, uint32_t height, uint32_t mipLevels, uint32_t arrayLayers, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkSampleCountFlagBits numSamples, VkImageCreateFlags createFlags, VkMemoryPropertyFlags properties, VkImageViewType viewType, VkImageAspectFlags aspectFlags) {
     this->device = device;
 
     VkImageCreateInfo imageCreateInfo{};
@@ -10,14 +10,14 @@ Image::Image(VkPhysicalDevice& physicalDevice, VkDevice& device, uint32_t width,
     imageCreateInfo.extent.height = height;
     imageCreateInfo.extent.depth = 1;
     imageCreateInfo.mipLevels = mipLevels;
-    imageCreateInfo.arrayLayers = 1;
+    imageCreateInfo.arrayLayers = arrayLayers;
     imageCreateInfo.format = format;
     imageCreateInfo.tiling = tiling;
     imageCreateInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     imageCreateInfo.usage = usage;
     imageCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
     imageCreateInfo.samples = numSamples;
-    imageCreateInfo.flags = 0;
+    imageCreateInfo.flags = createFlags;
 
     if (vkCreateImage(device, &imageCreateInfo, nullptr, &image) != VK_SUCCESS) {
         throw std::runtime_error("Failed to create image!");
@@ -40,13 +40,13 @@ Image::Image(VkPhysicalDevice& physicalDevice, VkDevice& device, uint32_t width,
     VkImageViewCreateInfo imageViewCreateInfo{};
     imageViewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
     imageViewCreateInfo.image = image;
-    imageViewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+    imageViewCreateInfo.viewType = viewType;
     imageViewCreateInfo.format = format;
     imageViewCreateInfo.subresourceRange.aspectMask = aspectFlags;
     imageViewCreateInfo.subresourceRange.baseMipLevel = 0;
     imageViewCreateInfo.subresourceRange.levelCount = mipLevels;
     imageViewCreateInfo.subresourceRange.baseArrayLayer = 0;
-    imageViewCreateInfo.subresourceRange.layerCount = 1;
+    imageViewCreateInfo.subresourceRange.layerCount = arrayLayers;
 
     if (vkCreateImageView(device, &imageViewCreateInfo, nullptr, &imageView) != VK_SUCCESS) {
         throw std::runtime_error("Failed to create image view!");
@@ -59,7 +59,7 @@ Image::~Image() {
     vkFreeMemory(device, imageMemory, nullptr);
 }
 
-void Image::TransitionImageLayout(VkDevice& device, VkCommandPool& commandPool, VkQueue& graphicsQueue, VkImage& image, uint32_t mipLevels, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout) {
+void Image::TransitionImageLayout(VkDevice& device, VkCommandPool& commandPool, VkQueue& graphicsQueue, VkImage& image, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels, uint32_t arrayLayers, VkFormat format) {
     CommandBuffers commandBuffers(device, commandPool, 1);
 
     VkCommandBufferBeginInfo commandBufferBeginInfo{};
@@ -72,15 +72,15 @@ void Image::TransitionImageLayout(VkDevice& device, VkCommandPool& commandPool, 
 
     VkImageMemoryBarrier barrier{};
     barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    barrier.image = image;
     barrier.oldLayout = oldLayout;
     barrier.newLayout = newLayout;
     barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
     barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    barrier.image = image;
     barrier.subresourceRange.baseMipLevel = 0;
     barrier.subresourceRange.levelCount = mipLevels;
     barrier.subresourceRange.baseArrayLayer = 0;
-    barrier.subresourceRange.layerCount = 1;
+    barrier.subresourceRange.layerCount = arrayLayers;
 
     if (newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL) {
         barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
@@ -132,7 +132,7 @@ void Image::TransitionImageLayout(VkDevice& device, VkCommandPool& commandPool, 
     vkQueueWaitIdle(graphicsQueue);
 }
 
-void Image::CopyBufferToImage(VkDevice& device, VkCommandPool& commandPool, VkQueue& graphicsQueue, VkBuffer& buffer, VkImage& image, uint32_t width, uint32_t height) {
+void Image::CopyBufferToImage(VkDevice& device, VkCommandPool& commandPool, VkQueue& graphicsQueue, uint32_t width, uint32_t height, uint32_t arrayLayers, VkBuffer& buffer, VkImage& image) {
     CommandBuffers commandBuffers(device, commandPool, 1);
 
     VkCommandBufferBeginInfo commandBufferBeginInfo{};
@@ -147,12 +147,12 @@ void Image::CopyBufferToImage(VkDevice& device, VkCommandPool& commandPool, VkQu
     copyRegion.bufferOffset = 0;
     copyRegion.bufferRowLength = 0;
     copyRegion.bufferImageHeight = 0;
+    copyRegion.imageOffset = {0, 0, 0};
+    copyRegion.imageExtent = {width, height, 1};
     copyRegion.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
     copyRegion.imageSubresource.mipLevel = 0;
     copyRegion.imageSubresource.baseArrayLayer = 0;
-    copyRegion.imageSubresource.layerCount = 1;
-    copyRegion.imageOffset = {0, 0, 0};
-    copyRegion.imageExtent = {width, height, 1};
+    copyRegion.imageSubresource.layerCount = arrayLayers;
 
     vkCmdCopyBufferToImage(commandBuffers.commandBuffers[0], buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copyRegion);
 
