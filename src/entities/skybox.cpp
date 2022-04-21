@@ -16,7 +16,6 @@ Skybox::Skybox(Texture* texture, float size, Camera* camera, Renderer* renderer)
     std::vector<VkDescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT, descriptorSetLayout->descriptorSetLayout);
     descriptorSets = new DescriptorSets(renderer->device->device, descriptorPool->descriptorPool, layouts.data(), MAX_FRAMES_IN_FLIGHT);
 
-    ubo.projectionMatrix = camera->createProjectionMatrix();
     ubo.size = size;
 
     vertexUniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
@@ -45,6 +44,7 @@ Skybox::~Skybox() {
 
 void Skybox::updateDescriptorSetResources(uint32_t currentFrame) {
     ubo.viewMatrix = camera->createViewMatrix();
+    ubo.projectionMatrix = camera->createProjectionMatrix();
     ubo.viewMatrix[3][0] = 0.0f;
     ubo.viewMatrix[3][1] = 0.0f;
     ubo.viewMatrix[3][2] = 0.0f;

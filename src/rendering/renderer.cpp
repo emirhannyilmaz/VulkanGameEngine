@@ -211,9 +211,10 @@ void Renderer::recreateSwapchain() {
 
     framebuffers.resize(swapchain->swapchainImageViews.size());
     for (size_t i = 0; i < framebuffers.size(); i++) {
-        std::array<VkImageView, 2> attachments = {
-            swapchain->swapchainImageViews[i],
-            depthResources->image->imageView
+        std::array<VkImageView, 3> attachments = {
+            colorResources->image->imageView,
+            depthResources->image->imageView,
+            swapchain->swapchainImageViews[i]
         };
         framebuffers[i] = new Framebuffer(device->device, renderPass->renderPass, static_cast<uint32_t>(attachments.size()), attachments.data(), swapchain->swapchainExtent);
     }
