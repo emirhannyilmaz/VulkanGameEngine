@@ -19,11 +19,11 @@ class WaterTile {
 public:
     glm::vec3 position;
     glm::vec2 scale;
-    DescriptorSetLayout* descriptorSetLayout;
+    static DescriptorSetLayout* descriptorSetLayout;
     DescriptorSets* descriptorSets;
     WaterTile(glm::vec3 position, glm::vec2 scale, Renderer* renderer);
     ~WaterTile();
-    void updateDescriptorSetResources(uint32_t currentFrame);
+    void updateDescriptorSetResources();
     static void CreateDesriptorSetLayout(VkDevice& device);
     static void DeleteDesriptorSetLayout();
 private:

@@ -69,8 +69,7 @@ void Renderer::beginRendering() {
 
     calculateDeltaTime();
 
-    uint32_t imageIndex;
-    VkResult acquireNextImageResult = vkAcquireNextImageKHR(device->device, swapchain->swapchain, UINT64_MAX, imageAvailableSemaphores[currentFrame]->semaphore, VK_NULL_HANDLE, &imageIndex);
+    VkResult acquireNextImageResult = vkAcquireNextImageKHR(device->device, swapchain->swapchain, UINT64_MAX, imageAvailableSemaphores[currentFrame]->semaphore, VK_NULL_HANDLE, &currentImageIndex);
     if (acquireNextImageResult == VK_ERROR_OUT_OF_DATE_KHR) {
         recreateSwapchain();
         return;
@@ -90,7 +89,7 @@ void Renderer::beginRendering() {
     VkRenderPassBeginInfo renderPassBeginInfo{};
     renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
     renderPassBeginInfo.renderPass = renderPass->renderPass;
-    renderPassBeginInfo.framebuffer = framebuffers[imageIndex]->framebuffer;
+    renderPassBeginInfo.framebuffer = framebuffers[currentImageIndex]->framebuffer;
     renderPassBeginInfo.renderArea.offset = {0, 0};
     renderPassBeginInfo.renderArea.extent = swapchain->swapchainExtent;
     std::array<VkClearValue, 2> clearValues{};
@@ -129,7 +128,7 @@ void Renderer::endRendering() {
     presentInfo.pWaitSemaphores = &renderFinishedSemaphores[currentFrame]->semaphore;
     presentInfo.swapchainCount = 1;
     presentInfo.pSwapchains = &swapchain->swapchain;
-    presentInfo.pImageIndices = &imageIndex;
+    presentInfo.pImageIndices = &currentImageIndex;
     presentInfo.pResults = nullptr;
 
     VkResult queuePresentResult = vkQueuePresentKHR(device->presentQueue, &presentInfo);

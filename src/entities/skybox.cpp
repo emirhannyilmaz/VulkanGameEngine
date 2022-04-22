@@ -2,10 +2,9 @@
 
 DescriptorSetLayout* Skybox::descriptorSetLayout = nullptr;
 
-Skybox::Skybox(Texture* texture, float size, Camera* camera, Renderer* renderer) {
+Skybox::Skybox(Texture* texture, float size, Renderer* renderer) {
     this->texture = texture;
     this->size = size;
-    this->camera = camera;
     this->renderer = renderer;
 
     std::array<VkDescriptorPoolSize, 2> poolSizes{};
@@ -27,7 +26,7 @@ Skybox::Skybox(Texture* texture, float size, Camera* camera, Renderer* renderer)
         descriptorSets->updateImageInfo(i, 1, 0, 1, texture->image->imageView, texture->sampler->sampler);
 
         void* data;
-        vkMapMemory(renderer->device->device, vertexUniformBuffers[i]->bufferMemory, 0, sizeof(vertexUbo), 0, &vubData);
+        vkMapMemory(renderer->device->device, vertexUniformBuffers[i]->bufferMemory, 0, sizeof(vertexUbo), 0, &data);
         memcpy(data, &vertexUbo, sizeof(vertexUbo));
         vkUnmapMemory(renderer->device->device, vertexUniformBuffers[i]->bufferMemory);
     }

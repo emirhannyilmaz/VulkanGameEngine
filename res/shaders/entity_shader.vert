@@ -1,10 +1,10 @@
 #version 450
 
-layout(set = 0, binding = 0) uniform GeneralVertexUniformBufferObject {
+layout(set = 0, binding = 0) uniform EntityRendererVertexUniformBufferObject {
     mat4 viewMatrix;
     mat4 projectionMatrix;
     vec3 lightPosition;
-} gvubo;
+} ervubo;
 
 layout(set = 1, binding = 0) uniform EntityVertexUniformBufferObject {
     mat4 modelMatrix;
@@ -21,9 +21,9 @@ layout(location = 3) out vec3 fragToCameraVector;
 
 void main() {
     vec4 worldPosition = evubo.modelMatrix * vec4(position, 1.0);
-    gl_Position = gvubo.projectionMatrix * gvubo.viewMatrix * worldPosition;
+    gl_Position = ervubo.projectionMatrix * ervubo.viewMatrix * worldPosition;
     fragNormal = (evubo.modelMatrix * vec4(normal, 0.0)).xyz;
     fragTextureCoordinates = textureCoordinates;
-    fragToLightVector = gvubo.lightPosition - worldPosition.xyz;
-    fragToCameraVector = (inverse(gvubo.viewMatrix) * vec4(0.0, 0.0, 0.0, 1.0)).xyz - worldPosition.xyz;
+    fragToLightVector = ervubo.lightPosition - worldPosition.xyz;
+    fragToCameraVector = (inverse(ervubo.viewMatrix) * vec4(0.0, 0.0, 0.0, 1.0)).xyz - worldPosition.xyz;
 }

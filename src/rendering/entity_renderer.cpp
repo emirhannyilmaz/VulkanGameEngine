@@ -57,16 +57,16 @@ void EntityRenderer::render(std::vector<Entity*> entities, Light* light, Camera*
     vertexUbo.projectionMatrix = camera->createProjectionMatrix();
     vertexUbo.lightPosition = light->position;
     void* vubData;
-    vkMapMemory(device->device, vertexUniformBuffers[renderer->currentFrame]->bufferMemory, 0, sizeof(vertexUbo), 0, &vubData);
+    vkMapMemory(renderer->device->device, vertexUniformBuffers[renderer->currentFrame]->bufferMemory, 0, sizeof(vertexUbo), 0, &vubData);
     memcpy(vubData, &vertexUbo, sizeof(vertexUbo));
-    vkUnmapMemory(device->device, vertexUniformBuffers[renderer->currentFrame]->bufferMemory);
+    vkUnmapMemory(renderer->device->device, vertexUniformBuffers[renderer->currentFrame]->bufferMemory);
 
     EntityRendererFragmentUniformBufferObject fragmentUbo{};
     fragmentUbo.lightColor = light->color;
     void* fubData;
-    vkMapMemory(device->device, fragmentUniformBuffers[currentFrame]->bufferMemory, 0, sizeof(fragmentUbo), 0, &fubData);
+    vkMapMemory(renderer->device->device, fragmentUniformBuffers[renderer->currentFrame]->bufferMemory, 0, sizeof(fragmentUbo), 0, &fubData);
     memcpy(fubData, &fragmentUbo, sizeof(fragmentUbo));
-    vkUnmapMemory(device->device, fragmentUniformBuffers[currentFrame]->bufferMemory);
+    vkUnmapMemory(renderer->device->device, fragmentUniformBuffers[renderer->currentFrame]->bufferMemory);
 
     VkCommandBuffer commandBuffer = renderer->commandBuffers->commandBuffers[renderer->currentFrame];
 
@@ -74,7 +74,7 @@ void EntityRenderer::render(std::vector<Entity*> entities, Light* light, Camera*
     std::array<VkDescriptorSet, 2> descriptorSetsToBind{};
     descriptorSetsToBind[0] = descriptorSets->descriptorSets[renderer->currentFrame];
     for (Entity* entity : entities) {
-        entity->updateDescriptorSetResources(renderer->currentFrame);
+        entity->updateDescriptorSetResources();
 
         VkDeviceSize offsets = 0;
         vkCmdBindVertexBuffers(commandBuffer, 0, 1, &entity->mesh->vertexBuffer->buffer, &offsets);

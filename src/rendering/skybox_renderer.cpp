@@ -1,6 +1,8 @@
 #include "skybox_renderer.hpp"
 
 SkyboxRenderer::SkyboxRenderer(Renderer* renderer) {
+    this->renderer = renderer;
+
     std::array<VkDescriptorSetLayoutBinding, 1> layoutBindings{};
     layoutBindings[0] = {0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, nullptr};
     descriptorSetLayout = new DescriptorSetLayout(renderer->device->device, static_cast<uint32_t>(layoutBindings.size()), layoutBindings.data());

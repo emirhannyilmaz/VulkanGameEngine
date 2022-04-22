@@ -37,8 +37,9 @@ public:
     std::vector<Semaphore*> imageAvailableSemaphores;
     std::vector<Semaphore*> renderFinishedSemaphores;
     std::vector<Fence*> inFlightFences;
-    uint32_t currentFrame = 0;
     float deltaTime = 0.0f;
+    uint32_t currentFrame = 0;
+    uint32_t currentImageIndex;
     Renderer(Window* window, Camera* camera);
     ~Renderer();
     void beginRendering();

@@ -31,7 +31,7 @@ public:
     glm::vec3 scale;
     Entity(Mesh* mesh, Texture* texture, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale, Renderer* renderer);
     ~Entity();
-    void updateDescriptorSetResources(uint32_t currentFrame);
+    void updateDescriptorSetResources();
     static void CreateDesriptorSetLayout(VkDevice& device);
     static void DeleteDesriptorSetLayout();
 private:

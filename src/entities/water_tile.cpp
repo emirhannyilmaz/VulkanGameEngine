@@ -1,6 +1,9 @@
 #include "water_tile.hpp"
 
+DescriptorSetLayout* WaterTile::descriptorSetLayout = nullptr;
+
 WaterTile::WaterTile(glm::vec3 position, glm::vec2 scale, Renderer* renderer) {
+/*
     this->position = position;
     this->scale = scale;
 
@@ -22,6 +25,7 @@ WaterTile::WaterTile(glm::vec3 position, glm::vec2 scale, Renderer* renderer) {
         memcpy(data, &vertexUbo, sizeof(vertexUbo));
         vkUnmapMemory(renderer->device->device, uniformBuffers[i]->bufferMemory);
     }
+*/
 }
 
 WaterTile::~WaterTile() {

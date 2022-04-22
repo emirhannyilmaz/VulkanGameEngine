@@ -1,6 +1,6 @@
 #version 450
 
-layout(binding = 1) uniform samplerCube textureSampler;
+layout(set = 1, binding = 1) uniform samplerCube textureSampler;
 
 layout(location = 0) in vec3 fragTextureCoordinates;
 
