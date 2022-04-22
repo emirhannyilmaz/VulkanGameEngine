@@ -15,27 +15,6 @@ Renderer::Renderer(Window* window, Camera* camera) {
     device = new Device(instance->instance, surface->surface);
     swapchain = new Swapchain(device->device, surface->surface, device->swapchainSupportDetails, window->window, device->indices);
     renderPass = new RenderPass(device->device, swapchain->swapchainImageFormat, DepthResources::findDepthFormat(device->physicalDevice), device->msaaSamples);
-
-    std::array<VkDescriptorSetLayoutBinding, 2> layoutBindings{};
-    layoutBindings[0] = {0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, nullptr};
-    layoutBindings[1] = {1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, nullptr};
-    descriptorSetLayout = new DescriptorSetLayout(device->device, static_cast<uint32_t>(layoutBindings.size()), layoutBindings.data());
-
-    Entity::CreateDesriptorSetLayout(device->device);
-
-    auto bindingDescription = Vertex::getBindingDescription();
-    auto attributeDescriptions = Vertex::getAttributeDescriptions();
-
-    std::array<VkDescriptorSetLayout, 2> descriptorSetLayouts{};
-    descriptorSetLayouts[0] = descriptorSetLayout->descriptorSetLayout;
-    descriptorSetLayouts[1] = Entity::descriptorSetLayout->descriptorSetLayout;
-
-    generalGraphicsPipeline = new GraphicsPipeline(device->device, "res/shaders/general_shader.vert.spv", "res/shaders/general_shader.frag.spv", 1, &bindingDescription, static_cast<uint32_t>(attributeDescriptions.size()), attributeDescriptions.data(), static_cast<uint32_t>(descriptorSetLayouts.size()), descriptorSetLayouts.data(), swapchain->swapchainExtent, renderPass->renderPass, device->msaaSamples);
-
-    Skybox::CreateDesriptorSetLayout(device->device);
-
-    skyboxGraphicsPipeline = new GraphicsPipeline(device->device, "res/shaders/skybox_shader.vert.spv", "res/shaders/skybox_shader.frag.spv", 0, nullptr, 0, nullptr, 1, &Skybox::descriptorSetLayout->descriptorSetLayout, swapchain->swapchainExtent, renderPass->renderPass, device->msaaSamples);
-
     commandPool = new CommandPool(device->device, device->indices.graphicsFamily.value(), VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
     colorResources = new ColorResources(device->physicalDevice, device->device, swapchain->swapchainExtent, device->msaaSamples, swapchain->swapchainImageFormat);
     depthResources = new DepthResources(device->physicalDevice, device->device, swapchain->swapchainExtent, device->msaaSamples, commandPool->commandPool, device->graphicsQueue);
@@ -48,25 +27,6 @@ Renderer::Renderer(Window* window, Camera* camera) {
             swapchain->swapchainImageViews[i]
         };
         framebuffers[i] = new Framebuffer(device->device, renderPass->renderPass, static_cast<uint32_t>(attachments.size()), attachments.data(), swapchain->swapchainExtent);
-    }
-
-    std::array<VkDescriptorPoolSize, 1> poolSizes{};
-    poolSizes[0] = {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 2 * MAX_FRAMES_IN_FLIGHT};
-    descriptorPool = new DescriptorPool(device->device, static_cast<uint32_t>(poolSizes.size()), poolSizes.data(), MAX_FRAMES_IN_FLIGHT);
-
-    std::vector<VkDescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT, descriptorSetLayout->descriptorSetLayout);
-    descriptorSets = new DescriptorSets(device->device, descriptorPool->descriptorPool, layouts.data(), MAX_FRAMES_IN_FLIGHT);
-
-    vertexUniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
-    fragmentUniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
-    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-        vertexUniformBuffers[i] = new Buffer(device->physicalDevice, device->device, sizeof(GeneralVertexUniformBufferObject), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-        descriptorSets->updateBufferInfo(i, 0, 0, 1, vertexUniformBuffers[i]->buffer, sizeof(GeneralVertexUniformBufferObject));
-
-        fragmentUniformBuffers[i] = new Buffer(device->physicalDevice, device->device, sizeof(GeneralFragmentUniformBufferObject), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-        descriptorSets->updateBufferInfo(i, 1, 0, 1, fragmentUniformBuffers[i]->buffer, sizeof(GeneralFragmentUniformBufferObject));
-
-        vertexUbo.projectionMatrix = camera->createProjectionMatrix();
     }
 
     commandBuffers = new CommandBuffers(device->device, commandPool->commandPool, MAX_FRAMES_IN_FLIGHT);
@@ -82,20 +42,7 @@ Renderer::Renderer(Window* window, Camera* camera) {
 }
 
 Renderer::~Renderer() {
-    Entity::DeleteDesriptorSetLayout();
-    Skybox::DeleteDesriptorSetLayout();
-
     cleanUpSwapchain();
-
-    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-        delete vertexUniformBuffers[i];
-        delete fragmentUniformBuffers[i];
-    }
-    vertexUniformBuffers.clear();
-    fragmentUniformBuffers.clear();
-
-    delete descriptorPool;
-    delete descriptorSetLayout;
 
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         delete imageAvailableSemaphores[i];
@@ -117,9 +64,7 @@ Renderer::~Renderer() {
     delete instance;
 }
 
-void Renderer::render(std::vector<Entity*> entities, Light* light, Skybox* skybox) {
-    static uint32_t currentFrame = 0;
-
+void Renderer::beginRendering() {
     vkWaitForFences(device->device, 1, &inFlightFences[currentFrame]->fence, VK_TRUE, UINT64_MAX);
 
     calculateDeltaTime();
@@ -136,7 +81,32 @@ void Renderer::render(std::vector<Entity*> entities, Light* light, Skybox* skybo
     vkResetFences(device->device, 1, &inFlightFences[currentFrame]->fence);
     vkResetCommandBuffer(commandBuffers->commandBuffers[currentFrame], 0);
 
-    recordCommandBuffer(currentFrame, imageIndex, entities, light, skybox);
+    VkCommandBufferBeginInfo commandBufferBeginInfo{};
+    commandBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    if (vkBeginCommandBuffer(commandBuffers->commandBuffers[currentFrame], &commandBufferBeginInfo) != VK_SUCCESS) {
+        throw std::runtime_error("Failed to begin recording command buffer!");
+    }
+
+    VkRenderPassBeginInfo renderPassBeginInfo{};
+    renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+    renderPassBeginInfo.renderPass = renderPass->renderPass;
+    renderPassBeginInfo.framebuffer = framebuffers[imageIndex]->framebuffer;
+    renderPassBeginInfo.renderArea.offset = {0, 0};
+    renderPassBeginInfo.renderArea.extent = swapchain->swapchainExtent;
+    std::array<VkClearValue, 2> clearValues{};
+    clearValues[0] = {{0.0f, 0.0f, 0.0f, 1.0f}};
+    clearValues[1] = {{1.0f, 0}};
+    renderPassBeginInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+    renderPassBeginInfo.pClearValues = clearValues.data();
+    vkCmdBeginRenderPass(commandBuffers->commandBuffers[currentFrame], &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+}
+
+void Renderer::endRendering() {
+    vkCmdEndRenderPass(commandBuffers->commandBuffers[currentFrame]);
+
+    if (vkEndCommandBuffer(commandBuffers->commandBuffers[currentFrame]) != VK_SUCCESS) {
+        throw std::runtime_error("Failed to record command buffer!");
+    }
 
     VkSubmitInfo submitInfo{};
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -196,16 +166,6 @@ void Renderer::recreateSwapchain() {
 
     swapchain = new Swapchain(device->device, surface->surface, device->swapchainSupportDetails, window->window, device->indices);
     renderPass = new RenderPass(device->device, swapchain->swapchainImageFormat, DepthResources::findDepthFormat(device->physicalDevice), device->msaaSamples);
-
-    auto bindingDescription = Vertex::getBindingDescription();
-    auto attributeDescriptions = Vertex::getAttributeDescriptions();
-
-    std::array<VkDescriptorSetLayout, 2> descriptorSetLayouts{};
-    descriptorSetLayouts[0] = descriptorSetLayout->descriptorSetLayout;
-    descriptorSetLayouts[1] = Entity::descriptorSetLayout->descriptorSetLayout;
-
-    generalGraphicsPipeline = new GraphicsPipeline(device->device, "res/shaders/general_shader.vert.spv", "res/shaders/general_shader.frag.spv", 1, &bindingDescription, static_cast<uint32_t>(attributeDescriptions.size()), attributeDescriptions.data(), static_cast<uint32_t>(descriptorSetLayouts.size()), descriptorSetLayouts.data(), swapchain->swapchainExtent, renderPass->renderPass, device->msaaSamples);
-    skyboxGraphicsPipeline = new GraphicsPipeline(device->device, "res/shaders/skybox_shader.vert.spv", "res/shaders/skybox_shader.frag.spv", 0, nullptr, 0, nullptr, 1, &Skybox::descriptorSetLayout->descriptorSetLayout, swapchain->swapchainExtent, renderPass->renderPass, device->msaaSamples);
     depthResources = new DepthResources(device->physicalDevice, device->device, swapchain->swapchainExtent, device->msaaSamples, commandPool->commandPool, device->graphicsQueue);
     colorResources = new ColorResources(device->physicalDevice, device->device, swapchain->swapchainExtent, device->msaaSamples, swapchain->swapchainImageFormat);
 
@@ -220,7 +180,6 @@ void Renderer::recreateSwapchain() {
     }
 
     camera->aspectRatio = (float) swapchain->swapchainExtent.width / (float) swapchain->swapchainExtent.height;
-    vertexUbo.projectionMatrix = camera->createProjectionMatrix();
 }
 
 void Renderer::cleanUpSwapchain() {
@@ -231,70 +190,6 @@ void Renderer::cleanUpSwapchain() {
 
     delete colorResources;
     delete depthResources;
-    delete skyboxGraphicsPipeline;
-    delete generalGraphicsPipeline;
     delete renderPass;
     delete swapchain;
-}
-
-void Renderer::recordCommandBuffer(uint32_t currentFrame, uint32_t imageIndex, std::vector<Entity*> entities, Light* light, Skybox* skybox) {
-    vertexUbo.viewMatrix = camera->createViewMatrix();
-    vertexUbo.lightPosition = light->position;
-    void* vubData;
-    vkMapMemory(device->device, vertexUniformBuffers[currentFrame]->bufferMemory, 0, sizeof(vertexUbo), 0, &vubData);
-    memcpy(vubData, &vertexUbo, sizeof(vertexUbo));
-    vkUnmapMemory(device->device, vertexUniformBuffers[currentFrame]->bufferMemory);
-
-    GeneralFragmentUniformBufferObject fragmentUbo{};
-    fragmentUbo.lightColor = light->color;
-    void* fubData;
-    vkMapMemory(device->device, fragmentUniformBuffers[currentFrame]->bufferMemory, 0, sizeof(fragmentUbo), 0, &fubData);
-    memcpy(fubData, &fragmentUbo, sizeof(fragmentUbo));
-    vkUnmapMemory(device->device, fragmentUniformBuffers[currentFrame]->bufferMemory);
-
-    VkCommandBuffer commandBuffer = commandBuffers->commandBuffers[currentFrame];
-    VkCommandBufferBeginInfo commandBufferBeginInfo{};
-    commandBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-    if (vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo) != VK_SUCCESS) {
-        throw std::runtime_error("Failed to begin recording command buffer!");
-    }
-
-    VkRenderPassBeginInfo renderPassBeginInfo{};
-    renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-    renderPassBeginInfo.renderPass = renderPass->renderPass;
-    renderPassBeginInfo.framebuffer = framebuffers[imageIndex]->framebuffer;
-    renderPassBeginInfo.renderArea.offset = {0, 0};
-    renderPassBeginInfo.renderArea.extent = swapchain->swapchainExtent;
-    std::array<VkClearValue, 2> clearValues{};
-    clearValues[0] = {{0.0f, 0.0f, 0.0f, 1.0f}};
-    clearValues[1] = {{1.0f, 0}};
-    renderPassBeginInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
-    renderPassBeginInfo.pClearValues = clearValues.data();
-    vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
-
-    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, generalGraphicsPipeline->graphicsPipeline);
-    std::array<VkDescriptorSet, 2> descriptorSetsToBind{};
-    descriptorSetsToBind[0] = descriptorSets->descriptorSets[currentFrame];
-    for (Entity* entity : entities) {
-        entity->updateDescriptorSetResources(currentFrame);
-
-        VkDeviceSize offsets = 0;
-        vkCmdBindVertexBuffers(commandBuffer, 0, 1, &entity->mesh->vertexBuffer->buffer, &offsets);
-        vkCmdBindIndexBuffer(commandBuffer, entity->mesh->indexBuffer->buffer, 0, VK_INDEX_TYPE_UINT32);
-        descriptorSetsToBind[1] = entity->descriptorSets->descriptorSets[currentFrame];
-        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, generalGraphicsPipeline->pipelineLayout, 0, static_cast<uint32_t>(descriptorSetsToBind.size()), descriptorSetsToBind.data(), 0, nullptr);
-
-        vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(entity->mesh->indicesSize), 1, 0, 0, 0);
-    }
-
-    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, skyboxGraphicsPipeline->graphicsPipeline);
-    skybox->updateDescriptorSetResources(currentFrame);
-    vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, skyboxGraphicsPipeline->pipelineLayout, 0, 1, &skybox->descriptorSets->descriptorSets[currentFrame], 0, nullptr);
-    vkCmdDraw(commandBuffer, 36, 1, 0, 0);
-
-    vkCmdEndRenderPass(commandBuffer);
-
-    if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
-        throw std::runtime_error("Failed to record command buffer!");
-    }
 }

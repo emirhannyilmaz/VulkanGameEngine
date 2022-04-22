@@ -16,10 +16,10 @@ Skybox::Skybox(Texture* texture, float size, Camera* camera, Renderer* renderer)
     std::vector<VkDescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT, descriptorSetLayout->descriptorSetLayout);
     descriptorSets = new DescriptorSets(renderer->device->device, descriptorPool->descriptorPool, layouts.data(), MAX_FRAMES_IN_FLIGHT);
 
-    ubo.size = size;
+    SkyboxVertexUniformBufferObject vertexUbo;
+    vertexUbo.size = size;
 
     vertexUniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
-
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         vertexUniformBuffers[i] = new Buffer(renderer->device->physicalDevice, renderer->device->device, sizeof(SkyboxVertexUniformBufferObject), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
         descriptorSets->updateBufferInfo(i, 0, 0, 1, vertexUniformBuffers[i]->buffer, sizeof(SkyboxVertexUniformBufferObject));
@@ -27,8 +27,8 @@ Skybox::Skybox(Texture* texture, float size, Camera* camera, Renderer* renderer)
         descriptorSets->updateImageInfo(i, 1, 0, 1, texture->image->imageView, texture->sampler->sampler);
 
         void* data;
-        vkMapMemory(renderer->device->device, vertexUniformBuffers[i]->bufferMemory, 0, sizeof(ubo), 0, &data);
-        memcpy(data, &ubo, sizeof(ubo));
+        vkMapMemory(renderer->device->device, vertexUniformBuffers[i]->bufferMemory, 0, sizeof(vertexUbo), 0, &vubData);
+        memcpy(data, &vertexUbo, sizeof(vertexUbo));
         vkUnmapMemory(renderer->device->device, vertexUniformBuffers[i]->bufferMemory);
     }
 }
@@ -40,19 +40,6 @@ Skybox::~Skybox() {
     vertexUniformBuffers.clear();
     delete descriptorPool;
     delete texture;
-}
-
-void Skybox::updateDescriptorSetResources(uint32_t currentFrame) {
-    ubo.viewMatrix = camera->createViewMatrix();
-    ubo.projectionMatrix = camera->createProjectionMatrix();
-    ubo.viewMatrix[3][0] = 0.0f;
-    ubo.viewMatrix[3][1] = 0.0f;
-    ubo.viewMatrix[3][2] = 0.0f;
-
-    void* data;
-    vkMapMemory(renderer->device->device, vertexUniformBuffers[currentFrame]->bufferMemory, 0, sizeof(ubo), 0, &data);
-    memcpy(data, &ubo, sizeof(ubo));
-    vkUnmapMemory(renderer->device->device, vertexUniformBuffers[currentFrame]->bufferMemory);
 }
 
 void Skybox::CreateDesriptorSetLayout(VkDevice& device) {

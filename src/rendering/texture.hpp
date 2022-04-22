@@ -5,6 +5,7 @@
 #include "renderer.hpp"
 #include "image.hpp"
 #include "sampler.hpp"
+#include "buffer.hpp"
 
 class Texture {
 public:

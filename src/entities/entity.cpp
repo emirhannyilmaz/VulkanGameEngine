@@ -55,7 +55,7 @@ Entity::~Entity() {
     delete texture;
 }
 
-void Entity::updateDescriptorSetResources(uint32_t currentFrame) {
+void Entity::updateDescriptorSetResources() {
     glm::mat4 matrix(1.0f);
     matrix = glm::translate(matrix, position);
     matrix = glm::rotate(matrix, glm::radians(rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
@@ -67,9 +67,9 @@ void Entity::updateDescriptorSetResources(uint32_t currentFrame) {
     ubo.modelMatrix = matrix;
 
     void* data;
-    vkMapMemory(renderer->device->device, vertexUniformBuffers[currentFrame]->bufferMemory, 0, sizeof(ubo), 0, &data);
+    vkMapMemory(renderer->device->device, vertexUniformBuffers[renderer->currentFrame]->bufferMemory, 0, sizeof(ubo), 0, &data);
     memcpy(data, &ubo, sizeof(ubo));
-    vkUnmapMemory(renderer->device->device, vertexUniformBuffers[currentFrame]->bufferMemory);
+    vkUnmapMemory(renderer->device->device, vertexUniformBuffers[renderer->currentFrame]->bufferMemory);
 }
 
 void Entity::CreateDesriptorSetLayout(VkDevice& device) {

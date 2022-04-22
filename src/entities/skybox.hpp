@@ -6,11 +6,9 @@
 #include "../rendering/descriptor_set_layout.hpp"
 #include "../rendering/descriptor_sets.hpp"
 #include "../rendering/renderer_info.hpp"
-#include "camera.hpp"
+#include "../rendering/buffer.hpp"
 
 struct SkyboxVertexUniformBufferObject {
-    alignas(16) glm::mat4 viewMatrix;
-    alignas(16) glm::mat4 projectionMatrix;
     alignas(4) float size;
 };
 
@@ -20,16 +18,13 @@ public:
     float size;
     static DescriptorSetLayout* descriptorSetLayout;
     DescriptorSets* descriptorSets;
-    Skybox(Texture* texture, float size, Camera* camera, Renderer* renderer);
+    Skybox(Texture* texture, float size, Renderer* renderer);
     ~Skybox();
-    void updateDescriptorSetResources(uint32_t currentFrame);
     static void CreateDesriptorSetLayout(VkDevice& device);
     static void DeleteDesriptorSetLayout();
 private:
     DescriptorPool* descriptorPool;
-    Camera* camera;
     Renderer* renderer;
-    SkyboxVertexUniformBufferObject ubo{};
     std::vector<Buffer*> vertexUniformBuffers;
 };
 
