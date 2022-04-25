@@ -42,8 +42,12 @@ public:
     uint32_t currentImageIndex;
     Renderer(Window* window, Camera* camera);
     ~Renderer();
+    void beginRecordingCommands();
+    void endRecordingCommands();
     void beginRendering();
     void endRendering();
+    void beginOffScreenRendering(Framebuffer* framebuffer);
+    void endOffScreenRendering();
 private:
     Window* window;
     Camera* camera;

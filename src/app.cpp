@@ -9,6 +9,7 @@ void App::run() {
     Renderer* renderer = new Renderer(window, camera);
     EntityRenderer* entityRenderer = new EntityRenderer(renderer);
     SkyboxRenderer* skyboxRenderer = new SkyboxRenderer(renderer);
+    WaterRenderer* waterRenderer = new WaterRenderer(renderer);
 
     ObjModelData objModelData = ModelLoader::LoadObj("res/models/rocket.obj");
 
@@ -27,6 +28,11 @@ void App::run() {
     Texture* skyboxTexture = new Texture({"res/textures/skybox_front.tga", "res/textures/skybox_back.tga", "res/textures/skybox_up.tga", "res/textures/skybox_down.tga", "res/textures/skybox_right.tga", "res/textures/skybox_left.tga"}, renderer);
     Skybox* skybox = new Skybox(skyboxTexture, 500.0f, renderer);
 
+    WaterTile* waterTile = new WaterTile(glm::vec3(0.0f, -10.0f, 0.0f), glm::vec2(25.0f, 25.0f), renderer);
+
+    std::vector<WaterTile*> waterTiles;
+    waterTiles.push_back(waterTile);
+
     while (!glfwWindowShouldClose(window->window)) {
         glfwPollEvents();
 
@@ -36,17 +42,26 @@ void App::run() {
 
         entityRenderer->render(entities, light, camera);
         skyboxRenderer->render(skybox, camera);
+        waterRenderer->render(waterTiles, camera);
 
         renderer->endRendering();
     }
 
     vkDeviceWaitIdle(renderer->device->device);
 
+    for (size_t i = 0; i < waterTiles.size(); i++) {
+        delete waterTiles[i];
+    }
+    waterTiles.clear();
+
     delete skybox;
+
     for (size_t i = 0; i < entities.size(); i++) {
         delete entities[i];
     }
     entities.clear();
+
+    delete waterRenderer;
     delete skyboxRenderer;
     delete entityRenderer;
     delete renderer;

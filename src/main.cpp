@@ -1,7 +1,6 @@
 #include <iostream>
 #include <stdexcept>
 #include <cstdlib>
-
 #include "app.hpp"
 
 int main() {

@@ -63,12 +63,12 @@ void Entity::updateDescriptorSetResources() {
     matrix = glm::rotate(matrix, glm::radians(rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
     matrix = glm::scale(matrix, scale);
 
-    EntityVertexUniformBufferObject ubo{};
-    ubo.modelMatrix = matrix;
+    EntityVertexUniformBufferObject vertexUbo{};
+    vertexUbo.modelMatrix = matrix;
 
     void* data;
-    vkMapMemory(renderer->device->device, vertexUniformBuffers[renderer->currentFrame]->bufferMemory, 0, sizeof(ubo), 0, &data);
-    memcpy(data, &ubo, sizeof(ubo));
+    vkMapMemory(renderer->device->device, vertexUniformBuffers[renderer->currentFrame]->bufferMemory, 0, sizeof(vertexUbo), 0, &data);
+    memcpy(data, &vertexUbo, sizeof(vertexUbo));
     vkUnmapMemory(renderer->device->device, vertexUniformBuffers[renderer->currentFrame]->bufferMemory);
 }
 

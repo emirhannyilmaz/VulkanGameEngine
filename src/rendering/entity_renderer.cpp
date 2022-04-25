@@ -52,21 +52,7 @@ EntityRenderer::~EntityRenderer() {
 }
 
 void EntityRenderer::render(std::vector<Entity*> entities, Light* light, Camera* camera) {
-    EntityRendererVertexUniformBufferObject vertexUbo{};
-    vertexUbo.viewMatrix = camera->createViewMatrix();
-    vertexUbo.projectionMatrix = camera->createProjectionMatrix();
-    vertexUbo.lightPosition = light->position;
-    void* vubData;
-    vkMapMemory(renderer->device->device, vertexUniformBuffers[renderer->currentFrame]->bufferMemory, 0, sizeof(vertexUbo), 0, &vubData);
-    memcpy(vubData, &vertexUbo, sizeof(vertexUbo));
-    vkUnmapMemory(renderer->device->device, vertexUniformBuffers[renderer->currentFrame]->bufferMemory);
-
-    EntityRendererFragmentUniformBufferObject fragmentUbo{};
-    fragmentUbo.lightColor = light->color;
-    void* fubData;
-    vkMapMemory(renderer->device->device, fragmentUniformBuffers[renderer->currentFrame]->bufferMemory, 0, sizeof(fragmentUbo), 0, &fubData);
-    memcpy(fubData, &fragmentUbo, sizeof(fragmentUbo));
-    vkUnmapMemory(renderer->device->device, fragmentUniformBuffers[renderer->currentFrame]->bufferMemory);
+    updateDescriptorSetResources(light, camera);
 
     VkCommandBuffer commandBuffer = renderer->commandBuffers->commandBuffers[renderer->currentFrame];
 
@@ -84,4 +70,22 @@ void EntityRenderer::render(std::vector<Entity*> entities, Light* light, Camera*
 
         vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(entity->mesh->indicesSize), 1, 0, 0, 0);
     }
+}
+
+void EntityRenderer::updateDescriptorSetResources(Light* light, Camera* camera) {
+    EntityRendererVertexUniformBufferObject vertexUbo{};
+    vertexUbo.viewMatrix = camera->createViewMatrix();
+    vertexUbo.projectionMatrix = camera->createProjectionMatrix();
+    vertexUbo.lightPosition = light->position;
+    void* vubData;
+    vkMapMemory(renderer->device->device, vertexUniformBuffers[renderer->currentFrame]->bufferMemory, 0, sizeof(vertexUbo), 0, &vubData);
+    memcpy(vubData, &vertexUbo, sizeof(vertexUbo));
+    vkUnmapMemory(renderer->device->device, vertexUniformBuffers[renderer->currentFrame]->bufferMemory);
+
+    EntityRendererFragmentUniformBufferObject fragmentUbo{};
+    fragmentUbo.lightColor = light->color;
+    void* fubData;
+    vkMapMemory(renderer->device->device, fragmentUniformBuffers[renderer->currentFrame]->bufferMemory, 0, sizeof(fragmentUbo), 0, &fubData);
+    memcpy(fubData, &fragmentUbo, sizeof(fragmentUbo));
+    vkUnmapMemory(renderer->device->device, fragmentUniformBuffers[renderer->currentFrame]->bufferMemory);
 }

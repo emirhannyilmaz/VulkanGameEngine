@@ -64,7 +64,7 @@ Renderer::~Renderer() {
     delete instance;
 }
 
-void Renderer::beginRendering() {
+void Renderer::beginRecordingCommands() {
     vkWaitForFences(device->device, 1, &inFlightFences[currentFrame]->fence, VK_TRUE, UINT64_MAX);
 
     calculateDeltaTime();
@@ -85,24 +85,9 @@ void Renderer::beginRendering() {
     if (vkBeginCommandBuffer(commandBuffers->commandBuffers[currentFrame], &commandBufferBeginInfo) != VK_SUCCESS) {
         throw std::runtime_error("Failed to begin recording command buffer!");
     }
-
-    VkRenderPassBeginInfo renderPassBeginInfo{};
-    renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-    renderPassBeginInfo.renderPass = renderPass->renderPass;
-    renderPassBeginInfo.framebuffer = framebuffers[currentImageIndex]->framebuffer;
-    renderPassBeginInfo.renderArea.offset = {0, 0};
-    renderPassBeginInfo.renderArea.extent = swapchain->swapchainExtent;
-    std::array<VkClearValue, 2> clearValues{};
-    clearValues[0] = {{0.0f, 0.0f, 0.0f, 1.0f}};
-    clearValues[1] = {{1.0f, 0}};
-    renderPassBeginInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
-    renderPassBeginInfo.pClearValues = clearValues.data();
-    vkCmdBeginRenderPass(commandBuffers->commandBuffers[currentFrame], &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 }
 
-void Renderer::endRendering() {
-    vkCmdEndRenderPass(commandBuffers->commandBuffers[currentFrame]);
-
+void Renderer::endRecordingCommands() {
     if (vkEndCommandBuffer(commandBuffers->commandBuffers[currentFrame]) != VK_SUCCESS) {
         throw std::runtime_error("Failed to record command buffer!");
     }
@@ -140,6 +125,44 @@ void Renderer::endRendering() {
     }
 
     currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+}
+
+void Renderer::beginRendering() {
+    VkRenderPassBeginInfo renderPassBeginInfo{};
+    renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+    renderPassBeginInfo.renderPass = renderPass->renderPass;
+    renderPassBeginInfo.framebuffer = framebuffers[currentImageIndex]->framebuffer;
+    renderPassBeginInfo.renderArea.offset = {0, 0};
+    renderPassBeginInfo.renderArea.extent = swapchain->swapchainExtent;
+    std::array<VkClearValue, 2> clearValues{};
+    clearValues[0] = {{0.0f, 0.0f, 0.0f, 1.0f}};
+    clearValues[1] = {{1.0f, 0}};
+    renderPassBeginInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+    renderPassBeginInfo.pClearValues = clearValues.data();
+    vkCmdBeginRenderPass(commandBuffers->commandBuffers[currentFrame], &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+}
+
+void Renderer::endRendering() {
+    vkCmdEndRenderPass(commandBuffers->commandBuffers[currentFrame]);
+}
+
+void Renderer::beginOffScreenRendering(Framebuffer* framebuffer) {
+    VkRenderPassBeginInfo renderPassBeginInfo{};
+    renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+    renderPassBeginInfo.renderPass = renderPass->renderPass;
+    renderPassBeginInfo.framebuffer = framebuffer->framebuffer;
+    renderPassBeginInfo.renderArea.offset = {0, 0};
+    renderPassBeginInfo.renderArea.extent = swapchain->swapchainExtent;
+    std::array<VkClearValue, 2> clearValues{};
+    clearValues[0] = {{0.0f, 0.0f, 0.0f, 1.0f}};
+    clearValues[1] = {{1.0f, 0}};
+    renderPassBeginInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+    renderPassBeginInfo.pClearValues = clearValues.data();
+    vkCmdBeginRenderPass(commandBuffers->commandBuffers[currentFrame], &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+}
+
+void Renderer::endOffScreenRendering() {
+    vkCmdEndRenderPass(commandBuffers->commandBuffers[currentFrame]);
 }
 
 void Renderer::calculateDeltaTime() {

@@ -11,8 +11,6 @@
 
 struct WaterTileVertexUniformBufferObject {
     alignas(16) glm::mat4 modelMatrix;
-    alignas(16) glm::mat4 viewMatrix;
-    alignas(16) glm::mat4 projectionMatrix;
 };
 
 class WaterTile {

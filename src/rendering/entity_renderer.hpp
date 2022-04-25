@@ -33,6 +33,7 @@ private:
     DescriptorSets* descriptorSets;
     std::vector<Buffer*> vertexUniformBuffers;
     std::vector<Buffer*> fragmentUniformBuffers;
+    void updateDescriptorSetResources(Light* light, Camera* camera);
 };
 
 #endif

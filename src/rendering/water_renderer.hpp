@@ -1,24 +1,24 @@
-#ifndef skybox_renderer_hpp
-#define skybox_renderer_hpp
+#ifndef water_renderer_hpp
+#define water_renderer_hpp
 
 #include "renderer.hpp"
-#include "../entities/skybox.hpp"
+#include "../entities/water_tile.hpp"
 #include "graphics_pipeline.hpp"
 #include "descriptor_set_layout.hpp"
 #include "descriptor_pool.hpp"
 #include "descriptor_sets.hpp"
 #include "buffer.hpp"
 
-struct SkyboxRendererVertexUniformBufferObject {
+struct WaterRendererVertexUniformBufferObject {
     alignas(16) glm::mat4 viewMatrix;
     alignas(16) glm::mat4 projectionMatrix;
 };
 
-class SkyboxRenderer {
+class WaterRenderer {
 public:
-    SkyboxRenderer(Renderer* renderer);
-    ~SkyboxRenderer();
-    void render(Skybox* skybox, Camera* camera);
+    WaterRenderer(Renderer* renderer);
+    ~WaterRenderer();
+    void render(std::vector<WaterTile*> waterTiles, Camera* camera);
 private:
     Renderer* renderer;
     GraphicsPipeline* graphicsPipeline;

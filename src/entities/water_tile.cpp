@@ -3,9 +3,9 @@
 DescriptorSetLayout* WaterTile::descriptorSetLayout = nullptr;
 
 WaterTile::WaterTile(glm::vec3 position, glm::vec2 scale, Renderer* renderer) {
-/*
     this->position = position;
     this->scale = scale;
+    this->renderer = renderer;
 
     std::array<VkDescriptorPoolSize, 1> poolSizes{};
     poolSizes[0] = {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, MAX_FRAMES_IN_FLIGHT};
@@ -15,32 +15,32 @@ WaterTile::WaterTile(glm::vec3 position, glm::vec2 scale, Renderer* renderer) {
     descriptorSets = new DescriptorSets(renderer->device->device, descriptorPool->descriptorPool, layouts.data(), MAX_FRAMES_IN_FLIGHT);
 
     vertexUniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
-
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-        uniformBuffers[i] = new Buffer(renderer->device->physicalDevice, renderer->device->device, sizeof(WaterTileVertexUniformBufferObject), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-        descriptorSets->updateBufferInfo(i, 0, 0, 1, uniformBuffers[i]->buffer, sizeof(WaterTileVertexUniformBufferObject));
-
-        void* data;
-        vkMapMemory(renderer->device->device, uniformBuffers[i]->bufferMemory, 0, sizeof(vertexUbo), 0, &data);
-        memcpy(data, &vertexUbo, sizeof(vertexUbo));
-        vkUnmapMemory(renderer->device->device, uniformBuffers[i]->bufferMemory);
+        vertexUniformBuffers[i] = new Buffer(renderer->device->physicalDevice, renderer->device->device, sizeof(WaterTileVertexUniformBufferObject), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+        descriptorSets->updateBufferInfo(i, 0, 0, 1, vertexUniformBuffers[i]->buffer, sizeof(WaterTileVertexUniformBufferObject));
     }
-*/
 }
 
 WaterTile::~WaterTile() {
+    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+        delete vertexUniformBuffers[i];
+    }
+    vertexUniformBuffers.clear();
+    delete descriptorPool;
 }
 
 void WaterTile::updateDescriptorSetResources() {
-/*
-    EntityVertexUniformBufferObject ubo{};
-    ubo.modelMatrix = matrix;
+    glm::mat4 matrix(1.0f);
+    matrix = glm::translate(matrix, position);
+    matrix = glm::scale(matrix, glm::vec3(scale.x, 1.0f, scale.y));
+
+    WaterTileVertexUniformBufferObject vertexUbo{};
+    vertexUbo.modelMatrix = matrix;
 
     void* data;
-    vkMapMemory(renderer->device->device, vertexUniformBuffers[currentFrame]->bufferMemory, 0, sizeof(ubo), 0, &data);
-    memcpy(data, &ubo, sizeof(ubo));
-    vkUnmapMemory(renderer->device->device, vertexUniformBuffers[currentFrame]->bufferMemory);
-*/
+    vkMapMemory(renderer->device->device, vertexUniformBuffers[renderer->currentFrame]->bufferMemory, 0, sizeof(vertexUbo), 0, &data);
+    memcpy(data, &vertexUbo, sizeof(vertexUbo));
+    vkUnmapMemory(renderer->device->device, vertexUniformBuffers[renderer->currentFrame]->bufferMemory);
 }
 
 void WaterTile::CreateDesriptorSetLayout(VkDevice& device) {

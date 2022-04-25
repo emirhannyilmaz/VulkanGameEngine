@@ -5,6 +5,7 @@
 #include "rendering/renderer.hpp"
 #include "rendering/entity_renderer.hpp"
 #include "rendering/skybox_renderer.hpp"
+#include "rendering/water_renderer.hpp"
 #include "rendering/model_loader.hpp"
 
 class App {
