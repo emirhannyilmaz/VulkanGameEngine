@@ -1,5 +1,4 @@
 #include "renderer.hpp"
-#include "../entities/skybox.hpp"
 
 Renderer::Renderer(Window* window, Camera* camera) {
     this->window = window;
@@ -14,7 +13,7 @@ Renderer::Renderer(Window* window, Camera* camera) {
     surface = new Surface(instance->instance, window->window);
     device = new Device(instance->instance, surface->surface);
     swapchain = new Swapchain(device->device, surface->surface, device->swapchainSupportDetails, window->window, device->indices);
-    renderPass = new RenderPass(device->device, swapchain->swapchainImageFormat, DepthResources::findDepthFormat(device->physicalDevice), device->msaaSamples);
+    renderPass = new RenderPass(device->device, swapchain->swapchainImageFormat, DepthResources::findDepthFormat(device->physicalDevice), device->msaaSamples, false);
     commandPool = new CommandPool(device->device, device->indices.graphicsFamily.value(), VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
     colorResources = new ColorResources(device->physicalDevice, device->device, swapchain->swapchainExtent, device->msaaSamples, swapchain->swapchainImageFormat);
     depthResources = new DepthResources(device->physicalDevice, device->device, swapchain->swapchainExtent, device->msaaSamples, commandPool->commandPool, device->graphicsQueue);
@@ -28,6 +27,8 @@ Renderer::Renderer(Window* window, Camera* camera) {
         };
         framebuffers[i] = new Framebuffer(device->device, renderPass->renderPass, static_cast<uint32_t>(attachments.size()), attachments.data(), swapchain->swapchainExtent);
     }
+
+    waterResources = new WaterResources(device->physicalDevice, device->device, swapchain->swapchainExtent, device->msaaSamples, swapchain->swapchainImageFormat, commandPool->commandPool, device->graphicsQueue);
 
     commandBuffers = new CommandBuffers(device->device, commandPool->commandPool, MAX_FRAMES_IN_FLIGHT);
 
@@ -69,7 +70,7 @@ void Renderer::beginRecordingCommands() {
 
     calculateDeltaTime();
 
-    VkResult acquireNextImageResult = vkAcquireNextImageKHR(device->device, swapchain->swapchain, UINT64_MAX, imageAvailableSemaphores[currentFrame]->semaphore, VK_NULL_HANDLE, &currentImageIndex);
+    acquireNextImageResult = vkAcquireNextImageKHR(device->device, swapchain->swapchain, UINT64_MAX, imageAvailableSemaphores[currentFrame]->semaphore, VK_NULL_HANDLE, &currentImageIndex);
     if (acquireNextImageResult == VK_ERROR_OUT_OF_DATE_KHR) {
         recreateSwapchain();
         return;
@@ -88,6 +89,10 @@ void Renderer::beginRecordingCommands() {
 }
 
 void Renderer::endRecordingCommands() {
+    if (acquireNextImageResult == VK_ERROR_OUT_OF_DATE_KHR) {
+        return;
+    }
+
     if (vkEndCommandBuffer(commandBuffers->commandBuffers[currentFrame]) != VK_SUCCESS) {
         throw std::runtime_error("Failed to record command buffer!");
     }
@@ -128,6 +133,10 @@ void Renderer::endRecordingCommands() {
 }
 
 void Renderer::beginRendering() {
+    if (acquireNextImageResult == VK_ERROR_OUT_OF_DATE_KHR) {
+        return;
+    }
+
     VkRenderPassBeginInfo renderPassBeginInfo{};
     renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
     renderPassBeginInfo.renderPass = renderPass->renderPass;
@@ -143,14 +152,22 @@ void Renderer::beginRendering() {
 }
 
 void Renderer::endRendering() {
+    if (acquireNextImageResult == VK_ERROR_OUT_OF_DATE_KHR) {
+        return;
+    }
+
     vkCmdEndRenderPass(commandBuffers->commandBuffers[currentFrame]);
 }
 
-void Renderer::beginOffScreenRendering(Framebuffer* framebuffer) {
+void Renderer::beginOffScreenRendering() {
+    if (acquireNextImageResult == VK_ERROR_OUT_OF_DATE_KHR) {
+        return;
+    }
+
     VkRenderPassBeginInfo renderPassBeginInfo{};
     renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-    renderPassBeginInfo.renderPass = renderPass->renderPass;
-    renderPassBeginInfo.framebuffer = framebuffer->framebuffer;
+    renderPassBeginInfo.renderPass = waterResources->renderPass->renderPass;
+    renderPassBeginInfo.framebuffer = waterResources->framebuffer->framebuffer;
     renderPassBeginInfo.renderArea.offset = {0, 0};
     renderPassBeginInfo.renderArea.extent = swapchain->swapchainExtent;
     std::array<VkClearValue, 2> clearValues{};
@@ -162,6 +179,10 @@ void Renderer::beginOffScreenRendering(Framebuffer* framebuffer) {
 }
 
 void Renderer::endOffScreenRendering() {
+    if (acquireNextImageResult == VK_ERROR_OUT_OF_DATE_KHR) {
+        return;
+    }
+
     vkCmdEndRenderPass(commandBuffers->commandBuffers[currentFrame]);
 }
 
@@ -187,9 +208,9 @@ void Renderer::recreateSwapchain() {
     cleanUpSwapchain();
 
     swapchain = new Swapchain(device->device, surface->surface, device->swapchainSupportDetails, window->window, device->indices);
-    renderPass = new RenderPass(device->device, swapchain->swapchainImageFormat, DepthResources::findDepthFormat(device->physicalDevice), device->msaaSamples);
-    depthResources = new DepthResources(device->physicalDevice, device->device, swapchain->swapchainExtent, device->msaaSamples, commandPool->commandPool, device->graphicsQueue);
+    renderPass = new RenderPass(device->device, swapchain->swapchainImageFormat, DepthResources::findDepthFormat(device->physicalDevice), device->msaaSamples, false);
     colorResources = new ColorResources(device->physicalDevice, device->device, swapchain->swapchainExtent, device->msaaSamples, swapchain->swapchainImageFormat);
+    depthResources = new DepthResources(device->physicalDevice, device->device, swapchain->swapchainExtent, device->msaaSamples, commandPool->commandPool, device->graphicsQueue);
 
     framebuffers.resize(swapchain->swapchainImageViews.size());
     for (size_t i = 0; i < framebuffers.size(); i++) {
@@ -201,17 +222,21 @@ void Renderer::recreateSwapchain() {
         framebuffers[i] = new Framebuffer(device->device, renderPass->renderPass, static_cast<uint32_t>(attachments.size()), attachments.data(), swapchain->swapchainExtent);
     }
 
+    waterResources = new WaterResources(device->physicalDevice, device->device, swapchain->swapchainExtent, device->msaaSamples, swapchain->swapchainImageFormat, commandPool->commandPool, device->graphicsQueue);
+
     camera->aspectRatio = (float) swapchain->swapchainExtent.width / (float) swapchain->swapchainExtent.height;
 }
 
 void Renderer::cleanUpSwapchain() {
+    delete waterResources;
+
     for (auto framebuffer : framebuffers) {
         delete framebuffer;
     }
     framebuffers.clear();
 
-    delete colorResources;
     delete depthResources;
+    delete colorResources;
     delete renderPass;
     delete swapchain;
 }

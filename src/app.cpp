@@ -38,13 +38,20 @@ void App::run() {
 
         camera->update(renderer->deltaTime);
 
-        renderer->beginRendering();
+        renderer->beginRecordingCommands();
 
+        renderer->beginOffScreenRendering();
+        entityRenderer->render(entities, light, camera);
+        skyboxRenderer->render(skybox, camera);
+        renderer->endOffScreenRendering();
+
+        renderer->beginRendering();
         entityRenderer->render(entities, light, camera);
         skyboxRenderer->render(skybox, camera);
         waterRenderer->render(waterTiles, camera);
-
         renderer->endRendering();
+
+        renderer->endRecordingCommands();
     }
 
     vkDeviceWaitIdle(renderer->device->device);

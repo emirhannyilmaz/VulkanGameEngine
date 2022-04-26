@@ -1,6 +1,6 @@
 #include "render_pass.hpp"
 
-RenderPass::RenderPass(VkDevice& device, VkFormat colorAttachmentFormat, VkFormat depthAttachmentFormat, VkSampleCountFlagBits msaaSamples) {
+RenderPass::RenderPass(VkDevice& device, VkFormat colorAttachmentFormat, VkFormat depthAttachmentFormat, VkSampleCountFlagBits msaaSamples, bool offScreen) {
     this->device = device;
 
     VkAttachmentDescription colorAttachmentDescription{};
@@ -50,13 +50,17 @@ RenderPass::RenderPass(VkDevice& device, VkFormat colorAttachmentFormat, VkForma
     subpassDescription.colorAttachmentCount = 1;
     subpassDescription.pColorAttachments = &colorAttachmentReference;
     subpassDescription.pDepthStencilAttachment = &depthAttachmentReference;
-    subpassDescription.pResolveAttachments = &colorAttachmentResolveReference;
+    if (!offScreen) {
+        subpassDescription.pResolveAttachments = &colorAttachmentResolveReference;
+    }
 
-    std::array<VkAttachmentDescription, 3> attachments = {
+    std::vector<VkAttachmentDescription> attachments = {
         colorAttachmentDescription,
-        depthAttachmentDescription,
-        colorAttachmentResolveDescription
+        depthAttachmentDescription
     };
+    if (!offScreen) {
+        attachments.push_back(colorAttachmentResolveDescription);
+    }
 
     VkRenderPassCreateInfo renderPassCreateInfo{};
     renderPassCreateInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
@@ -66,12 +70,21 @@ RenderPass::RenderPass(VkDevice& device, VkFormat colorAttachmentFormat, VkForma
     renderPassCreateInfo.pSubpasses = &subpassDescription;
 
     VkSubpassDependency subpassDependency{};
-    subpassDependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-    subpassDependency.dstSubpass = 0;
-    subpassDependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-    subpassDependency.srcAccessMask = 0;
-    subpassDependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-    subpassDependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+    if (offScreen) {
+        subpassDependency.srcSubpass = 0;
+        subpassDependency.dstSubpass = VK_SUBPASS_EXTERNAL;
+        subpassDependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        subpassDependency.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        subpassDependency.dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        subpassDependency.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+    } else {
+        subpassDependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+        subpassDependency.dstSubpass = 0;
+        subpassDependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+        subpassDependency.srcAccessMask = 0;
+        subpassDependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+        subpassDependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+    }
 
     renderPassCreateInfo.dependencyCount = 1;
     renderPassCreateInfo.pDependencies = &subpassDependency;

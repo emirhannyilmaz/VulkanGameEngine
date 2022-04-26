@@ -20,6 +20,8 @@
 #include <chrono>
 #include "../io/window.hpp"
 #include "../entities/camera.hpp"
+#include "water_resources.hpp"
+#include <array>
 
 class Renderer {
 public:
@@ -33,6 +35,7 @@ public:
     ColorResources* colorResources;
     DepthResources* depthResources;
     std::vector<Framebuffer*> framebuffers;
+    WaterResources* waterResources;
     CommandBuffers* commandBuffers;
     std::vector<Semaphore*> imageAvailableSemaphores;
     std::vector<Semaphore*> renderFinishedSemaphores;
@@ -46,11 +49,12 @@ public:
     void endRecordingCommands();
     void beginRendering();
     void endRendering();
-    void beginOffScreenRendering(Framebuffer* framebuffer);
+    void beginOffScreenRendering();
     void endOffScreenRendering();
 private:
     Window* window;
     Camera* camera;
+    VkResult acquireNextImageResult;
     void calculateDeltaTime();
     void recreateSwapchain();
     void cleanUpSwapchain();

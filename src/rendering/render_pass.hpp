@@ -3,12 +3,12 @@
 
 #include <vulkan/vulkan.h>
 #include <stdexcept>
-#include <array>
+#include <vector>
 
 class RenderPass {
 public:
     VkRenderPass renderPass;
-    RenderPass(VkDevice& device, VkFormat colorAttachmentFormat, VkFormat depthAttachmentFormat, VkSampleCountFlagBits msaaSamples);
+    RenderPass(VkDevice& device, VkFormat colorAttachmentFormat, VkFormat depthAttachmentFormat, VkSampleCountFlagBits msaaSamples, bool offScreen);
     ~RenderPass();
 private:
     VkDevice device;
