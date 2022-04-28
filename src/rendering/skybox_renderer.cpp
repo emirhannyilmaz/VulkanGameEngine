@@ -41,10 +41,10 @@ SkyboxRenderer::~SkyboxRenderer() {
     delete descriptorSetLayout;
 }
 
-void SkyboxRenderer::render(Skybox* skybox, Camera* camera) {
+void SkyboxRenderer::render(Skybox* skybox, Camera* camera, CommandBuffers* commandBuffers) {
     updateDescriptorSetResources(camera);
 
-    VkCommandBuffer commandBuffer = renderer->commandBuffers->commandBuffers[renderer->currentFrame];
+    VkCommandBuffer commandBuffer = commandBuffers->commandBuffers[renderer->currentFrame];
 
     vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline->graphicsPipeline);
 

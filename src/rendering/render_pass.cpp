@@ -1,6 +1,6 @@
 #include "render_pass.hpp"
 
-RenderPass::RenderPass(VkDevice& device, VkFormat colorAttachmentFormat, VkFormat depthAttachmentFormat, VkSampleCountFlagBits msaaSamples, bool offScreen) {
+RenderPass::RenderPass(VkDevice& device, VkFormat colorAttachmentFormat, VkFormat depthAttachmentFormat, VkSampleCountFlagBits msaaSamples, bool onScreen) {
     this->device = device;
 
     VkAttachmentDescription colorAttachmentDescription{};
@@ -32,33 +32,35 @@ RenderPass::RenderPass(VkDevice& device, VkFormat colorAttachmentFormat, VkForma
     depthAttachmentReference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
     VkAttachmentDescription colorAttachmentResolveDescription{};
-    colorAttachmentResolveDescription.format = colorAttachmentFormat;
-    colorAttachmentResolveDescription.samples = VK_SAMPLE_COUNT_1_BIT;
-    colorAttachmentResolveDescription.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-    colorAttachmentResolveDescription.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-    colorAttachmentResolveDescription.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-    colorAttachmentResolveDescription.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-    colorAttachmentResolveDescription.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    colorAttachmentResolveDescription.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+    if (onScreen) {
+        colorAttachmentResolveDescription.format = colorAttachmentFormat;
+        colorAttachmentResolveDescription.samples = VK_SAMPLE_COUNT_1_BIT;
+        colorAttachmentResolveDescription.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        colorAttachmentResolveDescription.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        colorAttachmentResolveDescription.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        colorAttachmentResolveDescription.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        colorAttachmentResolveDescription.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        colorAttachmentResolveDescription.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+    }
 
     VkAttachmentReference colorAttachmentResolveReference{};
-    colorAttachmentResolveReference.attachment = 2;
-    colorAttachmentResolveReference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+    if (onScreen) {
+        colorAttachmentResolveReference.attachment = 2;
+        colorAttachmentResolveReference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+    }
 
     VkSubpassDescription subpassDescription{};
     subpassDescription.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
     subpassDescription.colorAttachmentCount = 1;
     subpassDescription.pColorAttachments = &colorAttachmentReference;
     subpassDescription.pDepthStencilAttachment = &depthAttachmentReference;
-    if (!offScreen) {
-        subpassDescription.pResolveAttachments = &colorAttachmentResolveReference;
-    }
+    subpassDescription.pResolveAttachments = onScreen ? &colorAttachmentResolveReference : nullptr;
 
     std::vector<VkAttachmentDescription> attachments = {
         colorAttachmentDescription,
         depthAttachmentDescription
     };
-    if (!offScreen) {
+    if (onScreen) {
         attachments.push_back(colorAttachmentResolveDescription);
     }
 
@@ -70,14 +72,7 @@ RenderPass::RenderPass(VkDevice& device, VkFormat colorAttachmentFormat, VkForma
     renderPassCreateInfo.pSubpasses = &subpassDescription;
 
     VkSubpassDependency subpassDependency{};
-    if (offScreen) {
-        subpassDependency.srcSubpass = 0;
-        subpassDependency.dstSubpass = VK_SUBPASS_EXTERNAL;
-        subpassDependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        subpassDependency.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-        subpassDependency.dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-        subpassDependency.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-    } else {
+    if (onScreen) {
         subpassDependency.srcSubpass = VK_SUBPASS_EXTERNAL;
         subpassDependency.dstSubpass = 0;
         subpassDependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
@@ -86,8 +81,8 @@ RenderPass::RenderPass(VkDevice& device, VkFormat colorAttachmentFormat, VkForma
         subpassDependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
     }
 
-    renderPassCreateInfo.dependencyCount = 1;
-    renderPassCreateInfo.pDependencies = &subpassDependency;
+    renderPassCreateInfo.dependencyCount = onScreen ? 1 : 0;
+    renderPassCreateInfo.pDependencies = onScreen ? &subpassDependency : nullptr;
 
     if (vkCreateRenderPass(device, &renderPassCreateInfo, nullptr, &renderPass) != VK_SUCCESS) {
         throw std::runtime_error("Failed to create render pass!");

@@ -26,7 +26,7 @@
 class Renderer {
 public:
     Instance* instance;
-    Messenger* messenger;
+    Messenger* messenger = nullptr;
     Surface* surface;
     Device* device;
     Swapchain* swapchain;
@@ -37,20 +37,20 @@ public:
     std::vector<Framebuffer*> framebuffers;
     WaterResources* waterResources;
     CommandBuffers* commandBuffers;
+    CommandBuffers* offScreenCommandBuffers;
     std::vector<Semaphore*> imageAvailableSemaphores;
     std::vector<Semaphore*> renderFinishedSemaphores;
+    std::vector<Semaphore*> offScreenRenderFinishedSemaphores;
     std::vector<Fence*> inFlightFences;
     float deltaTime = 0.0f;
     uint32_t currentFrame = 0;
     uint32_t currentImageIndex;
     Renderer(Window* window, Camera* camera);
     ~Renderer();
-    void beginRecordingCommands();
-    void endRecordingCommands();
-    void beginRendering();
-    void endRendering();
-    void beginOffScreenRendering();
-    void endOffScreenRendering();
+    void beginDrawing();
+    void endDrawing();
+    void beginRendering(RenderPass* renderPass, Framebuffer* framebuffer, CommandBuffers* commandBuffers);
+    void endRendering(CommandBuffers* commandBuffers);
 private:
     Window* window;
     Camera* camera;

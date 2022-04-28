@@ -14,6 +14,7 @@ struct EntityRendererVertexUniformBufferObject {
     alignas(16) glm::mat4 viewMatrix;
     alignas(16) glm::mat4 projectionMatrix;
     alignas(16) glm::vec3 lightPosition;
+    alignas(16) glm::vec4 clipPlane;
 };
 
 struct EntityRendererFragmentUniformBufferObject {
@@ -24,7 +25,7 @@ class EntityRenderer {
 public:
     EntityRenderer(Renderer* renderer);
     ~EntityRenderer();
-    void render(std::vector<Entity*> entities, Light* light, Camera* camera);
+    void render(std::vector<Entity*> entities, Light* light, Camera* camera, glm::vec4 clipPlane, CommandBuffers* commandBuffers);
 private:
     Renderer* renderer;
     GraphicsPipeline* graphicsPipeline;
@@ -33,7 +34,7 @@ private:
     DescriptorSets* descriptorSets;
     std::vector<Buffer*> vertexUniformBuffers;
     std::vector<Buffer*> fragmentUniformBuffers;
-    void updateDescriptorSetResources(Light* light, Camera* camera);
+    void updateDescriptorSetResources(Light* light, Camera* camera, glm::vec4 clipPlane);
 };
 
 #endif

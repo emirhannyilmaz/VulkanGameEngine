@@ -4,6 +4,7 @@ layout(set = 0, binding = 0) uniform EntityRendererVertexUniformBufferObject {
     mat4 viewMatrix;
     mat4 projectionMatrix;
     vec3 lightPosition;
+    vec4 clipPlane;
 } ervubo;
 
 layout(set = 1, binding = 0) uniform EntityVertexUniformBufferObject {
@@ -21,6 +22,7 @@ layout(location = 3) out vec3 fragToCameraVector;
 
 void main() {
     vec4 worldPosition = evubo.modelMatrix * vec4(position, 1.0);
+    gl_ClipDistance[0] = dot(worldPosition, ervubo.clipPlane);
     gl_Position = ervubo.projectionMatrix * ervubo.viewMatrix * worldPosition;
     fragNormal = (evubo.modelMatrix * vec4(normal, 0.0)).xyz;
     fragTextureCoordinates = textureCoordinates;

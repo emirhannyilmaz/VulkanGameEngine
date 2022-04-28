@@ -51,10 +51,10 @@ EntityRenderer::~EntityRenderer() {
     delete descriptorSetLayout;
 }
 
-void EntityRenderer::render(std::vector<Entity*> entities, Light* light, Camera* camera) {
-    updateDescriptorSetResources(light, camera);
+void EntityRenderer::render(std::vector<Entity*> entities, Light* light, Camera* camera, glm::vec4 clipPlane, CommandBuffers* commandBuffers) {
+    updateDescriptorSetResources(light, camera, clipPlane);
 
-    VkCommandBuffer commandBuffer = renderer->commandBuffers->commandBuffers[renderer->currentFrame];
+    VkCommandBuffer commandBuffer = commandBuffers->commandBuffers[renderer->currentFrame];
 
     vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline->graphicsPipeline);
     std::array<VkDescriptorSet, 2> descriptorSetsToBind{};
@@ -72,11 +72,12 @@ void EntityRenderer::render(std::vector<Entity*> entities, Light* light, Camera*
     }
 }
 
-void EntityRenderer::updateDescriptorSetResources(Light* light, Camera* camera) {
+void EntityRenderer::updateDescriptorSetResources(Light* light, Camera* camera, glm::vec4 clipPlane) {
     EntityRendererVertexUniformBufferObject vertexUbo{};
     vertexUbo.viewMatrix = camera->createViewMatrix();
     vertexUbo.projectionMatrix = camera->createProjectionMatrix();
     vertexUbo.lightPosition = light->position;
+    vertexUbo.clipPlane = clipPlane;
     void* vubData;
     vkMapMemory(renderer->device->device, vertexUniformBuffers[renderer->currentFrame]->bufferMemory, 0, sizeof(vertexUbo), 0, &vubData);
     memcpy(vubData, &vertexUbo, sizeof(vertexUbo));

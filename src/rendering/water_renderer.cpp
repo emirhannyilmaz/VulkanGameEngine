@@ -41,10 +41,10 @@ WaterRenderer::~WaterRenderer() {
     delete descriptorSetLayout;
 }
 
-void WaterRenderer::render(std::vector<WaterTile*> waterTiles, Camera* camera) {
+void WaterRenderer::render(std::vector<WaterTile*> waterTiles, Camera* camera, CommandBuffers* commandBuffers) {
     updateDescriptorSetResources(camera);
 
-    VkCommandBuffer commandBuffer = renderer->commandBuffers->commandBuffers[renderer->currentFrame];
+    VkCommandBuffer commandBuffer = commandBuffers->commandBuffers[renderer->currentFrame];
 
     vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline->graphicsPipeline);
     std::array<VkDescriptorSet, 2> descriptorSetsToBind{};

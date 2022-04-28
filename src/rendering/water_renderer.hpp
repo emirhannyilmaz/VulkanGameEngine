@@ -18,7 +18,7 @@ class WaterRenderer {
 public:
     WaterRenderer(Renderer* renderer);
     ~WaterRenderer();
-    void render(std::vector<WaterTile*> waterTiles, Camera* camera);
+    void render(std::vector<WaterTile*> waterTiles, Camera* camera, CommandBuffers* commandBuffers);
 private:
     Renderer* renderer;
     GraphicsPipeline* graphicsPipeline;

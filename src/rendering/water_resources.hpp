@@ -10,7 +10,8 @@
 class WaterResources {
 public:
     RenderPass* renderPass;
-    Framebuffer* framebuffer;
+    Framebuffer* reflectionFramebuffer;
+    Framebuffer* refractionFramebuffer;
     WaterResources(VkPhysicalDevice& physicalDevice, VkDevice& device, VkExtent2D& extent, VkSampleCountFlagBits msaaSamples, VkFormat colorFormat, VkCommandPool& commandPool, VkQueue& graphicsQueue);
     ~WaterResources();
 private:

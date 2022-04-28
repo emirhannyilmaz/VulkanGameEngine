@@ -18,7 +18,7 @@ class SkyboxRenderer {
 public:
     SkyboxRenderer(Renderer* renderer);
     ~SkyboxRenderer();
-    void render(Skybox* skybox, Camera* camera);
+    void render(Skybox* skybox, Camera* camera, CommandBuffers* commandBuffers);
 private:
     Renderer* renderer;
     GraphicsPipeline* graphicsPipeline;
