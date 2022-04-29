@@ -6,7 +6,7 @@
 class ColorResources {
 public:
     Image* image;
-    ColorResources(VkPhysicalDevice& physicalDevice, VkDevice& device, VkExtent2D& extent, VkSampleCountFlagBits msaaSamples, VkFormat format);
+    ColorResources(VkPhysicalDevice& physicalDevice, VkDevice& device, VkExtent2D& extent, VkSampleCountFlagBits msaaSamples, VkFormat format, VkImageUsageFlags usage);
     ~ColorResources();
 };
 

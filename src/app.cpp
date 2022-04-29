@@ -44,20 +44,20 @@ void App::run() {
         camera->position.y -= distance;
         camera->rotation.x *= -1.0f;
         renderer->beginRendering(renderer->waterResources->renderPass, renderer->waterResources->reflectionFramebuffer, renderer->offScreenCommandBuffers);
-        entityRenderer->render(entities, light, camera, glm::vec4(0.0f, 1.0f, 0.0f, -waterTile->position.y), renderer->offScreenCommandBuffers);
-        skyboxRenderer->render(skybox, camera, renderer->offScreenCommandBuffers);
+        entityRenderer->render(entities, light, camera, glm::vec4(0.0f, 1.0f, 0.0f, -waterTile->position.y), renderer->offScreenCommandBuffers, false);
+        skyboxRenderer->render(skybox, camera, renderer->offScreenCommandBuffers, false);
         renderer->endRendering(renderer->offScreenCommandBuffers);
         camera->position.y += distance;
         camera->rotation.x *= -1.0f;
 
         renderer->beginRendering(renderer->waterResources->renderPass, renderer->waterResources->refractionFramebuffer, renderer->offScreenCommandBuffers);
-        entityRenderer->render(entities, light, camera, glm::vec4(0.0f, -1.0f, 0.0f, waterTile->position.y), renderer->offScreenCommandBuffers);
-        skyboxRenderer->render(skybox, camera, renderer->offScreenCommandBuffers);
+        entityRenderer->render(entities, light, camera, glm::vec4(0.0f, -1.0f, 0.0f, waterTile->position.y), renderer->offScreenCommandBuffers, false);
+        skyboxRenderer->render(skybox, camera, renderer->offScreenCommandBuffers, false);
         renderer->endRendering(renderer->offScreenCommandBuffers);
 
         renderer->beginRendering(renderer->renderPass, renderer->framebuffers[renderer->currentImageIndex], renderer->commandBuffers);
-        entityRenderer->render(entities, light, camera, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), renderer->commandBuffers);
-        skyboxRenderer->render(skybox, camera, renderer->commandBuffers);
+        entityRenderer->render(entities, light, camera, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), renderer->commandBuffers, true);
+        skyboxRenderer->render(skybox, camera, renderer->commandBuffers, true);
         waterRenderer->render(waterTiles, camera, renderer->commandBuffers);
         renderer->endRendering(renderer->commandBuffers);
 

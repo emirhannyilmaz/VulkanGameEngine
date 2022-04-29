@@ -14,6 +14,7 @@ SkyboxRenderer::SkyboxRenderer(Renderer* renderer) {
     descriptorSetLayouts[1] = Skybox::descriptorSetLayout->descriptorSetLayout;
 
     graphicsPipeline = new GraphicsPipeline(renderer->device->device, "res/shaders/skybox_shader.vert.spv", "res/shaders/skybox_shader.frag.spv", 0, nullptr, 0, nullptr, static_cast<uint32_t>(descriptorSetLayouts.size()), descriptorSetLayouts.data(), renderer->swapchain->swapchainExtent, renderer->renderPass->renderPass, renderer->device->msaaSamples);
+    offScreenGraphicsPipeline = new GraphicsPipeline(renderer->device->device, "res/shaders/skybox_shader.vert.spv", "res/shaders/skybox_shader.frag.spv", 0, nullptr, 0, nullptr, static_cast<uint32_t>(descriptorSetLayouts.size()), descriptorSetLayouts.data(), renderer->swapchain->swapchainExtent, renderer->waterResources->renderPass->renderPass, VK_SAMPLE_COUNT_1_BIT);
 
     std::array<VkDescriptorPoolSize, 1> poolSizes{};
     poolSizes[0] = {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, MAX_FRAMES_IN_FLIGHT};
@@ -36,15 +37,17 @@ SkyboxRenderer::~SkyboxRenderer() {
     vertexUniformBuffers.clear();
 
     delete descriptorPool;
+    delete offScreenGraphicsPipeline;
     delete graphicsPipeline;
     Skybox::DeleteDesriptorSetLayout();
     delete descriptorSetLayout;
 }
 
-void SkyboxRenderer::render(Skybox* skybox, Camera* camera, CommandBuffers* commandBuffers) {
+void SkyboxRenderer::render(Skybox* skybox, Camera* camera, CommandBuffers* commandBuffers, bool onScreen) {
     updateDescriptorSetResources(camera);
 
     VkCommandBuffer commandBuffer = commandBuffers->commandBuffers[renderer->currentFrame];
+    GraphicsPipeline* graphicsPipeline = onScreen ? graphicsPipeline : offScreenGraphicsPipeline;
 
     vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline->graphicsPipeline);
 

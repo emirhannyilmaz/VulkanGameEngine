@@ -18,10 +18,11 @@ class SkyboxRenderer {
 public:
     SkyboxRenderer(Renderer* renderer);
     ~SkyboxRenderer();
-    void render(Skybox* skybox, Camera* camera, CommandBuffers* commandBuffers);
+    void render(Skybox* skybox, Camera* camera, CommandBuffers* commandBuffers, bool onScreen);
 private:
     Renderer* renderer;
     GraphicsPipeline* graphicsPipeline;
+    GraphicsPipeline* offScreenGraphicsPipeline;
     DescriptorSetLayout* descriptorSetLayout;
     DescriptorPool* descriptorPool;
     DescriptorSets* descriptorSets;

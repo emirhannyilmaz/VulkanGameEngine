@@ -25,10 +25,11 @@ class EntityRenderer {
 public:
     EntityRenderer(Renderer* renderer);
     ~EntityRenderer();
-    void render(std::vector<Entity*> entities, Light* light, Camera* camera, glm::vec4 clipPlane, CommandBuffers* commandBuffers);
+    void render(std::vector<Entity*> entities, Light* light, Camera* camera, glm::vec4 clipPlane, CommandBuffers* commandBuffers, bool onScreen);
 private:
     Renderer* renderer;
     GraphicsPipeline* graphicsPipeline;
+    GraphicsPipeline* offScreenGraphicsPipeline;
     DescriptorSetLayout* descriptorSetLayout;
     DescriptorPool* descriptorPool;
     DescriptorSets* descriptorSets;

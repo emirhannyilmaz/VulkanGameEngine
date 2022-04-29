@@ -18,6 +18,9 @@ layout(set = 1, binding = 0) uniform WaterTileVertexUniformBufferObject {
     mat4 modelMatrix;
 } wtvubo;
 
+layout(location = 0) out vec4 clipSpace;
+
 void main() {
-    gl_Position = wrvubo.projectionMatrix * wrvubo.viewMatrix * wtvubo.modelMatrix * vec4(vertices[gl_VertexIndex], 1.0);
+    clipSpace = wrvubo.projectionMatrix * wrvubo.viewMatrix * wtvubo.modelMatrix * vec4(vertices[gl_VertexIndex], 1.0);
+    gl_Position = clipSpace;
 }
