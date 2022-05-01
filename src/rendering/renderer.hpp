@@ -23,6 +23,8 @@
 #include "water_resources.hpp"
 #include <array>
 
+class WaterRenderer;
+
 class Renderer {
 public:
     Instance* instance;
@@ -45,10 +47,13 @@ public:
     float deltaTime = 0.0f;
     uint32_t currentFrame = 0;
     uint32_t currentImageIndex;
+    static WaterRenderer* waterRenderer;
     Renderer(Window* window, Camera* camera);
     ~Renderer();
     void beginDrawing();
     void endDrawing();
+    void beginRecordingCommands(CommandBuffers* commandBuffers);
+    void endRecordingCommands(CommandBuffers* commandBuffers);
     void beginRendering(RenderPass* renderPass, Framebuffer* framebuffer, CommandBuffers* commandBuffers);
     void endRendering(CommandBuffers* commandBuffers);
 private:

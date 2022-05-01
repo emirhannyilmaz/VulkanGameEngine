@@ -19,6 +19,7 @@ public:
     WaterRenderer(Renderer* renderer);
     ~WaterRenderer();
     void render(std::vector<WaterTile*> waterTiles, Camera* camera, CommandBuffers* commandBuffers);
+    void updateDescriptorSetInfos();
 private:
     Renderer* renderer;
     GraphicsPipeline* graphicsPipeline;

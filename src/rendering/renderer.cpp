@@ -1,4 +1,7 @@
 #include "renderer.hpp"
+#include "water_renderer.hpp"
+
+WaterRenderer* Renderer::waterRenderer = nullptr;
 
 Renderer::Renderer(Window* window, Camera* camera) {
     this->window = window;
@@ -141,17 +144,31 @@ void Renderer::endDrawing() {
     currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
 
-void Renderer::beginRendering(RenderPass* renderPass, Framebuffer* framebuffer, CommandBuffers* commandBuffers) {
+void Renderer::beginRecordingCommands(CommandBuffers* commandBuffers) {
     if (acquireNextImageResult == VK_ERROR_OUT_OF_DATE_KHR) {
         return;
     }
 
-    VkCommandBuffer commandBuffer = commandBuffers->commandBuffers[currentFrame];
-
     VkCommandBufferBeginInfo commandBufferBeginInfo{};
     commandBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-    if (vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo) != VK_SUCCESS) {
+    if (vkBeginCommandBuffer(commandBuffers->commandBuffers[currentFrame], &commandBufferBeginInfo) != VK_SUCCESS) {
         throw std::runtime_error("Failed to begin recording command buffer!");
+    }
+}
+
+void Renderer::endRecordingCommands(CommandBuffers* commandBuffers) {
+    if (acquireNextImageResult == VK_ERROR_OUT_OF_DATE_KHR) {
+        return;
+    }
+
+    if (vkEndCommandBuffer(commandBuffers->commandBuffers[currentFrame]) != VK_SUCCESS) {
+        throw std::runtime_error("Failed to record command buffer!");
+    }
+}
+
+void Renderer::beginRendering(RenderPass* renderPass, Framebuffer* framebuffer, CommandBuffers* commandBuffers) {
+    if (acquireNextImageResult == VK_ERROR_OUT_OF_DATE_KHR) {
+        return;
     }
 
     VkRenderPassBeginInfo renderPassBeginInfo{};
@@ -165,7 +182,7 @@ void Renderer::beginRendering(RenderPass* renderPass, Framebuffer* framebuffer, 
     clearValues[1] = {{1.0f, 0}};
     renderPassBeginInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
     renderPassBeginInfo.pClearValues = clearValues.data();
-    vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+    vkCmdBeginRenderPass(commandBuffers->commandBuffers[currentFrame], &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 }
 
 void Renderer::endRendering(CommandBuffers* commandBuffers) {
@@ -173,13 +190,7 @@ void Renderer::endRendering(CommandBuffers* commandBuffers) {
         return;
     }
 
-    VkCommandBuffer commandBuffer = commandBuffers->commandBuffers[currentFrame];
-
-    vkCmdEndRenderPass(commandBuffer);
-
-    if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
-        throw std::runtime_error("Failed to record command buffer!");
-    }
+    vkCmdEndRenderPass(commandBuffers->commandBuffers[currentFrame]);
 }
 
 void Renderer::calculateDeltaTime() {
@@ -219,6 +230,7 @@ void Renderer::recreateSwapchain() {
     }
 
     waterResources = new WaterResources(device->physicalDevice, device->device, swapchain->swapchainExtent, swapchain->swapchainImageFormat, commandPool->commandPool, device->graphicsQueue);
+    waterRenderer->updateDescriptorSetInfos();
 
     camera->aspectRatio = (float) swapchain->swapchainExtent.width / (float) swapchain->swapchainExtent.height;
 }

@@ -10,8 +10,10 @@
 
 class WaterResources {
 public:
-    ColorResources* colorResources;
-    DepthResources* depthResources;
+    ColorResources* reflectionColorResources;
+    DepthResources* reflectionDepthResources;
+    ColorResources* refractionColorResources;
+    DepthResources* refractionDepthResources;
     Sampler* sampler;
     RenderPass* renderPass;
     Framebuffer* reflectionFramebuffer;

@@ -10,6 +10,7 @@ void App::run() {
     EntityRenderer* entityRenderer = new EntityRenderer(renderer);
     SkyboxRenderer* skyboxRenderer = new SkyboxRenderer(renderer);
     WaterRenderer* waterRenderer = new WaterRenderer(renderer);
+    Renderer::waterRenderer = waterRenderer;
 
     ObjModelData objModelData = ModelLoader::LoadObj("res/models/rocket.obj");
 
@@ -40,6 +41,7 @@ void App::run() {
 
         renderer->beginDrawing();
 
+        renderer->beginRecordingCommands(renderer->offScreenCommandBuffers);
         float distance = 2 * (camera->position.y - waterTile->position.y);
         camera->position.y -= distance;
         camera->rotation.x *= -1.0f;
@@ -54,12 +56,15 @@ void App::run() {
         entityRenderer->render(entities, light, camera, glm::vec4(0.0f, -1.0f, 0.0f, waterTile->position.y), renderer->offScreenCommandBuffers, false);
         skyboxRenderer->render(skybox, camera, renderer->offScreenCommandBuffers, false);
         renderer->endRendering(renderer->offScreenCommandBuffers);
+        renderer->endRecordingCommands(renderer->offScreenCommandBuffers);
 
+        renderer->beginRecordingCommands(renderer->commandBuffers);
         renderer->beginRendering(renderer->renderPass, renderer->framebuffers[renderer->currentImageIndex], renderer->commandBuffers);
         entityRenderer->render(entities, light, camera, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), renderer->commandBuffers, true);
         skyboxRenderer->render(skybox, camera, renderer->commandBuffers, true);
         waterRenderer->render(waterTiles, camera, renderer->commandBuffers);
         renderer->endRendering(renderer->commandBuffers);
+        renderer->endRecordingCommands(renderer->commandBuffers);
 
         renderer->endDrawing();
     }
