@@ -22,6 +22,7 @@
 #include "../entities/camera.hpp"
 #include "water_resources.hpp"
 #include <array>
+#include "query_pool.hpp"
 
 class WaterRenderer;
 
@@ -34,6 +35,8 @@ public:
     Swapchain* swapchain;
     RenderPass* renderPass;
     CommandPool* commandPool;
+    QueryPool* queryPool;
+    QueryPool* offScreenQueryPool;
     ColorResources* colorResources;
     DepthResources* depthResources;
     std::vector<Framebuffer*> framebuffers;
@@ -44,23 +47,23 @@ public:
     std::vector<Semaphore*> renderFinishedSemaphores;
     std::vector<Semaphore*> offScreenRenderFinishedSemaphores;
     std::vector<Fence*> inFlightFences;
-    float deltaTime = 0.0f;
+    double deltaTime = 0.0f;
     uint32_t currentFrame = 0;
     uint32_t currentImageIndex;
-    static WaterRenderer* waterRenderer;
+    WaterRenderer* waterRenderer;
     Renderer(Window* window, Camera* camera);
     ~Renderer();
+    void waitIdle();
     void beginDrawing();
     void endDrawing();
-    void beginRecordingCommands(CommandBuffers* commandBuffers);
-    void endRecordingCommands(CommandBuffers* commandBuffers);
+    void beginRecordingCommands(CommandBuffers* commandBuffers, bool onScreen);
+    void endRecordingCommands(CommandBuffers* commandBuffers, bool onScreen);
     void beginRendering(RenderPass* renderPass, Framebuffer* framebuffer, CommandBuffers* commandBuffers);
     void endRendering(CommandBuffers* commandBuffers);
 private:
     Window* window;
     Camera* camera;
     VkResult acquireNextImageResult;
-    void calculateDeltaTime();
     void recreateSwapchain();
     void cleanUpSwapchain();
 };

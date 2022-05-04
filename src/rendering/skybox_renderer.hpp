@@ -12,13 +12,14 @@
 struct SkyboxRendererVertexUniformBufferObject {
     alignas(16) glm::mat4 viewMatrix;
     alignas(16) glm::mat4 projectionMatrix;
+    alignas(16) glm::vec4 clipPlane;
 };
 
 class SkyboxRenderer {
 public:
     SkyboxRenderer(Renderer* renderer);
     ~SkyboxRenderer();
-    void render(Skybox* skybox, Camera* camera, CommandBuffers* commandBuffers, bool onScreen);
+    void render(Skybox* skybox, Camera* camera, glm::vec4 clipPlane, CommandBuffers* commandBuffers, bool onScreen);
 private:
     Renderer* renderer;
     GraphicsPipeline* graphicsPipeline;
@@ -27,7 +28,7 @@ private:
     DescriptorPool* descriptorPool;
     DescriptorSets* descriptorSets;
     std::vector<Buffer*> vertexUniformBuffers;
-    void updateDescriptorSetResources(Camera* camera);
+    void updateDescriptorSetResources(Camera* camera, glm::vec4 clipPlane);
 };
 
 #endif

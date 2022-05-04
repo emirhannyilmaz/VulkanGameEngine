@@ -12,11 +12,12 @@ WaterResources::WaterResources(VkPhysicalDevice& physicalDevice, VkDevice& devic
         reflectionColorResources->image->imageView,
         reflectionDepthResources->image->imageView
     };
+    reflectionFramebuffer = new Framebuffer(device, renderPass->renderPass, static_cast<uint32_t>(reflectionAttachments.size()), reflectionAttachments.data(), extent);
+
     std::array<VkImageView, 2> refractionAttachments = {
         refractionColorResources->image->imageView,
         refractionDepthResources->image->imageView
     };
-    reflectionFramebuffer = new Framebuffer(device, renderPass->renderPass, static_cast<uint32_t>(reflectionAttachments.size()), reflectionAttachments.data(), extent);
     refractionFramebuffer = new Framebuffer(device, renderPass->renderPass, static_cast<uint32_t>(refractionAttachments.size()), refractionAttachments.data(), extent);
 }
 

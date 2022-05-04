@@ -7,9 +7,9 @@ class Input {
 public:
     static GLFWwindow* window;
     static float sensitivity;
-    static bool getKey(int key);
-    static double getMouseDx();
-    static double getMouseDy();
+    static bool GetKey(int key);
+    static double GetMouseDx();
+    static double GetMouseDy();
 };
 
 #endif

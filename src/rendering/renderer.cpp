@@ -1,8 +1,6 @@
 #include "renderer.hpp"
 #include "water_renderer.hpp"
 
-WaterRenderer* Renderer::waterRenderer = nullptr;
-
 Renderer::Renderer(Window* window, Camera* camera) {
     this->window = window;
     this->camera = camera;
@@ -18,6 +16,8 @@ Renderer::Renderer(Window* window, Camera* camera) {
     swapchain = new Swapchain(device->device, surface->surface, device->swapchainSupportDetails, window->window, device->indices);
     renderPass = new RenderPass(device->device, swapchain->swapchainImageFormat, DepthResources::findDepthFormat(device->physicalDevice), device->msaaSamples, true);
     commandPool = new CommandPool(device->device, device->indices.graphicsFamily.value(), VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
+    queryPool = new QueryPool(device->device, 2 * MAX_FRAMES_IN_FLIGHT);
+    offScreenQueryPool = new QueryPool(device->device, 2 * MAX_FRAMES_IN_FLIGHT);
     colorResources = new ColorResources(device->physicalDevice, device->device, swapchain->swapchainExtent, device->msaaSamples, swapchain->swapchainImageFormat, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT);
     depthResources = new DepthResources(device->physicalDevice, device->device, swapchain->swapchainExtent, device->msaaSamples, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT);
 
@@ -61,8 +61,8 @@ Renderer::~Renderer() {
     renderFinishedSemaphores.clear();
     imageAvailableSemaphores.clear();
 
-    delete offScreenCommandBuffers;
-    delete commandBuffers;
+    delete offScreenQueryPool;
+    delete queryPool;
     delete commandPool;
     delete device;
     delete surface;
@@ -70,10 +70,12 @@ Renderer::~Renderer() {
     delete instance;
 }
 
+void Renderer::waitIdle() {
+    vkDeviceWaitIdle(device->device);
+}
+
 void Renderer::beginDrawing() {
     vkWaitForFences(device->device, 1, &inFlightFences[currentFrame]->fence, VK_TRUE, UINT64_MAX);
-
-    calculateDeltaTime();
 
     acquireNextImageResult = vkAcquireNextImageKHR(device->device, swapchain->swapchain, UINT64_MAX, imageAvailableSemaphores[currentFrame]->semaphore, VK_NULL_HANDLE, &currentImageIndex);
     if (acquireNextImageResult == VK_ERROR_OUT_OF_DATE_KHR) {
@@ -141,10 +143,20 @@ void Renderer::endDrawing() {
         throw std::runtime_error("Failed to present swap chain image!");
     }
 
+    std::array<uint64_t, 2> offScreenTimestamps{};
+    vkGetQueryPoolResults(device->device, offScreenQueryPool->queryPool, currentFrame * 2, 2, sizeof(offScreenTimestamps), offScreenTimestamps.data(), sizeof(uint64_t), VK_QUERY_RESULT_WAIT_BIT | VK_QUERY_RESULT_64_BIT);
+    double offScreenDeltaTime = double(offScreenTimestamps[1] - offScreenTimestamps[0]) * device->timestampPeriod;
+
+    std::array<uint64_t, 2> onScreenTimestamps{};
+    vkGetQueryPoolResults(device->device, queryPool->queryPool, currentFrame * 2, 2, sizeof(onScreenTimestamps), onScreenTimestamps.data(), sizeof(uint64_t), VK_QUERY_RESULT_WAIT_BIT | VK_QUERY_RESULT_64_BIT);
+    double onScreenDeltaTime = double(onScreenTimestamps[1] - onScreenTimestamps[0]) * device->timestampPeriod;
+
+    deltaTime = (offScreenDeltaTime + onScreenDeltaTime) / 1000000000.0f;
+
     currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
 
-void Renderer::beginRecordingCommands(CommandBuffers* commandBuffers) {
+void Renderer::beginRecordingCommands(CommandBuffers* commandBuffers, bool onScreen) {
     if (acquireNextImageResult == VK_ERROR_OUT_OF_DATE_KHR) {
         return;
     }
@@ -154,12 +166,17 @@ void Renderer::beginRecordingCommands(CommandBuffers* commandBuffers) {
     if (vkBeginCommandBuffer(commandBuffers->commandBuffers[currentFrame], &commandBufferBeginInfo) != VK_SUCCESS) {
         throw std::runtime_error("Failed to begin recording command buffer!");
     }
+
+    vkCmdResetQueryPool(commandBuffers->commandBuffers[currentFrame], onScreen ? queryPool->queryPool : offScreenQueryPool->queryPool, currentFrame * 2, 2);
+    vkCmdWriteTimestamp(commandBuffers->commandBuffers[currentFrame], VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, onScreen ? queryPool->queryPool : offScreenQueryPool->queryPool, currentFrame * 2);
 }
 
-void Renderer::endRecordingCommands(CommandBuffers* commandBuffers) {
+void Renderer::endRecordingCommands(CommandBuffers* commandBuffers, bool onScreen) {
     if (acquireNextImageResult == VK_ERROR_OUT_OF_DATE_KHR) {
         return;
     }
+
+    vkCmdWriteTimestamp(commandBuffers->commandBuffers[currentFrame], VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, onScreen ? queryPool->queryPool : offScreenQueryPool->queryPool, currentFrame * 2 + 1);
 
     if (vkEndCommandBuffer(commandBuffers->commandBuffers[currentFrame]) != VK_SUCCESS) {
         throw std::runtime_error("Failed to record command buffer!");
@@ -193,15 +210,6 @@ void Renderer::endRendering(CommandBuffers* commandBuffers) {
     vkCmdEndRenderPass(commandBuffers->commandBuffers[currentFrame]);
 }
 
-void Renderer::calculateDeltaTime() {
-    static auto renderStartTime = std::chrono::system_clock::now();
-    auto renderFinishTime = std::chrono::system_clock::now();
-
-    deltaTime = std::chrono::duration<float, std::chrono::seconds::period>(renderFinishTime - renderStartTime).count();
-
-    renderStartTime = std::chrono::system_clock::now();
-}
-
 void Renderer::recreateSwapchain() {
     int width = 0;
     int height = 0;
@@ -230,7 +238,7 @@ void Renderer::recreateSwapchain() {
     }
 
     waterResources = new WaterResources(device->physicalDevice, device->device, swapchain->swapchainExtent, swapchain->swapchainImageFormat, commandPool->commandPool, device->graphicsQueue);
-    waterRenderer->updateDescriptorSetInfos();
+    waterRenderer->updateDescriptorSetImageInfos();
 
     camera->aspectRatio = (float) swapchain->swapchainExtent.width / (float) swapchain->swapchainExtent.height;
 }

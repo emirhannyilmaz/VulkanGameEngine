@@ -1,35 +1,36 @@
 #include "camera.hpp"
 
-Camera::Camera(glm::vec3 position, glm::vec3 rotation, float fieldOfView, float aspectRatio, float nearPlane, float farPlane) {
+Camera::Camera(glm::vec3 position, glm::vec3 rotation, float fieldOfView, float aspectRatio, float nearPlane, float farPlane, float speed) {
     this->position = position;
     this->rotation = rotation;
     this->fieldOfView = fieldOfView;
     this->aspectRatio = aspectRatio;
     this->nearPlane = nearPlane;
     this->farPlane = farPlane;
+    this->speed = speed;
 }
 
 void Camera::update(float deltaTime) {
-    rotation.x += (float) Input::getMouseDy() * deltaTime;
-    rotation.y += (float) Input::getMouseDx() * deltaTime;
+    rotation.x += (float) Input::GetMouseDy() * deltaTime;
+    rotation.y += (float) Input::GetMouseDx() * deltaTime;
 
     glm::vec3 direction = glm::normalize(glm::vec3(glm::sin(glm::radians(rotation.y)), glm::sin(glm::radians(rotation.x)) * -1.0f, glm::cos(glm::radians(rotation.y))));
     glm::vec3 right = glm::cross(direction, glm::vec3(0.0f, -1.0f, 0.0f));
 
-    if (Input::getKey(GLFW_KEY_W)) {
-        position += direction * 5.0f * deltaTime;
+    if (Input::GetKey(GLFW_KEY_W)) {
+        position += direction * speed * deltaTime;
     }
 
-    if (Input::getKey(GLFW_KEY_S)) {
-        position -= direction * 5.0f * deltaTime;
+    if (Input::GetKey(GLFW_KEY_S)) {
+        position -= direction * speed * deltaTime;
     }
 
-    if (Input::getKey(GLFW_KEY_A)) {
-        position -= right * 5.0f * deltaTime;
+    if (Input::GetKey(GLFW_KEY_A)) {
+        position -= right * speed * deltaTime;
     }
 
-    if (Input::getKey(GLFW_KEY_D)) {
-        position += right * 5.0f * deltaTime;
+    if (Input::GetKey(GLFW_KEY_D)) {
+        position += right * speed * deltaTime;
     }
 }
 
@@ -45,7 +46,19 @@ glm::mat4 Camera::createViewMatrix() {
 
 glm::mat4 Camera::createProjectionMatrix() {
     glm::mat4 matrix = glm::perspectiveLH_ZO(glm::radians(fieldOfView), aspectRatio, nearPlane, farPlane);
-    matrix[1][1] *= -1.0f;
 
     return matrix;
+}
+
+void Camera::invert(float distance) {
+    oldPosition = position;
+    oldRotation = rotation;
+
+    position.y += distance;
+    rotation.x = -rotation.x;
+}
+
+void Camera::revert() {
+    position = oldPosition;
+    rotation = oldRotation;
 }

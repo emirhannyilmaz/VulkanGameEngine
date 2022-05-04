@@ -30,7 +30,7 @@ WaterRenderer::WaterRenderer(Renderer* renderer) {
         vertexUniformBuffers[i] = new Buffer(renderer->device->physicalDevice, renderer->device->device, sizeof(WaterRendererVertexUniformBufferObject), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
         descriptorSets->updateBufferInfo(i, 0, 0, 1, vertexUniformBuffers[i]->buffer, sizeof(WaterRendererVertexUniformBufferObject));
         
-        updateDescriptorSetInfos();
+        updateDescriptorSetImageInfos();
     }
 }
 
@@ -64,7 +64,7 @@ void WaterRenderer::render(std::vector<WaterTile*> waterTiles, Camera* camera, C
     }
 }
 
-void WaterRenderer::updateDescriptorSetInfos() {
+void WaterRenderer::updateDescriptorSetImageInfos() {
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         descriptorSets->updateImageInfo(i, 1, 0, 1, renderer->waterResources->reflectionColorResources->image->imageView, renderer->waterResources->sampler->sampler);
         descriptorSets->updateImageInfo(i, 2, 0, 1, renderer->waterResources->refractionColorResources->image->imageView, renderer->waterResources->sampler->sampler);

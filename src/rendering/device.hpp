@@ -31,6 +31,7 @@ public:
     VkQueue graphicsQueue;
     VkQueue presentQueue;
     VkSampleCountFlagBits msaaSamples = VK_SAMPLE_COUNT_1_BIT;
+    float timestampPeriod;
     Device(VkInstance& instance, VkSurfaceKHR& surface);
     ~Device();
 private:
@@ -39,6 +40,7 @@ private:
     bool checkDeviceExtensionSupport(VkPhysicalDevice device);
     SwapchainSupportDetails querySwapchainSupport(VkPhysicalDevice device, VkSurfaceKHR surface);
     VkSampleCountFlagBits getMaxUsableSampleCount();
+    float getTimestampPeriod();
 };
 
 #endif

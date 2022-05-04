@@ -43,8 +43,8 @@ SkyboxRenderer::~SkyboxRenderer() {
     delete descriptorSetLayout;
 }
 
-void SkyboxRenderer::render(Skybox* skybox, Camera* camera, CommandBuffers* commandBuffers, bool onScreen) {
-    updateDescriptorSetResources(camera);
+void SkyboxRenderer::render(Skybox* skybox, Camera* camera, glm::vec4 clipPlane, CommandBuffers* commandBuffers, bool onScreen) {
+    updateDescriptorSetResources(camera, clipPlane);
 
     VkCommandBuffer commandBuffer = commandBuffers->commandBuffers[renderer->currentFrame];
     GraphicsPipeline* gp = onScreen ? graphicsPipeline : offScreenGraphicsPipeline;
@@ -59,13 +59,14 @@ void SkyboxRenderer::render(Skybox* skybox, Camera* camera, CommandBuffers* comm
     vkCmdDraw(commandBuffer, 36, 1, 0, 0);
 }
 
-void SkyboxRenderer::updateDescriptorSetResources(Camera* camera) {
+void SkyboxRenderer::updateDescriptorSetResources(Camera* camera, glm::vec4 clipPlane) {
     SkyboxRendererVertexUniformBufferObject vertexUbo{};
     vertexUbo.viewMatrix = camera->createViewMatrix();
     vertexUbo.viewMatrix[3][0] = 0.0f;
     vertexUbo.viewMatrix[3][1] = 0.0f;
     vertexUbo.viewMatrix[3][2] = 0.0f;
     vertexUbo.projectionMatrix = camera->createProjectionMatrix();
+    vertexUbo.clipPlane = clipPlane;
     void* vubData;
     vkMapMemory(renderer->device->device, vertexUniformBuffers[renderer->currentFrame]->bufferMemory, 0, sizeof(vertexUbo), 0, &vubData);
     memcpy(vubData, &vertexUbo, sizeof(vertexUbo));

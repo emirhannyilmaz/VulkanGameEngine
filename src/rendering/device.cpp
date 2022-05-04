@@ -15,6 +15,7 @@ Device::Device(VkInstance& instance, VkSurfaceKHR& surface) {
         if (isDeviceSuitable(device, surface)) {
             physicalDevice = device;
             msaaSamples = getMaxUsableSampleCount();
+            timestampPeriod = getTimestampPeriod();
             break;
         }
     }
@@ -85,7 +86,10 @@ bool Device::isDeviceSuitable(VkPhysicalDevice device, VkSurfaceKHR surface) {
     VkPhysicalDeviceFeatures supportedFeatures{};
     vkGetPhysicalDeviceFeatures(device, &supportedFeatures);
 
-    return indices.isComplete() && extensionsSupported && swapchainAdequate && supportedFeatures.samplerAnisotropy;
+    VkPhysicalDeviceProperties properties;
+    vkGetPhysicalDeviceProperties(device, &properties);
+
+    return indices.isComplete() && extensionsSupported && swapchainAdequate && supportedFeatures.samplerAnisotropy && supportedFeatures.sampleRateShading && supportedFeatures.shaderClipDistance && properties.limits.timestampComputeAndGraphics;
 }
 
 QueueFamilyIndices Device::findQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR surface) {
@@ -190,4 +194,11 @@ VkSampleCountFlagBits Device::getMaxUsableSampleCount() {
     }
 
     return VK_SAMPLE_COUNT_1_BIT;
+}
+
+float Device::getTimestampPeriod() {
+    VkPhysicalDeviceProperties properties;
+    vkGetPhysicalDeviceProperties(physicalDevice, &properties);
+
+    return properties.limits.timestampPeriod;
 }
