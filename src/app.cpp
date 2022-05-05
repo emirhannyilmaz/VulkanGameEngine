@@ -10,6 +10,8 @@ void App::run() {
     EntityRenderer* entityRenderer = new EntityRenderer(renderer);
     SkyboxRenderer* skyboxRenderer = new SkyboxRenderer(renderer);
     WaterRenderer* waterRenderer = new WaterRenderer(renderer);
+    renderer->entityRenderer = entityRenderer;
+    renderer->skyboxRenderer = skyboxRenderer;
     renderer->waterRenderer = waterRenderer;
 
     ObjModelData carModelData = ModelLoader::LoadObj("res/models/car.obj");
@@ -34,27 +36,33 @@ void App::run() {
         camera->update(renderer->deltaTime);
 
         renderer->beginDrawing();
-            renderer->beginRecordingCommands(renderer->offScreenCommandBuffers, false);
-                renderer->beginRendering(renderer->waterResources->renderPass, renderer->waterResources->reflectionFramebuffer, renderer->offScreenCommandBuffers);
-                    camera->invert(2 * (std::abs(camera->position.y) - std::abs(waterTile->position.y)));
-                    entityRenderer->render(entities, light, camera, glm::vec4(0.0f, -1.0f, 0.0f, -waterTile->position.y), renderer->offScreenCommandBuffers, false);
-                    skyboxRenderer->render(skybox, camera, glm::vec4(0.0f, -1.0f, 0.0f, -waterTile->position.y), renderer->offScreenCommandBuffers, false);
-                    camera->revert();
-                renderer->endRendering(renderer->offScreenCommandBuffers);
 
-                renderer->beginRendering(renderer->waterResources->renderPass, renderer->waterResources->refractionFramebuffer, renderer->offScreenCommandBuffers);
-                    entityRenderer->render(entities, light, camera, glm::vec4(0.0f, 1.0f, 0.0f, -waterTile->position.y), renderer->offScreenCommandBuffers, false);
-                    skyboxRenderer->render(skybox, camera, glm::vec4(0.0f, 1.0f, 0.0f, -waterTile->position.y), renderer->offScreenCommandBuffers, false);
-                renderer->endRendering(renderer->offScreenCommandBuffers);
-            renderer->endRecordingCommands(renderer->offScreenCommandBuffers, false);
+        renderer->beginRecordingCommands(renderer->offScreenCommandBuffers, false);
 
-            renderer->beginRecordingCommands(renderer->commandBuffers, true);
-                renderer->beginRendering(renderer->renderPass, renderer->framebuffers[renderer->currentImageIndex], renderer->commandBuffers);
-                    entityRenderer->render(entities, light, camera, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), renderer->commandBuffers, true);
-                    skyboxRenderer->render(skybox, camera, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), renderer->commandBuffers, true);
-                    waterRenderer->render(waterTiles, camera, renderer->commandBuffers);
-                renderer->endRendering(renderer->commandBuffers);
-            renderer->endRecordingCommands(renderer->commandBuffers, true);
+        renderer->beginRendering(renderer->waterResources->renderPass, renderer->waterResources->reflectionFramebuffer, renderer->offScreenCommandBuffers);
+        camera->invert(2 * (std::abs(camera->position.y) - std::abs(waterTile->position.y)));
+        entityRenderer->render(entities, light, camera, glm::vec4(0.0f, -1.0f, 0.0f, -waterTile->position.y), renderer->offScreenCommandBuffers, false);
+        skyboxRenderer->render(skybox, camera, glm::vec4(0.0f, -1.0f, 0.0f, -waterTile->position.y), renderer->offScreenCommandBuffers, false);
+        camera->revert();
+        renderer->endRendering(renderer->offScreenCommandBuffers);
+
+        renderer->beginRendering(renderer->waterResources->renderPass, renderer->waterResources->refractionFramebuffer, renderer->offScreenCommandBuffers);
+        entityRenderer->render(entities, light, camera, glm::vec4(0.0f, 1.0f, 0.0f, -waterTile->position.y), renderer->offScreenCommandBuffers, false);
+        skyboxRenderer->render(skybox, camera, glm::vec4(0.0f, 1.0f, 0.0f, -waterTile->position.y), renderer->offScreenCommandBuffers, false);
+        renderer->endRendering(renderer->offScreenCommandBuffers);
+
+        renderer->endRecordingCommands(renderer->offScreenCommandBuffers, false);
+
+        renderer->beginRecordingCommands(renderer->commandBuffers, true);
+
+        renderer->beginRendering(renderer->renderPass, renderer->framebuffers[renderer->currentImageIndex], renderer->commandBuffers);
+        entityRenderer->render(entities, light, camera, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), renderer->commandBuffers, true);
+        skyboxRenderer->render(skybox, camera, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), renderer->commandBuffers, true);
+        waterRenderer->render(waterTiles, camera, renderer->commandBuffers);
+        renderer->endRendering(renderer->commandBuffers);
+
+        renderer->endRecordingCommands(renderer->commandBuffers, true);
+
         renderer->endDrawing();
     }
 

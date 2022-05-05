@@ -24,6 +24,8 @@
 #include <array>
 #include "query_pool.hpp"
 
+class EntityRenderer;
+class SkyboxRenderer;
 class WaterRenderer;
 
 class Renderer {
@@ -50,6 +52,8 @@ public:
     double deltaTime = 0.0f;
     uint32_t currentFrame = 0;
     uint32_t currentImageIndex;
+    EntityRenderer* entityRenderer;
+    SkyboxRenderer* skyboxRenderer;
     WaterRenderer* waterRenderer;
     Renderer(Window* window, Camera* camera);
     ~Renderer();

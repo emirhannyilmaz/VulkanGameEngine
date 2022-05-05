@@ -10,15 +10,7 @@ EntityRenderer::EntityRenderer(Renderer* renderer) {
 
     Entity::CreateDesriptorSetLayout(renderer->device->device);
 
-    auto bindingDescription = Vertex::getBindingDescription();
-    auto attributeDescriptions = Vertex::getAttributeDescriptions();
-
-    std::array<VkDescriptorSetLayout, 2> descriptorSetLayouts{};
-    descriptorSetLayouts[0] = descriptorSetLayout->descriptorSetLayout;
-    descriptorSetLayouts[1] = Entity::descriptorSetLayout->descriptorSetLayout;
-
-    graphicsPipeline = new GraphicsPipeline(renderer->device->device, "res/shaders/entity_shader.vert.spv", "res/shaders/entity_shader.frag.spv", 1, &bindingDescription, static_cast<uint32_t>(attributeDescriptions.size()), attributeDescriptions.data(), static_cast<uint32_t>(descriptorSetLayouts.size()), descriptorSetLayouts.data(), renderer->swapchain->swapchainExtent, renderer->renderPass->renderPass, renderer->device->msaaSamples);
-    offScreenGraphicsPipeline = new GraphicsPipeline(renderer->device->device, "res/shaders/entity_shader.vert.spv", "res/shaders/entity_shader.frag.spv", 1, &bindingDescription, static_cast<uint32_t>(attributeDescriptions.size()), attributeDescriptions.data(), static_cast<uint32_t>(descriptorSetLayouts.size()), descriptorSetLayouts.data(), renderer->swapchain->swapchainExtent, renderer->waterResources->renderPass->renderPass, VK_SAMPLE_COUNT_1_BIT);
+    CreateGraphicsPipelines();
 
     std::array<VkDescriptorPoolSize, 1> poolSizes{};
     poolSizes[0] = {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 2 * MAX_FRAMES_IN_FLIGHT};
@@ -47,19 +39,39 @@ EntityRenderer::~EntityRenderer() {
     fragmentUniformBuffers.clear();
 
     delete descriptorPool;
-    delete offScreenGraphicsPipeline;
-    delete graphicsPipeline;
     Entity::DeleteDesriptorSetLayout();
     delete descriptorSetLayout;
 }
 
+void EntityRenderer::CreateGraphicsPipelines() {
+    auto bindingDescription = Vertex::getBindingDescription();
+    auto attributeDescriptions = Vertex::getAttributeDescriptions();
+
+    std::array<VkDescriptorSetLayout, 2> descriptorSetLayouts{};
+    descriptorSetLayouts[0] = descriptorSetLayout->descriptorSetLayout;
+    descriptorSetLayouts[1] = Entity::descriptorSetLayout->descriptorSetLayout;
+
+    std::array<VkPushConstantRange, 1> pushConstantRanges{};
+    pushConstantRanges[0] = {VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(EntityRendererVertexPushConstants)};
+
+    graphicsPipeline = new GraphicsPipeline(renderer->device->device, "res/shaders/entity_shader.vert.spv", "res/shaders/entity_shader.frag.spv", 1, &bindingDescription, static_cast<uint32_t>(attributeDescriptions.size()), attributeDescriptions.data(), static_cast<uint32_t>(descriptorSetLayouts.size()), descriptorSetLayouts.data(), static_cast<uint32_t>(pushConstantRanges.size()), pushConstantRanges.data(), renderer->swapchain->swapchainExtent, renderer->renderPass->renderPass, renderer->device->msaaSamples);
+    offScreenGraphicsPipeline = new GraphicsPipeline(renderer->device->device, "res/shaders/entity_shader.vert.spv", "res/shaders/entity_shader.frag.spv", 1, &bindingDescription, static_cast<uint32_t>(attributeDescriptions.size()), attributeDescriptions.data(), static_cast<uint32_t>(descriptorSetLayouts.size()), descriptorSetLayouts.data(), static_cast<uint32_t>(pushConstantRanges.size()), pushConstantRanges.data(), renderer->swapchain->swapchainExtent, renderer->waterResources->renderPass->renderPass, VK_SAMPLE_COUNT_1_BIT);
+}
+
+void EntityRenderer::DeleteGraphicsPipelines() {
+    delete graphicsPipeline;
+    delete offScreenGraphicsPipeline;
+}
+
 void EntityRenderer::render(std::vector<Entity*> entities, Light* light, Camera* camera, glm::vec4 clipPlane, CommandBuffers* commandBuffers, bool onScreen) {
-    updateDescriptorSetResources(light, camera, clipPlane);
+    updateDescriptorSetResources(light, camera);
+    updatePushConstants(camera, clipPlane);
 
     VkCommandBuffer commandBuffer = commandBuffers->commandBuffers[renderer->currentFrame];
     GraphicsPipeline* gp = onScreen ? graphicsPipeline : offScreenGraphicsPipeline;
 
     vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, gp->graphicsPipeline);
+    vkCmdPushConstants(commandBuffer, gp->pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(EntityRendererVertexPushConstants), &vertexPushConstants);
 
     std::array<VkDescriptorSet, 2> descriptorSetsToBind{};
     descriptorSetsToBind[0] = descriptorSets->descriptorSets[renderer->currentFrame];
@@ -71,17 +83,14 @@ void EntityRenderer::render(std::vector<Entity*> entities, Light* light, Camera*
         vkCmdBindIndexBuffer(commandBuffer, entity->mesh->indexBuffer->buffer, 0, VK_INDEX_TYPE_UINT32);
         descriptorSetsToBind[1] = entity->descriptorSets->descriptorSets[renderer->currentFrame];
         vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, gp->pipelineLayout, 0, static_cast<uint32_t>(descriptorSetsToBind.size()), descriptorSetsToBind.data(), 0, nullptr);
-
         vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(entity->mesh->indicesSize), 1, 0, 0, 0);
     }
 }
 
-void EntityRenderer::updateDescriptorSetResources(Light* light, Camera* camera, glm::vec4 clipPlane) {
+void EntityRenderer::updateDescriptorSetResources(Light* light, Camera* camera) {
     EntityRendererVertexUniformBufferObject vertexUbo{};
-    vertexUbo.viewMatrix = camera->createViewMatrix();
     vertexUbo.projectionMatrix = camera->createProjectionMatrix();
     vertexUbo.lightPosition = light->position;
-    vertexUbo.clipPlane = clipPlane;
     void* vubData;
     vkMapMemory(renderer->device->device, vertexUniformBuffers[renderer->currentFrame]->bufferMemory, 0, sizeof(vertexUbo), 0, &vubData);
     memcpy(vubData, &vertexUbo, sizeof(vertexUbo));
@@ -93,4 +102,9 @@ void EntityRenderer::updateDescriptorSetResources(Light* light, Camera* camera, 
     vkMapMemory(renderer->device->device, fragmentUniformBuffers[renderer->currentFrame]->bufferMemory, 0, sizeof(fragmentUbo), 0, &fubData);
     memcpy(fubData, &fragmentUbo, sizeof(fragmentUbo));
     vkUnmapMemory(renderer->device->device, fragmentUniformBuffers[renderer->currentFrame]->bufferMemory);
+}
+
+void EntityRenderer::updatePushConstants(Camera* camera, glm::vec4 clipPlane) {
+    vertexPushConstants.viewMatrix = camera->createViewMatrix();
+    vertexPushConstants.clipPlane = clipPlane;
 }

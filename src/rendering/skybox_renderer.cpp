@@ -9,12 +9,7 @@ SkyboxRenderer::SkyboxRenderer(Renderer* renderer) {
 
     Skybox::CreateDesriptorSetLayout(renderer->device->device);
 
-    std::array<VkDescriptorSetLayout, 2> descriptorSetLayouts{};
-    descriptorSetLayouts[0] = descriptorSetLayout->descriptorSetLayout;
-    descriptorSetLayouts[1] = Skybox::descriptorSetLayout->descriptorSetLayout;
-
-    graphicsPipeline = new GraphicsPipeline(renderer->device->device, "res/shaders/skybox_shader.vert.spv", "res/shaders/skybox_shader.frag.spv", 0, nullptr, 0, nullptr, static_cast<uint32_t>(descriptorSetLayouts.size()), descriptorSetLayouts.data(), renderer->swapchain->swapchainExtent, renderer->renderPass->renderPass, renderer->device->msaaSamples);
-    offScreenGraphicsPipeline = new GraphicsPipeline(renderer->device->device, "res/shaders/skybox_shader.vert.spv", "res/shaders/skybox_shader.frag.spv", 0, nullptr, 0, nullptr, static_cast<uint32_t>(descriptorSetLayouts.size()), descriptorSetLayouts.data(), renderer->swapchain->swapchainExtent, renderer->waterResources->renderPass->renderPass, VK_SAMPLE_COUNT_1_BIT);
+    CreateGraphicsPipelines();
 
     std::array<VkDescriptorPoolSize, 1> poolSizes{};
     poolSizes[0] = {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, MAX_FRAMES_IN_FLIGHT};
@@ -37,19 +32,36 @@ SkyboxRenderer::~SkyboxRenderer() {
     vertexUniformBuffers.clear();
 
     delete descriptorPool;
-    delete offScreenGraphicsPipeline;
-    delete graphicsPipeline;
     Skybox::DeleteDesriptorSetLayout();
     delete descriptorSetLayout;
 }
 
+void SkyboxRenderer::CreateGraphicsPipelines() {
+    std::array<VkDescriptorSetLayout, 2> descriptorSetLayouts{};
+    descriptorSetLayouts[0] = descriptorSetLayout->descriptorSetLayout;
+    descriptorSetLayouts[1] = Skybox::descriptorSetLayout->descriptorSetLayout;
+
+    std::array<VkPushConstantRange, 1> pushConstantRanges{};
+    pushConstantRanges[0] = {VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(SkyboxRendererVertexPushConstants)};
+
+    graphicsPipeline = new GraphicsPipeline(renderer->device->device, "res/shaders/skybox_shader.vert.spv", "res/shaders/skybox_shader.frag.spv", 0, nullptr, 0, nullptr, static_cast<uint32_t>(descriptorSetLayouts.size()), descriptorSetLayouts.data(), static_cast<uint32_t>(pushConstantRanges.size()), pushConstantRanges.data(), renderer->swapchain->swapchainExtent, renderer->renderPass->renderPass, renderer->device->msaaSamples);
+    offScreenGraphicsPipeline = new GraphicsPipeline(renderer->device->device, "res/shaders/skybox_shader.vert.spv", "res/shaders/skybox_shader.frag.spv", 0, nullptr, 0, nullptr, static_cast<uint32_t>(descriptorSetLayouts.size()), descriptorSetLayouts.data(), static_cast<uint32_t>(pushConstantRanges.size()), pushConstantRanges.data(), renderer->swapchain->swapchainExtent, renderer->waterResources->renderPass->renderPass, VK_SAMPLE_COUNT_1_BIT);
+}
+
+void SkyboxRenderer::DeleteGraphicsPipelines() {
+    delete graphicsPipeline;
+    delete offScreenGraphicsPipeline;
+}
+
 void SkyboxRenderer::render(Skybox* skybox, Camera* camera, glm::vec4 clipPlane, CommandBuffers* commandBuffers, bool onScreen) {
-    updateDescriptorSetResources(camera, clipPlane);
+    updateDescriptorSetResources(camera);
+    updatePushConstants(camera, clipPlane);
 
     VkCommandBuffer commandBuffer = commandBuffers->commandBuffers[renderer->currentFrame];
     GraphicsPipeline* gp = onScreen ? graphicsPipeline : offScreenGraphicsPipeline;
 
     vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, gp->graphicsPipeline);
+    vkCmdPushConstants(commandBuffer, gp->pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(SkyboxRendererVertexPushConstants), &vertexPushConstants);
 
     std::array<VkDescriptorSet, 2> descriptorSetsToBind{};
     descriptorSetsToBind[0] = descriptorSets->descriptorSets[renderer->currentFrame];
@@ -59,16 +71,19 @@ void SkyboxRenderer::render(Skybox* skybox, Camera* camera, glm::vec4 clipPlane,
     vkCmdDraw(commandBuffer, 36, 1, 0, 0);
 }
 
-void SkyboxRenderer::updateDescriptorSetResources(Camera* camera, glm::vec4 clipPlane) {
+void SkyboxRenderer::updateDescriptorSetResources(Camera* camera) {
     SkyboxRendererVertexUniformBufferObject vertexUbo{};
-    vertexUbo.viewMatrix = camera->createViewMatrix();
-    vertexUbo.viewMatrix[3][0] = 0.0f;
-    vertexUbo.viewMatrix[3][1] = 0.0f;
-    vertexUbo.viewMatrix[3][2] = 0.0f;
     vertexUbo.projectionMatrix = camera->createProjectionMatrix();
-    vertexUbo.clipPlane = clipPlane;
     void* vubData;
     vkMapMemory(renderer->device->device, vertexUniformBuffers[renderer->currentFrame]->bufferMemory, 0, sizeof(vertexUbo), 0, &vubData);
     memcpy(vubData, &vertexUbo, sizeof(vertexUbo));
     vkUnmapMemory(renderer->device->device, vertexUniformBuffers[renderer->currentFrame]->bufferMemory);
+}
+
+void SkyboxRenderer::updatePushConstants(Camera* camera, glm::vec4 clipPlane) {
+    vertexPushConstants.viewMatrix = camera->createViewMatrix();
+    vertexPushConstants.viewMatrix[3][0] = 0.0f;
+    vertexPushConstants.viewMatrix[3][1] = 0.0f;
+    vertexPushConstants.viewMatrix[3][2] = 0.0f;
+    vertexPushConstants.clipPlane = clipPlane;
 }

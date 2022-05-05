@@ -18,12 +18,14 @@ class WaterRenderer {
 public:
     WaterRenderer(Renderer* renderer);
     ~WaterRenderer();
+    void CreateGraphicsPipeline();
+    void DeleteGraphicsPipeline();
     void render(std::vector<WaterTile*> waterTiles, Camera* camera, CommandBuffers* commandBuffers);
     void updateDescriptorSetImageInfos();
 private:
     Renderer* renderer;
-    GraphicsPipeline* graphicsPipeline;
     DescriptorSetLayout* descriptorSetLayout;
+    GraphicsPipeline* graphicsPipeline;
     DescriptorPool* descriptorPool;
     DescriptorSets* descriptorSets;
     std::vector<Buffer*> vertexUniformBuffers;

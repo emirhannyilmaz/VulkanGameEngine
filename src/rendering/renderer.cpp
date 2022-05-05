@@ -1,4 +1,6 @@
 #include "renderer.hpp"
+#include "entity_renderer.hpp"
+#include "skybox_renderer.hpp"
 #include "water_renderer.hpp"
 
 Renderer::Renderer(Window* window, Camera* camera) {
@@ -239,11 +241,17 @@ void Renderer::recreateSwapchain() {
 
     waterResources = new WaterResources(device->physicalDevice, device->device, swapchain->swapchainExtent, swapchain->swapchainImageFormat, commandPool->commandPool, device->graphicsQueue);
     waterRenderer->updateDescriptorSetImageInfos();
+    waterRenderer->CreateGraphicsPipeline();
+    skyboxRenderer->CreateGraphicsPipelines();
+    entityRenderer->CreateGraphicsPipelines();
 
     camera->aspectRatio = (float) swapchain->swapchainExtent.width / (float) swapchain->swapchainExtent.height;
 }
 
 void Renderer::cleanUpSwapchain() {
+    entityRenderer->DeleteGraphicsPipelines();
+    skyboxRenderer->DeleteGraphicsPipelines();
+    waterRenderer->DeleteGraphicsPipeline();
     delete waterResources;
 
     for (auto framebuffer : framebuffers) {

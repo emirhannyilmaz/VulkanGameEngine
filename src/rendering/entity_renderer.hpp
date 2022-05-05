@@ -11,31 +11,38 @@
 #include "buffer.hpp"
 
 struct EntityRendererVertexUniformBufferObject {
-    alignas(16) glm::mat4 viewMatrix;
     alignas(16) glm::mat4 projectionMatrix;
     alignas(16) glm::vec3 lightPosition;
-    alignas(16) glm::vec4 clipPlane;
 };
 
 struct EntityRendererFragmentUniformBufferObject {
     alignas(16) glm::vec3 lightColor;
 };
 
+struct EntityRendererVertexPushConstants {
+    alignas(16) glm::mat4 viewMatrix;
+    alignas(16) glm::vec4 clipPlane;
+};
+
 class EntityRenderer {
 public:
     EntityRenderer(Renderer* renderer);
     ~EntityRenderer();
+    void CreateGraphicsPipelines();
+    void DeleteGraphicsPipelines();
     void render(std::vector<Entity*> entities, Light* light, Camera* camera, glm::vec4 clipPlane, CommandBuffers* commandBuffers, bool onScreen);
 private:
     Renderer* renderer;
+    DescriptorSetLayout* descriptorSetLayout;
     GraphicsPipeline* graphicsPipeline;
     GraphicsPipeline* offScreenGraphicsPipeline;
-    DescriptorSetLayout* descriptorSetLayout;
     DescriptorPool* descriptorPool;
     DescriptorSets* descriptorSets;
     std::vector<Buffer*> vertexUniformBuffers;
     std::vector<Buffer*> fragmentUniformBuffers;
-    void updateDescriptorSetResources(Light* light, Camera* camera, glm::vec4 clipPlane);
+    EntityRendererVertexPushConstants vertexPushConstants{};
+    void updateDescriptorSetResources(Light* light, Camera* camera);
+    void updatePushConstants(Camera* camera, glm::vec4 clipPlane);
 };
 
 #endif

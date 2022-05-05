@@ -10,8 +10,11 @@
 #include "buffer.hpp"
 
 struct SkyboxRendererVertexUniformBufferObject {
-    alignas(16) glm::mat4 viewMatrix;
     alignas(16) glm::mat4 projectionMatrix;
+};
+
+struct SkyboxRendererVertexPushConstants {
+    alignas(16) glm::mat4 viewMatrix;
     alignas(16) glm::vec4 clipPlane;
 };
 
@@ -19,16 +22,20 @@ class SkyboxRenderer {
 public:
     SkyboxRenderer(Renderer* renderer);
     ~SkyboxRenderer();
+    void CreateGraphicsPipelines();
+    void DeleteGraphicsPipelines();
     void render(Skybox* skybox, Camera* camera, glm::vec4 clipPlane, CommandBuffers* commandBuffers, bool onScreen);
 private:
     Renderer* renderer;
+    DescriptorSetLayout* descriptorSetLayout;
     GraphicsPipeline* graphicsPipeline;
     GraphicsPipeline* offScreenGraphicsPipeline;
-    DescriptorSetLayout* descriptorSetLayout;
     DescriptorPool* descriptorPool;
     DescriptorSets* descriptorSets;
     std::vector<Buffer*> vertexUniformBuffers;
-    void updateDescriptorSetResources(Camera* camera, glm::vec4 clipPlane);
+    SkyboxRendererVertexPushConstants vertexPushConstants{};
+    void updateDescriptorSetResources(Camera* camera);
+    void updatePushConstants(Camera* camera, glm::vec4 clipPlane);
 };
 
 #endif

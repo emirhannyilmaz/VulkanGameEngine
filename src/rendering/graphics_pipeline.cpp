@@ -1,6 +1,6 @@
 #include "graphics_pipeline.hpp"
 
-GraphicsPipeline::GraphicsPipeline(VkDevice& device, const std::string& vertexShaderFileName, const std::string& fragmentShaderFileName, uint32_t vertexBindingDescriptionCount, VkVertexInputBindingDescription* vertexBindingDescriptions, uint32_t vertexAttributeDescriptionCount, VkVertexInputAttributeDescription* vertexAttributeDescriptions, uint32_t descriptorSetLayoutCount, VkDescriptorSetLayout* descriptorSetLayouts, VkExtent2D& swapchainExtent, VkRenderPass& renderPass, VkSampleCountFlagBits msaaSamples) {
+GraphicsPipeline::GraphicsPipeline(VkDevice& device, const std::string& vertexShaderFileName, const std::string& fragmentShaderFileName, uint32_t vertexBindingDescriptionCount, VkVertexInputBindingDescription* vertexBindingDescriptions, uint32_t vertexAttributeDescriptionCount, VkVertexInputAttributeDescription* vertexAttributeDescriptions, uint32_t descriptorSetLayoutCount, VkDescriptorSetLayout* descriptorSetLayouts, uint32_t pushConstantRangeCount, VkPushConstantRange* pushConstantRanges, VkExtent2D& swapchainExtent, VkRenderPass& renderPass, VkSampleCountFlagBits msaaSamples) {
     this->device = device;
 
     ShaderModule vertexShader(device, vertexShaderFileName);
@@ -124,8 +124,8 @@ GraphicsPipeline::GraphicsPipeline(VkDevice& device, const std::string& vertexSh
     pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     pipelineLayoutCreateInfo.setLayoutCount = descriptorSetLayoutCount;
     pipelineLayoutCreateInfo.pSetLayouts = descriptorSetLayouts;
-    pipelineLayoutCreateInfo.pushConstantRangeCount = 0;
-    pipelineLayoutCreateInfo.pPushConstantRanges = nullptr;
+    pipelineLayoutCreateInfo.pushConstantRangeCount = pushConstantRangeCount;
+    pipelineLayoutCreateInfo.pPushConstantRanges = pushConstantRanges;
 
     if (vkCreatePipelineLayout(device, &pipelineLayoutCreateInfo, nullptr, &pipelineLayout) != VK_SUCCESS) {
         throw std::runtime_error("Failed to create pipeline layout!");

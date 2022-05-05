@@ -11,11 +11,7 @@ WaterRenderer::WaterRenderer(Renderer* renderer) {
 
     WaterTile::CreateDesriptorSetLayout(renderer->device->device);
 
-    std::array<VkDescriptorSetLayout, 2> descriptorSetLayouts{};
-    descriptorSetLayouts[0] = descriptorSetLayout->descriptorSetLayout;
-    descriptorSetLayouts[1] = WaterTile::descriptorSetLayout->descriptorSetLayout;
-
-    graphicsPipeline = new GraphicsPipeline(renderer->device->device, "res/shaders/water_shader.vert.spv", "res/shaders/water_shader.frag.spv", 0, nullptr, 0, nullptr, static_cast<uint32_t>(descriptorSetLayouts.size()), descriptorSetLayouts.data(), renderer->swapchain->swapchainExtent, renderer->renderPass->renderPass, renderer->device->msaaSamples);
+    CreateGraphicsPipeline();
 
     std::array<VkDescriptorPoolSize, 2> poolSizes{};
     poolSizes[0] = {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, MAX_FRAMES_IN_FLIGHT};
@@ -41,9 +37,20 @@ WaterRenderer::~WaterRenderer() {
     vertexUniformBuffers.clear();
 
     delete descriptorPool;
-    delete graphicsPipeline;
     WaterTile::DeleteDesriptorSetLayout();
     delete descriptorSetLayout;
+}
+
+void WaterRenderer::CreateGraphicsPipeline() {
+    std::array<VkDescriptorSetLayout, 2> descriptorSetLayouts{};
+    descriptorSetLayouts[0] = descriptorSetLayout->descriptorSetLayout;
+    descriptorSetLayouts[1] = WaterTile::descriptorSetLayout->descriptorSetLayout;
+
+    graphicsPipeline = new GraphicsPipeline(renderer->device->device, "res/shaders/water_shader.vert.spv", "res/shaders/water_shader.frag.spv", 0, nullptr, 0, nullptr, static_cast<uint32_t>(descriptorSetLayouts.size()), descriptorSetLayouts.data(), 0, nullptr, renderer->swapchain->swapchainExtent, renderer->renderPass->renderPass, renderer->device->msaaSamples);
+}
+
+void WaterRenderer::DeleteGraphicsPipeline() {
+    delete graphicsPipeline;
 }
 
 void WaterRenderer::render(std::vector<WaterTile*> waterTiles, Camera* camera, CommandBuffers* commandBuffers) {
