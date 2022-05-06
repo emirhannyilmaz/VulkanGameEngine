@@ -19,8 +19,13 @@ layout(set = 1, binding = 0) uniform WaterTileVertexUniformBufferObject {
 } wtvubo;
 
 layout(location = 0) out vec4 clipSpace;
+layout(location = 1) out vec2 textureCoordinates;
+
+const float tiling = 6.0;
 
 void main() {
-    clipSpace = wrvubo.projectionMatrix * wrvubo.viewMatrix * wtvubo.modelMatrix * vec4(vertices[gl_VertexIndex], 1.0);
+    vec3 position = vertices[gl_VertexIndex];
+    clipSpace = wrvubo.projectionMatrix * wrvubo.viewMatrix * wtvubo.modelMatrix * vec4(position, 1.0);
     gl_Position = clipSpace;
+    textureCoordinates = vec2(position.x / 2.0 + 0.5, position.z / 2.0 + 0.5) * tiling;
 }

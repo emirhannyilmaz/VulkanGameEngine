@@ -3,10 +3,12 @@
 WaterRenderer::WaterRenderer(Renderer* renderer) {
     this->renderer = renderer;
 
-    std::array<VkDescriptorSetLayoutBinding, 3> layoutBindings{};
+    std::array<VkDescriptorSetLayoutBinding, 5> layoutBindings{};
     layoutBindings[0] = {0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, nullptr};
     layoutBindings[1] = {1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, nullptr};
     layoutBindings[2] = {2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, nullptr};
+    layoutBindings[3] = {3, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, nullptr};
+    layoutBindings[4] = {4, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, nullptr};
     descriptorSetLayout = new DescriptorSetLayout(renderer->device->device, static_cast<uint32_t>(layoutBindings.size()), layoutBindings.data());
 
     WaterTile::CreateDesriptorSetLayout(renderer->device->device);
@@ -14,17 +16,23 @@ WaterRenderer::WaterRenderer(Renderer* renderer) {
     CreateGraphicsPipeline();
 
     std::array<VkDescriptorPoolSize, 2> poolSizes{};
-    poolSizes[0] = {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, MAX_FRAMES_IN_FLIGHT};
-    poolSizes[1] = {VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 2 * MAX_FRAMES_IN_FLIGHT};
+    poolSizes[0] = {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 2 * MAX_FRAMES_IN_FLIGHT};
+    poolSizes[1] = {VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 3 * MAX_FRAMES_IN_FLIGHT};
     descriptorPool = new DescriptorPool(renderer->device->device, static_cast<uint32_t>(poolSizes.size()), poolSizes.data(), MAX_FRAMES_IN_FLIGHT);
 
     std::vector<VkDescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT, descriptorSetLayout->descriptorSetLayout);
     descriptorSets = new DescriptorSets(renderer->device->device, descriptorPool->descriptorPool, layouts.data(), MAX_FRAMES_IN_FLIGHT);
 
+    dudvMap = new Texture("res/textures/water_dudv_map.png", 0, 0, renderer);
+
     vertexUniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
+    fragmentUniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         vertexUniformBuffers[i] = new Buffer(renderer->device->physicalDevice, renderer->device->device, sizeof(WaterRendererVertexUniformBufferObject), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
         descriptorSets->updateBufferInfo(i, 0, 0, 1, vertexUniformBuffers[i]->buffer, sizeof(WaterRendererVertexUniformBufferObject));
+
+        fragmentUniformBuffers[i] = new Buffer(renderer->device->physicalDevice, renderer->device->device, sizeof(WaterRendererFragmentUniformBufferObject), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+        descriptorSets->updateBufferInfo(i, 4, 0, 1, fragmentUniformBuffers[i]->buffer, sizeof(WaterRendererFragmentUniformBufferObject));
         
         updateDescriptorSetImageInfos();
     }
@@ -33,9 +41,12 @@ WaterRenderer::WaterRenderer(Renderer* renderer) {
 WaterRenderer::~WaterRenderer() {
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         delete vertexUniformBuffers[i];
+        delete fragmentUniformBuffers[i];
     }
     vertexUniformBuffers.clear();
+    fragmentUniformBuffers.clear();
 
+    delete dudvMap;
     delete descriptorPool;
     WaterTile::DeleteDesriptorSetLayout();
     delete descriptorSetLayout;
@@ -75,6 +86,7 @@ void WaterRenderer::updateDescriptorSetImageInfos() {
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         descriptorSets->updateImageInfo(i, 1, 0, 1, renderer->waterResources->reflectionColorResources->image->imageView, renderer->waterResources->sampler->sampler);
         descriptorSets->updateImageInfo(i, 2, 0, 1, renderer->waterResources->refractionColorResources->image->imageView, renderer->waterResources->sampler->sampler);
+        descriptorSets->updateImageInfo(i, 3, 0, 1, dudvMap->image->imageView, dudvMap->sampler->sampler);
     }
 }
 
@@ -86,4 +98,13 @@ void WaterRenderer::updateDescriptorSetResources(Camera* camera) {
     vkMapMemory(renderer->device->device, vertexUniformBuffers[renderer->currentFrame]->bufferMemory, 0, sizeof(vertexUbo), 0, &vubData);
     memcpy(vubData, &vertexUbo, sizeof(vertexUbo));
     vkUnmapMemory(renderer->device->device, vertexUniformBuffers[renderer->currentFrame]->bufferMemory);
+
+    WaterRendererFragmentUniformBufferObject fragmentUbo{};
+    moveFactor += waveSpeed * renderer->deltaTime;
+    moveFactor = fmod(moveFactor, 1.0f);
+    fragmentUbo.moveFactor = moveFactor;
+    void* fubData;
+    vkMapMemory(renderer->device->device, fragmentUniformBuffers[renderer->currentFrame]->bufferMemory, 0, sizeof(fragmentUbo), 0, &fubData);
+    memcpy(fubData, &fragmentUbo, sizeof(fragmentUbo));
+    vkUnmapMemory(renderer->device->device, fragmentUniformBuffers[renderer->currentFrame]->bufferMemory);
 }
