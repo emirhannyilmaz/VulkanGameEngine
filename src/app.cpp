@@ -17,7 +17,7 @@ void App::run() {
     ObjModelData carModelData = ModelLoader::LoadObj("res/models/car.obj");
     Mesh* carMesh = new Mesh(carModelData.vertices, carModelData.indices, renderer);
     Texture* carTexture = new Texture("res/textures/car.jpg", 1.0f, 10.0f, renderer);
-    Entity* car = new Entity(carMesh, carTexture, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), renderer);
+    Entity* car = new Entity(carMesh, carTexture, glm::vec3(0.0f, 3.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), renderer);
 
     std::vector<Entity*> entities;
     entities.push_back(car);
