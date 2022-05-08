@@ -36,7 +36,7 @@ void main() {
 
     vec3 nToCameraVector = normalize(fragToCameraVector);
     float refractiveFactor = dot(nToCameraVector, vec3(0.0, -1.0, 0.0));
-    refractiveFactor = pow(refractiveFactor, 0.5);
+    refractiveFactor = pow(refractiveFactor, 1.0);
 
     outColor = mix(reflectionColor, refractionColor, refractiveFactor);
     outColor = mix(outColor, vec4(0.0, 0.3, 0.5, 1.0), 0.2);
