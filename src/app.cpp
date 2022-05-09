@@ -17,7 +17,7 @@ void App::run() {
     ObjModelData carModelData = ModelLoader::LoadObj("res/models/car.obj");
     Mesh* carMesh = new Mesh(carModelData.vertices, carModelData.indices, renderer);
     Texture* carTexture = new Texture("res/textures/car.jpg", 1.0f, 10.0f, renderer);
-    Entity* car = new Entity(carMesh, carTexture, glm::vec3(0.0f, 3.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), renderer);
+    Entity* car = new Entity(carMesh, carTexture, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), renderer);
 
     std::vector<Entity*> entities;
     entities.push_back(car);
@@ -25,7 +25,7 @@ void App::run() {
     Texture* skyboxTexture = new Texture({"res/textures/skybox_front.tga", "res/textures/skybox_back.tga", "res/textures/skybox_up.tga", "res/textures/skybox_down.tga", "res/textures/skybox_right.tga", "res/textures/skybox_left.tga"}, renderer);
     Skybox* skybox = new Skybox(skyboxTexture, 500.0f, renderer);
 
-    WaterTile* waterTile = new WaterTile(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec2(25.0f, 25.0f), renderer);
+    WaterTile* waterTile = new WaterTile(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec2(25.0f, 25.0f), 0.6f, 20.0f, renderer);
 
     std::vector<WaterTile*> waterTiles;
     waterTiles.push_back(waterTile);
@@ -58,7 +58,7 @@ void App::run() {
         renderer->beginRendering(renderer->renderPass, renderer->framebuffers[renderer->currentImageIndex], renderer->commandBuffers);
         entityRenderer->render(entities, light, camera, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), renderer->commandBuffers, true);
         skyboxRenderer->render(skybox, camera, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), renderer->commandBuffers, true);
-        waterRenderer->render(waterTiles, camera, renderer->commandBuffers);
+        waterRenderer->render(waterTiles, camera, light, renderer->commandBuffers);
         renderer->endRendering(renderer->commandBuffers);
 
         renderer->endRecordingCommands(renderer->commandBuffers, true);

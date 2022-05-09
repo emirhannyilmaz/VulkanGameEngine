@@ -12,6 +12,7 @@ vec3 vertices[6] = vec3[] (
 layout(set = 0, binding = 0) uniform WaterRendererVertexUniformBufferObject {
     mat4 viewMatrix;
     mat4 projectionMatrix;
+    vec3 lightPosition;
 } wrvubo;
 
 layout(set = 1, binding = 0) uniform WaterTileVertexUniformBufferObject {
@@ -21,6 +22,7 @@ layout(set = 1, binding = 0) uniform WaterTileVertexUniformBufferObject {
 layout(location = 0) out vec4 fragClipSpace;
 layout(location = 1) out vec2 fragTextureCoordinates;
 layout(location = 2) out vec3 fragToCameraVector;
+layout(location = 3) out vec3 fragFromLightVector;
 
 const float tiling = 6.0;
 
@@ -31,4 +33,5 @@ void main() {
     gl_Position = fragClipSpace;
     fragTextureCoordinates = vec2(vertexPosition.x / 2.0 + 0.5, vertexPosition.z / 2.0 + 0.5) * tiling;
     fragToCameraVector = (inverse(wrvubo.viewMatrix) * vec4(0.0, 0.0, 0.0, 1.0)).xyz - worldPosition.xyz;
+    fragFromLightVector = worldPosition.xyz - wrvubo.lightPosition;
 }

@@ -9,14 +9,17 @@
 #include "descriptor_sets.hpp"
 #include "texture.hpp"
 #include "buffer.hpp"
+#include "../entities/light.hpp"
 
 struct WaterRendererVertexUniformBufferObject {
     alignas(16) glm::mat4 viewMatrix;
     alignas(16) glm::mat4 projectionMatrix;
+    alignas(16) glm::vec3 lightPosition;
 };
 
 struct WaterRendererFragmentUniformBufferObject {
     alignas(4) float moveFactor;
+    alignas(16) glm::vec3 lightColor;
 };
 
 class WaterRenderer {
@@ -25,7 +28,7 @@ public:
     ~WaterRenderer();
     void CreateGraphicsPipeline();
     void DeleteGraphicsPipeline();
-    void render(std::vector<WaterTile*> waterTiles, Camera* camera, CommandBuffers* commandBuffers);
+    void render(std::vector<WaterTile*> waterTiles, Camera* camera, Light* light, CommandBuffers* commandBuffers);
     void updateDescriptorSetImageInfos();
 private:
     Renderer* renderer;
@@ -34,11 +37,12 @@ private:
     DescriptorPool* descriptorPool;
     DescriptorSets* descriptorSets;
     Texture* dudvMap;
+    Texture* normalMap;
     std::vector<Buffer*> vertexUniformBuffers;
     std::vector<Buffer*> fragmentUniformBuffers;
     const float waveSpeed = 0.03f;
     float moveFactor = 0.0f;
-    void updateDescriptorSetResources(Camera* camera);
+    void updateDescriptorSetResources(Camera* camera, Light* light);
 };
 
 #endif

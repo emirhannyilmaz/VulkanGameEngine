@@ -13,13 +13,20 @@ struct WaterTileVertexUniformBufferObject {
     alignas(16) glm::mat4 modelMatrix;
 };
 
+struct WaterTileFragmentUniformBufferObject {
+    alignas(4) float reflectivity;
+    alignas(4) float shineDamper;
+};
+
 class WaterTile {
 public:
     glm::vec3 position;
     glm::vec2 scale;
+    float reflectivity;
+    float shineDamper;
     static DescriptorSetLayout* descriptorSetLayout;
     DescriptorSets* descriptorSets;
-    WaterTile(glm::vec3 position, glm::vec2 scale, Renderer* renderer);
+    WaterTile(glm::vec3 position, glm::vec2 scale, float reflectivity, float shineDamper, Renderer* renderer);
     ~WaterTile();
     void updateDescriptorSetResources();
     static void CreateDesriptorSetLayout(VkDevice& device);
@@ -28,6 +35,7 @@ private:
     DescriptorPool* descriptorPool;
     Renderer* renderer;
     std::vector<Buffer*> vertexUniformBuffers;
+    std::vector<Buffer*> fragmentUniformBuffers;
 };
 
 #endif
