@@ -20,6 +20,8 @@ struct WaterRendererVertexUniformBufferObject {
 struct WaterRendererFragmentUniformBufferObject {
     alignas(4) float moveFactor;
     alignas(16) glm::vec3 lightColor;
+    alignas(4) float nearPlane;
+    alignas(4) float farPlane;
 };
 
 class WaterRenderer {

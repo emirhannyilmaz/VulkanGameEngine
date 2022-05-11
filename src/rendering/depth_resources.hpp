@@ -6,7 +6,7 @@
 class DepthResources {
 public:
     Image* image;
-    DepthResources(VkPhysicalDevice& physicalDevice, VkDevice& device, VkExtent2D& swapchainExtent, VkSampleCountFlagBits msaaSamples, VkImageUsageFlags usage);
+    DepthResources(VkPhysicalDevice& physicalDevice, VkDevice& device, VkExtent2D& extent, VkSampleCountFlagBits msaaSamples, VkImageUsageFlags usage);
     ~DepthResources();
     static VkFormat findDepthFormat(VkPhysicalDevice& physicalDevice);
 private:

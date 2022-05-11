@@ -41,8 +41,8 @@ void App::run() {
 
         renderer->beginRendering(renderer->waterResources->renderPass, renderer->waterResources->reflectionFramebuffer, renderer->offScreenCommandBuffers);
         camera->invert(2 * (std::abs(camera->position.y) - std::abs(waterTile->position.y)));
-        entityRenderer->render(entities, light, camera, glm::vec4(0.0f, -1.0f, 0.0f, -waterTile->position.y), renderer->offScreenCommandBuffers, false);
-        skyboxRenderer->render(skybox, camera, glm::vec4(0.0f, -1.0f, 0.0f, -waterTile->position.y), renderer->offScreenCommandBuffers, false);
+        entityRenderer->render(entities, light, camera, glm::vec4(0.0f, -1.0f, 0.0f, waterTile->position.y + 1.0f), renderer->offScreenCommandBuffers, false);
+        skyboxRenderer->render(skybox, camera, glm::vec4(0.0f, -1.0f, 0.0f, waterTile->position.y + 1.0f), renderer->offScreenCommandBuffers, false);
         camera->revert();
         renderer->endRendering(renderer->offScreenCommandBuffers);
 
