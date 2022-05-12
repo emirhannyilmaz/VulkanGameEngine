@@ -1,4 +1,5 @@
 #include "renderer.hpp"
+#include "terrain_renderer.hpp"
 #include "entity_renderer.hpp"
 #include "skybox_renderer.hpp"
 #include "water_renderer.hpp"
@@ -244,11 +245,13 @@ void Renderer::recreateSwapchain() {
     waterRenderer->CreateGraphicsPipeline();
     skyboxRenderer->CreateGraphicsPipelines();
     entityRenderer->CreateGraphicsPipelines();
+    terrainRenderer->CreateGraphicsPipelines();
 
     camera->aspectRatio = (float) swapchain->swapchainExtent.width / (float) swapchain->swapchainExtent.height;
 }
 
 void Renderer::cleanUpSwapchain() {
+    terrainRenderer->DeleteGraphicsPipelines();
     entityRenderer->DeleteGraphicsPipelines();
     skyboxRenderer->DeleteGraphicsPipelines();
     waterRenderer->DeleteGraphicsPipeline();

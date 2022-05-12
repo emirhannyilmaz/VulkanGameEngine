@@ -7,12 +7,20 @@ void App::run() {
     Camera* camera = new Camera(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), 45.0f, (float) window->width / (float) window->height, 0.1f, 1000.0f, 40.0f);
     Light* light = new Light(glm::vec3(50.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
     Renderer* renderer = new Renderer(window, camera);
+    TerrainRenderer* terrainRenderer = new TerrainRenderer(renderer);
     EntityRenderer* entityRenderer = new EntityRenderer(renderer);
     SkyboxRenderer* skyboxRenderer = new SkyboxRenderer(renderer);
     WaterRenderer* waterRenderer = new WaterRenderer(renderer);
+    renderer->terrainRenderer = terrainRenderer;
     renderer->entityRenderer = entityRenderer;
     renderer->skyboxRenderer = skyboxRenderer;
     renderer->waterRenderer = waterRenderer;
+    
+    Texture* terrainTexture = new Texture("res/textures/grass.png", 1.0f, 10.0f, renderer);
+    Terrain* terrain = new Terrain(terrainTexture, glm::vec2(0.0f, 0.0f), renderer);
+
+    std::vector<Terrain*> terrains;
+    terrains.push_back(terrain);
 
     ObjModelData carModelData = ModelLoader::LoadObj("res/models/car.obj");
     Mesh* carMesh = new Mesh(carModelData.vertices, carModelData.indices, renderer);
@@ -41,12 +49,14 @@ void App::run() {
 
         renderer->beginRendering(renderer->waterResources->renderPass, renderer->waterResources->reflectionFramebuffer, renderer->offScreenCommandBuffers);
         camera->invert(2 * (std::abs(camera->position.y) - std::abs(waterTile->position.y)));
+        terrainRenderer->render(terrains, light, camera, glm::vec4(0.0f, -1.0f, 0.0f, waterTile->position.y + 1.0f), renderer->offScreenCommandBuffers, false);
         entityRenderer->render(entities, light, camera, glm::vec4(0.0f, -1.0f, 0.0f, waterTile->position.y + 1.0f), renderer->offScreenCommandBuffers, false);
         skyboxRenderer->render(skybox, camera, glm::vec4(0.0f, -1.0f, 0.0f, waterTile->position.y + 1.0f), renderer->offScreenCommandBuffers, false);
         camera->revert();
         renderer->endRendering(renderer->offScreenCommandBuffers);
 
         renderer->beginRendering(renderer->waterResources->renderPass, renderer->waterResources->refractionFramebuffer, renderer->offScreenCommandBuffers);
+        terrainRenderer->render(terrains, light, camera, glm::vec4(0.0f, -1.0f, 0.0f, waterTile->position.y + 1.0f), renderer->offScreenCommandBuffers, false);
         entityRenderer->render(entities, light, camera, glm::vec4(0.0f, 1.0f, 0.0f, -waterTile->position.y), renderer->offScreenCommandBuffers, false);
         skyboxRenderer->render(skybox, camera, glm::vec4(0.0f, 1.0f, 0.0f, -waterTile->position.y), renderer->offScreenCommandBuffers, false);
         renderer->endRendering(renderer->offScreenCommandBuffers);
@@ -56,6 +66,7 @@ void App::run() {
         renderer->beginRecordingCommands(renderer->commandBuffers, true);
 
         renderer->beginRendering(renderer->renderPass, renderer->framebuffers[renderer->currentImageIndex], renderer->commandBuffers);
+        terrainRenderer->render(terrains, light, camera, glm::vec4(0.0f, -1.0f, 0.0f, waterTile->position.y + 1.0f), renderer->commandBuffers, true);
         entityRenderer->render(entities, light, camera, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), renderer->commandBuffers, true);
         skyboxRenderer->render(skybox, camera, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), renderer->commandBuffers, true);
         waterRenderer->render(waterTiles, camera, light, renderer->commandBuffers);
@@ -80,9 +91,15 @@ void App::run() {
     }
     entities.clear();
 
+    for (size_t i = 0; i < terrains.size(); i++) {
+        delete terrains[i];
+    }
+    terrains.clear();
+
     delete waterRenderer;
     delete skyboxRenderer;
     delete entityRenderer;
+    delete terrainRenderer;
     delete renderer;
     delete light;
     delete camera;
