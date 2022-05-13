@@ -8,6 +8,7 @@
 #include "../rendering/descriptor_set_layout.hpp"
 #include "../rendering/descriptor_sets.hpp"
 #include "../rendering/renderer_info.hpp"
+#include <stb_image.h>
 
 class Texture;
 
@@ -27,7 +28,7 @@ public:
     static DescriptorSetLayout* descriptorSetLayout;
     DescriptorSets* descriptorSets;
     glm::vec2 position;
-    Terrain(Texture* texture, glm::vec2 position, Renderer* renderer);
+    Terrain(Texture* texture, const std::string& heightMapFileName, glm::vec2 position, Renderer* renderer);
     ~Terrain();
     void updateDescriptorSetResources();
     static void CreateDesriptorSetLayout(VkDevice& device);
@@ -38,8 +39,10 @@ private:
     std::vector<Buffer*> vertexUniformBuffers;
     std::vector<Buffer*> fragmentUniformBuffers;
     const float SIZE = 100.0f;
-    const int VERTEX_COUNT = 128;
-    void createMesh();
+    const float MAX_HEIGHT = 40.0f;
+    void createMesh(const std::string& heightMapFileName);
+    float getHeight(int x, int z, int width, int height, stbi_uc* heightMapPixels);
+    glm::vec3 getNormal(int x, int z, int width, int height, stbi_uc* heightMapPixels);
 };
 
 #endif

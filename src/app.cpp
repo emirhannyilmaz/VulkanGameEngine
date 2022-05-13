@@ -5,7 +5,7 @@ void App::run() {
     Input::window = window->window;
     Input::sensitivity = 5.0f;
     Camera* camera = new Camera(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), 45.0f, (float) window->width / (float) window->height, 0.1f, 1000.0f, 40.0f);
-    Light* light = new Light(glm::vec3(50.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
+    Light* light = new Light(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f));
     Renderer* renderer = new Renderer(window, camera);
     TerrainRenderer* terrainRenderer = new TerrainRenderer(renderer);
     EntityRenderer* entityRenderer = new EntityRenderer(renderer);
@@ -16,8 +16,8 @@ void App::run() {
     renderer->skyboxRenderer = skyboxRenderer;
     renderer->waterRenderer = waterRenderer;
     
-    Texture* terrainTexture = new Texture("res/textures/grass.png", 1.0f, 10.0f, renderer);
-    Terrain* terrain = new Terrain(terrainTexture, glm::vec2(0.0f, 0.0f), renderer);
+    Texture* terrainTexture = new Texture("res/textures/grass.png", 0.0f, 0.0f, renderer);
+    Terrain* terrain = new Terrain(terrainTexture, "res/textures/terrain_heightmap.png", glm::vec2(0.0f, 0.0f), renderer);
 
     std::vector<Terrain*> terrains;
     terrains.push_back(terrain);
@@ -33,7 +33,7 @@ void App::run() {
     Texture* skyboxTexture = new Texture({"res/textures/skybox_front.tga", "res/textures/skybox_back.tga", "res/textures/skybox_up.tga", "res/textures/skybox_down.tga", "res/textures/skybox_right.tga", "res/textures/skybox_left.tga"}, renderer);
     Skybox* skybox = new Skybox(skyboxTexture, 500.0f, renderer);
 
-    WaterTile* waterTile = new WaterTile(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec2(25.0f, 25.0f), 0.6f, 20.0f, renderer);
+    WaterTile* waterTile = new WaterTile(glm::vec3(50.0f, 0.0f, 50.0f), glm::vec2(50.0f, 50.0f), 0.6f, 20.0f, renderer);
 
     std::vector<WaterTile*> waterTiles;
     waterTiles.push_back(waterTile);

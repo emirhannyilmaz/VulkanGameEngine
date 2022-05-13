@@ -4,11 +4,11 @@
 
 DescriptorSetLayout* Terrain::descriptorSetLayout = nullptr;
 
-Terrain::Terrain(Texture* texture, glm::vec2 position, Renderer* renderer) {
+Terrain::Terrain(Texture* texture, const std::string& heightMapFileName, glm::vec2 position, Renderer* renderer) {
     this->texture = texture;
     this->position = position * SIZE;
     this->renderer = renderer;
-    createMesh();
+    createMesh(heightMapFileName);
 
     std::array<VkDescriptorPoolSize, 2> poolSizes{};
     poolSizes[0] = {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 2 * MAX_FRAMES_IN_FLIGHT};
@@ -77,26 +77,37 @@ void Terrain::DeleteDesriptorSetLayout() {
     delete descriptorSetLayout;
 }
 
-void Terrain::createMesh() {
+void Terrain::createMesh(const std::string& heightMapFileName) {
+    int width;
+    int height;
+    int channels;
+
+    stbi_uc* pixels = stbi_load(heightMapFileName.c_str(), &width, &height, &channels, STBI_rgb);
+    if (!pixels) {
+        throw std::runtime_error("Failed to load texture!");
+    }
+
+    int vertexCount = height;
+
     std::vector<Vertex> vertices;
-    vertices.resize(VERTEX_COUNT * VERTEX_COUNT);
+    vertices.resize(vertexCount * vertexCount);
 	std::vector<uint32_t> indices;
-    indices.resize(6 * (VERTEX_COUNT - 1) * (VERTEX_COUNT - 1));
+    indices.resize(6 * (vertexCount - 1) * (vertexCount - 1));
 	int vertexPointer = 0;
-	for (int z = 0; z < VERTEX_COUNT; z++) {
-		for (int x = 0; x < VERTEX_COUNT; x++) {
-			vertices[vertexPointer].position = glm::vec3((float) x / ((float) VERTEX_COUNT - 1) * SIZE, 0.0f, (float) z / ((float) VERTEX_COUNT - 1) * SIZE);
-			vertices[vertexPointer].normal = glm::vec3(0.0f, -1.0f, 0.0f);
-			vertices[vertexPointer].textureCoordinates = glm::vec2((float) x / ((float) VERTEX_COUNT - 1), 1.0f - ((float) z / ((float) VERTEX_COUNT - 1)));
+	for (int z = 0; z < vertexCount; z++) {
+		for (int x = 0; x < vertexCount; x++) {
+			vertices[vertexPointer].position = glm::vec3((float) x / ((float) vertexCount - 1) * SIZE, getHeight(x, z, width, height, pixels), (float) z / ((float) vertexCount - 1) * SIZE);
+			vertices[vertexPointer].normal = getNormal(x, z, width, height, pixels);
+			vertices[vertexPointer].textureCoordinates = glm::vec2((float) x / ((float) vertexCount - 1), 1.0f - ((float) z / ((float) vertexCount - 1)));
 			vertexPointer++;
 		}
 	}
 	int indexPointer = 0;
-	for (int z = 0; z < VERTEX_COUNT - 1; z++) {
-		for (int x = 0; x < VERTEX_COUNT - 1; x++) {
-			int topLeft = ((z + 1) * VERTEX_COUNT) + x;
+	for (int z = 0; z < vertexCount - 1; z++) {
+		for (int x = 0; x < vertexCount - 1; x++) {
+			int topLeft = ((z + 1) * vertexCount) + x;
 			int topRight = topLeft + 1;
-			int bottomLeft = (z * VERTEX_COUNT) + x;
+			int bottomLeft = (z * vertexCount) + x;
 			int bottomRight = bottomLeft + 1;
 			indices[indexPointer++] = bottomLeft;
 			indices[indexPointer++] = topLeft;
@@ -108,4 +119,31 @@ void Terrain::createMesh() {
 	}
 
     mesh = new Mesh(vertices, indices, renderer);
+}
+
+float Terrain::getHeight(int x, int z, int width, int height, stbi_uc* heightMapPixels) {
+    if (x < 0 || x >= width || z < 0 || z >= height) {
+        return 0.0f;
+    }
+
+    width *= 3;
+    x *= 3;
+    unsigned char data = heightMapPixels[z * width + x];
+    float h = data;
+    h = 2.0f * (h / 255.0f) - 1.0f;
+    h *= MAX_HEIGHT;
+    h *= -1.0f;
+
+    return h;
+}
+
+glm::vec3 Terrain::getNormal(int x, int z, int width, int height, stbi_uc* heightMapPixels) {
+    float heightL = getHeight(x - 1, z, width, height, heightMapPixels);
+    float heightR = getHeight(x + 1, z, width, height, heightMapPixels);
+    float heightD = getHeight(z, z - 1, width, height, heightMapPixels);
+    float heightU = getHeight(z, z + 1, width, height, heightMapPixels);
+    glm::vec3 normal = glm::vec3(heightL - heightR, 2.0f, heightD - heightU);
+    normal = glm::normalize(normal);
+
+    return normal;
 }
