@@ -53,9 +53,9 @@ void SkyboxRenderer::DeleteGraphicsPipelines() {
     delete offScreenGraphicsPipeline;
 }
 
-void SkyboxRenderer::render(Skybox* skybox, Camera* camera, glm::vec4 clipPlane, CommandBuffers* commandBuffers, bool onScreen) {
-    updateDescriptorSetResources(camera);
-    updatePushConstants(camera, clipPlane);
+void SkyboxRenderer::render(Skybox* skybox, PerspectiveCamera* perspectiveCamera, glm::vec4 clipPlane, CommandBuffers* commandBuffers, bool onScreen) {
+    updateDescriptorSetResources(perspectiveCamera);
+    updatePushConstants(perspectiveCamera, clipPlane);
 
     VkCommandBuffer commandBuffer = commandBuffers->commandBuffers[renderer->currentFrame];
     GraphicsPipeline* gp = onScreen ? graphicsPipeline : offScreenGraphicsPipeline;
@@ -71,17 +71,17 @@ void SkyboxRenderer::render(Skybox* skybox, Camera* camera, glm::vec4 clipPlane,
     vkCmdDraw(commandBuffer, 36, 1, 0, 0);
 }
 
-void SkyboxRenderer::updateDescriptorSetResources(Camera* camera) {
+void SkyboxRenderer::updateDescriptorSetResources(PerspectiveCamera* perspectiveCamera) {
     SkyboxRendererVertexUniformBufferObject vertexUbo{};
-    vertexUbo.projectionMatrix = camera->createProjectionMatrix();
+    vertexUbo.projectionMatrix = perspectiveCamera->createProjectionMatrix();
     void* vubData;
     vkMapMemory(renderer->device->device, vertexUniformBuffers[renderer->currentFrame]->bufferMemory, 0, sizeof(vertexUbo), 0, &vubData);
     memcpy(vubData, &vertexUbo, sizeof(vertexUbo));
     vkUnmapMemory(renderer->device->device, vertexUniformBuffers[renderer->currentFrame]->bufferMemory);
 }
 
-void SkyboxRenderer::updatePushConstants(Camera* camera, glm::vec4 clipPlane) {
-    vertexPushConstants.viewMatrix = camera->createViewMatrix();
+void SkyboxRenderer::updatePushConstants(PerspectiveCamera* perspectiveCamera, glm::vec4 clipPlane) {
+    vertexPushConstants.viewMatrix = perspectiveCamera->createViewMatrix();
     vertexPushConstants.viewMatrix[3][0] = 0.0f;
     vertexPushConstants.viewMatrix[3][1] = 0.0f;
     vertexPushConstants.viewMatrix[3][2] = 0.0f;

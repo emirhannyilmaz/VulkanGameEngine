@@ -19,7 +19,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <chrono>
 #include "../io/window.hpp"
-#include "../entities/camera.hpp"
+#include "../entities/perspective_camera.hpp"
 #include "water_resources.hpp"
 #include <array>
 #include "query_pool.hpp"
@@ -57,7 +57,7 @@ public:
     EntityRenderer* entityRenderer;
     SkyboxRenderer* skyboxRenderer;
     WaterRenderer* waterRenderer;
-    Renderer(Window* window, Camera* camera);
+    Renderer(Window* window, PerspectiveCamera* perspectiveCamera);
     ~Renderer();
     void waitIdle();
     void beginDrawing();
@@ -68,7 +68,7 @@ public:
     void endRendering(CommandBuffers* commandBuffers);
 private:
     Window* window;
-    Camera* camera;
+    PerspectiveCamera* perspectiveCamera;
     VkResult acquireNextImageResult;
     void recreateSwapchain();
     void cleanUpSwapchain();

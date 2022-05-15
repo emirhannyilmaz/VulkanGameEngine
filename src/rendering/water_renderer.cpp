@@ -71,8 +71,8 @@ void WaterRenderer::DeleteGraphicsPipeline() {
     delete graphicsPipeline;
 }
 
-void WaterRenderer::render(std::vector<WaterTile*> waterTiles, Camera* camera, Light* light, CommandBuffers* commandBuffers) {
-    updateDescriptorSetResources(camera, light);
+void WaterRenderer::render(std::vector<WaterTile*> waterTiles, PerspectiveCamera* perspectiveCamera, Light* light, CommandBuffers* commandBuffers) {
+    updateDescriptorSetResources(perspectiveCamera, light);
 
     VkCommandBuffer commandBuffer = commandBuffers->commandBuffers[renderer->currentFrame];
 
@@ -97,10 +97,10 @@ void WaterRenderer::updateDescriptorSetImageInfos() {
     }
 }
 
-void WaterRenderer::updateDescriptorSetResources(Camera* camera, Light* light) {
+void WaterRenderer::updateDescriptorSetResources(PerspectiveCamera* perspectiveCamera, Light* light) {
     WaterRendererVertexUniformBufferObject vertexUbo{};
-    vertexUbo.viewMatrix = camera->createViewMatrix();
-    vertexUbo.projectionMatrix = camera->createProjectionMatrix();
+    vertexUbo.viewMatrix = perspectiveCamera->createViewMatrix();
+    vertexUbo.projectionMatrix = perspectiveCamera->createProjectionMatrix();
     vertexUbo.lightPosition = light->position;
     void* vubData;
     vkMapMemory(renderer->device->device, vertexUniformBuffers[renderer->currentFrame]->bufferMemory, 0, sizeof(vertexUbo), 0, &vubData);
@@ -112,8 +112,8 @@ void WaterRenderer::updateDescriptorSetResources(Camera* camera, Light* light) {
     moveFactor = fmod(moveFactor, 1.0f);
     fragmentUbo.moveFactor = moveFactor;
     fragmentUbo.lightColor = light->color;
-    fragmentUbo.nearPlane = camera->nearPlane;
-    fragmentUbo.farPlane = camera->farPlane;
+    fragmentUbo.nearPlane = perspectiveCamera->nearPlane;
+    fragmentUbo.farPlane = perspectiveCamera->farPlane;
     void* fubData;
     vkMapMemory(renderer->device->device, fragmentUniformBuffers[renderer->currentFrame]->bufferMemory, 0, sizeof(fragmentUbo), 0, &fubData);
     memcpy(fubData, &fragmentUbo, sizeof(fragmentUbo));

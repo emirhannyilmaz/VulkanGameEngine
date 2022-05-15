@@ -142,7 +142,7 @@ glm::vec3 Terrain::getNormal(int x, int z, int width, int height, stbi_uc* heigh
     float heightR = getHeight(x + 1, z, width, height, heightMapPixels);
     float heightD = getHeight(z, z - 1, width, height, heightMapPixels);
     float heightU = getHeight(z, z + 1, width, height, heightMapPixels);
-    glm::vec3 normal = glm::vec3(heightL - heightR, 2.0f, heightD - heightU);
+    glm::vec3 normal = glm::vec3(heightL - heightR, -2.0f, heightD - heightU);
     normal = glm::normalize(normal);
 
     return normal;

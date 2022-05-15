@@ -4,9 +4,9 @@
 #include "skybox_renderer.hpp"
 #include "water_renderer.hpp"
 
-Renderer::Renderer(Window* window, Camera* camera) {
+Renderer::Renderer(Window* window, PerspectiveCamera* perspectiveCamera) {
     this->window = window;
-    this->camera = camera;
+    this->perspectiveCamera = perspectiveCamera;
 
     instance = new Instance(window->title);
 
@@ -247,7 +247,7 @@ void Renderer::recreateSwapchain() {
     entityRenderer->CreateGraphicsPipelines();
     terrainRenderer->CreateGraphicsPipelines();
 
-    camera->aspectRatio = (float) swapchain->swapchainExtent.width / (float) swapchain->swapchainExtent.height;
+    perspectiveCamera->aspectRatio = (float) swapchain->swapchainExtent.width / (float) swapchain->swapchainExtent.height;
 }
 
 void Renderer::cleanUpSwapchain() {

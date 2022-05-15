@@ -30,7 +30,7 @@ ObjModelData ModelLoader::LoadObj(const char* filePath) {
 
             vertex.normal = {
                 attrib.normals[3 * index.normal_index + 0],
-                attrib.normals[3 * index.normal_index + 1],
+                attrib.normals[3 * index.normal_index + 1] * -1.0f,
                 attrib.normals[3 * index.normal_index + 2]
             };
 

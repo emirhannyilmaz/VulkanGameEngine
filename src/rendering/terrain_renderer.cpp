@@ -63,9 +63,9 @@ void TerrainRenderer::DeleteGraphicsPipelines() {
     delete offScreenGraphicsPipeline;
 }
 
-void TerrainRenderer::render(std::vector<Terrain*> terrains, Light* light, Camera* camera, glm::vec4 clipPlane, CommandBuffers* commandBuffers, bool onScreen) {
-    updateDescriptorSetResources(light, camera);
-    updatePushConstants(camera, clipPlane);
+void TerrainRenderer::render(std::vector<Terrain*> terrains, Light* light, PerspectiveCamera* perspectiveCamera, glm::vec4 clipPlane, CommandBuffers* commandBuffers, bool onScreen) {
+    updateDescriptorSetResources(light, perspectiveCamera);
+    updatePushConstants(perspectiveCamera, clipPlane);
 
     VkCommandBuffer commandBuffer = commandBuffers->commandBuffers[renderer->currentFrame];
     GraphicsPipeline* gp = onScreen ? graphicsPipeline : offScreenGraphicsPipeline;
@@ -87,9 +87,9 @@ void TerrainRenderer::render(std::vector<Terrain*> terrains, Light* light, Camer
     }
 }
 
-void TerrainRenderer::updateDescriptorSetResources(Light* light, Camera* camera) {
+void TerrainRenderer::updateDescriptorSetResources(Light* light, PerspectiveCamera* perspectiveCamera) {
     TerrainRendererVertexUniformBufferObject vertexUbo{};
-    vertexUbo.projectionMatrix = camera->createProjectionMatrix();
+    vertexUbo.projectionMatrix = perspectiveCamera->createProjectionMatrix();
     vertexUbo.lightPosition = light->position;
     void* vubData;
     vkMapMemory(renderer->device->device, vertexUniformBuffers[renderer->currentFrame]->bufferMemory, 0, sizeof(vertexUbo), 0, &vubData);
@@ -104,7 +104,7 @@ void TerrainRenderer::updateDescriptorSetResources(Light* light, Camera* camera)
     vkUnmapMemory(renderer->device->device, fragmentUniformBuffers[renderer->currentFrame]->bufferMemory);
 }
 
-void TerrainRenderer::updatePushConstants(Camera* camera, glm::vec4 clipPlane) {
-    vertexPushConstants.viewMatrix = camera->createViewMatrix();
+void TerrainRenderer::updatePushConstants(PerspectiveCamera* perspectiveCamera, glm::vec4 clipPlane) {
+    vertexPushConstants.viewMatrix = perspectiveCamera->createViewMatrix();
     vertexPushConstants.clipPlane = clipPlane;
 }

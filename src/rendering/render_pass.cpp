@@ -1,6 +1,6 @@
 #include "render_pass.hpp"
 
-RenderPass::RenderPass(VkDevice& device, VkFormat colorAttachmentFormat, VkFormat depthAttachmentFormat, VkSampleCountFlagBits msaaSamples, bool onScreen) {
+RenderPass::RenderPass(VkDevice& device, VkFormat colorAttachmentFormat, VkFormat depthAttachmentFormat, VkSampleCountFlagBits msaaSamples, bool onScreen, bool hasColorAttachment) {
     this->device = device;
 
     VkAttachmentDescription colorAttachmentDescription{};
@@ -53,11 +53,13 @@ RenderPass::RenderPass(VkDevice& device, VkFormat colorAttachmentFormat, VkForma
     subpassDescription.pResolveAttachments = onScreen ? &colorAttachmentResolveReference : nullptr;
 
     std::vector<VkAttachmentDescription> attachments = {
-        colorAttachmentDescription,
         depthAttachmentDescription
     };
     if (onScreen) {
         attachments.push_back(colorAttachmentResolveDescription);
+    }
+    if (hasColorAttachment) {
+        attachments.insert(attachments.begin(), colorAttachmentDescription);
     }
 
     VkRenderPassCreateInfo renderPassCreateInfo{};

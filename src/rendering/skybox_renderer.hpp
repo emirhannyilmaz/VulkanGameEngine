@@ -24,7 +24,7 @@ public:
     ~SkyboxRenderer();
     void CreateGraphicsPipelines();
     void DeleteGraphicsPipelines();
-    void render(Skybox* skybox, Camera* camera, glm::vec4 clipPlane, CommandBuffers* commandBuffers, bool onScreen);
+    void render(Skybox* skybox, PerspectiveCamera* perspectiveCamera, glm::vec4 clipPlane, CommandBuffers* commandBuffers, bool onScreen);
 private:
     Renderer* renderer;
     DescriptorSetLayout* descriptorSetLayout;
@@ -34,8 +34,8 @@ private:
     DescriptorSets* descriptorSets;
     std::vector<Buffer*> vertexUniformBuffers;
     SkyboxRendererVertexPushConstants vertexPushConstants{};
-    void updateDescriptorSetResources(Camera* camera);
-    void updatePushConstants(Camera* camera, glm::vec4 clipPlane);
+    void updateDescriptorSetResources(PerspectiveCamera* perspectiveCamera);
+    void updatePushConstants(PerspectiveCamera* perspectiveCamera, glm::vec4 clipPlane);
 };
 
 #endif
