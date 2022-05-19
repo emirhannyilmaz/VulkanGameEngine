@@ -1,6 +1,7 @@
 #include "renderer.hpp"
-#include "terrain_renderer.hpp"
 #include "entity_renderer.hpp"
+#include "shadow_map_renderer.hpp"
+#include "terrain_renderer.hpp"
 #include "skybox_renderer.hpp"
 #include "water_renderer.hpp"
 
@@ -17,7 +18,7 @@ Renderer::Renderer(Window* window, PerspectiveCamera* perspectiveCamera) {
     surface = new Surface(instance->instance, window->window);
     device = new Device(instance->instance, surface->surface);
     swapchain = new Swapchain(device->device, surface->surface, device->swapchainSupportDetails, window->window, device->indices);
-    renderPass = new RenderPass(device->device, swapchain->swapchainImageFormat, DepthResources::findDepthFormat(device->physicalDevice), device->msaaSamples, true);
+    renderPass = new RenderPass(device->device, swapchain->swapchainImageFormat, DepthResources::findDepthFormat(device->physicalDevice), device->msaaSamples, true, true);
     commandPool = new CommandPool(device->device, device->indices.graphicsFamily.value(), VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
     queryPool = new QueryPool(device->device, 2 * MAX_FRAMES_IN_FLIGHT);
     offScreenQueryPool = new QueryPool(device->device, 2 * MAX_FRAMES_IN_FLIGHT);
@@ -34,7 +35,8 @@ Renderer::Renderer(Window* window, PerspectiveCamera* perspectiveCamera) {
         framebuffers[i] = new Framebuffer(device->device, renderPass->renderPass, static_cast<uint32_t>(attachments.size()), attachments.data(), swapchain->swapchainExtent);
     }
 
-    waterResources = new WaterResources(device->physicalDevice, device->device, swapchain->swapchainExtent, swapchain->swapchainImageFormat, commandPool->commandPool, device->graphicsQueue);
+    waterResources = new WaterResources(device->physicalDevice, device->device, swapchain->swapchainExtent, swapchain->swapchainImageFormat);
+    shadowMapResources = new ShadowMapResources(device->physicalDevice, device->device, swapchain->swapchainExtent);
     commandBuffers = new CommandBuffers(device->device, commandPool->commandPool, MAX_FRAMES_IN_FLIGHT);
     offScreenCommandBuffers = new CommandBuffers(device->device, commandPool->commandPool, MAX_FRAMES_IN_FLIGHT);
 
@@ -186,7 +188,7 @@ void Renderer::endRecordingCommands(CommandBuffers* commandBuffers, bool onScree
     }
 }
 
-void Renderer::beginRendering(RenderPass* renderPass, Framebuffer* framebuffer, CommandBuffers* commandBuffers) {
+void Renderer::beginRendering(RenderPass* renderPass, Framebuffer* framebuffer, CommandBuffers* commandBuffers, bool hasColorAttachment) {
     if (acquireNextImageResult == VK_ERROR_OUT_OF_DATE_KHR) {
         return;
     }
@@ -197,9 +199,11 @@ void Renderer::beginRendering(RenderPass* renderPass, Framebuffer* framebuffer, 
     renderPassBeginInfo.framebuffer = framebuffer->framebuffer;
     renderPassBeginInfo.renderArea.offset = {0, 0};
     renderPassBeginInfo.renderArea.extent = swapchain->swapchainExtent;
-    std::array<VkClearValue, 2> clearValues{};
-    clearValues[0] = {{0.0f, 0.0f, 0.0f, 1.0f}};
-    clearValues[1] = {{1.0f, 0}};
+    std::vector<VkClearValue> clearValues{};
+    if (hasColorAttachment) {
+        clearValues.push_back({{0.0f, 0.0f, 0.0f, 1.0f}});
+    }
+    clearValues.push_back({{1.0f, 0}});
     renderPassBeginInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
     renderPassBeginInfo.pClearValues = clearValues.data();
     vkCmdBeginRenderPass(commandBuffers->commandBuffers[currentFrame], &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
@@ -226,7 +230,7 @@ void Renderer::recreateSwapchain() {
     cleanUpSwapchain();
 
     swapchain = new Swapchain(device->device, surface->surface, device->swapchainSupportDetails, window->window, device->indices);
-    renderPass = new RenderPass(device->device, swapchain->swapchainImageFormat, DepthResources::findDepthFormat(device->physicalDevice), device->msaaSamples, true);
+    renderPass = new RenderPass(device->device, swapchain->swapchainImageFormat, DepthResources::findDepthFormat(device->physicalDevice), device->msaaSamples, true, true);
     colorResources = new ColorResources(device->physicalDevice, device->device, swapchain->swapchainExtent, device->msaaSamples, swapchain->swapchainImageFormat, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT);
     depthResources = new DepthResources(device->physicalDevice, device->device, swapchain->swapchainExtent, device->msaaSamples, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT);
 
@@ -240,21 +244,26 @@ void Renderer::recreateSwapchain() {
        framebuffers[i] = new Framebuffer(device->device, renderPass->renderPass, static_cast<uint32_t>(attachments.size()), attachments.data(), swapchain->swapchainExtent);
     }
 
-    waterResources = new WaterResources(device->physicalDevice, device->device, swapchain->swapchainExtent, swapchain->swapchainImageFormat, commandPool->commandPool, device->graphicsQueue);
+    waterResources = new WaterResources(device->physicalDevice, device->device, swapchain->swapchainExtent, swapchain->swapchainImageFormat);
+    shadowMapResources = new ShadowMapResources(device->physicalDevice, device->device, swapchain->swapchainExtent);
     waterRenderer->updateDescriptorSetImageInfos();
-    waterRenderer->CreateGraphicsPipeline();
-    skyboxRenderer->CreateGraphicsPipelines();
+    terrainRenderer->updateDescriptorSetImageInfos();
     entityRenderer->CreateGraphicsPipelines();
+    shadowMapRenderer->CreateGraphicsPipeline();
+    skyboxRenderer->CreateGraphicsPipelines();
     terrainRenderer->CreateGraphicsPipelines();
+    waterRenderer->CreateGraphicsPipeline();
 
     perspectiveCamera->aspectRatio = (float) swapchain->swapchainExtent.width / (float) swapchain->swapchainExtent.height;
 }
 
 void Renderer::cleanUpSwapchain() {
-    terrainRenderer->DeleteGraphicsPipelines();
-    entityRenderer->DeleteGraphicsPipelines();
-    skyboxRenderer->DeleteGraphicsPipelines();
     waterRenderer->DeleteGraphicsPipeline();
+    terrainRenderer->DeleteGraphicsPipelines();
+    skyboxRenderer->DeleteGraphicsPipelines();
+    shadowMapRenderer->DeleteGraphicsPipeline();
+    entityRenderer->DeleteGraphicsPipelines();
+    delete shadowMapResources;
     delete waterResources;
 
     for (auto framebuffer : framebuffers) {

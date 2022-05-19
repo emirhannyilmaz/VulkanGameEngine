@@ -8,8 +8,8 @@ PerspectiveCamera::PerspectiveCamera(glm::vec3 position, glm::vec3 rotation, flo
     this->nearPlane = nearPlane;
     this->farPlane = farPlane;
 
-    nearPlaneWidth = nearPlane * fieldOfView;
-    farPlaneWidth = farPlane * fieldOfView;
+    nearPlaneWidth = nearPlane * glm::tan(glm::radians(fieldOfView));
+    farPlaneWidth = farPlane * glm::tan(glm::radians(fieldOfView));
     nearPlaneHeight = nearPlaneWidth / aspectRatio;
     farPlaneHeight = farPlaneWidth / aspectRatio;
 }
@@ -22,11 +22,11 @@ void PerspectiveCamera::update(float speed, float deltaTime) {
     if (rotation.x <= -90.0f) {
         rotation.x = -90.0f;
     }
-
     rotation.y += (float) Input::GetMouseDx() * deltaTime;
 
-    forward = glm::vec4(0.0f, 0.0f, 1.0f, 0.0f) * createViewMatrix();
-    up = glm::vec4(0.0f, -1.0f, 0.0f, 0.0f) * createViewMatrix();
+    glm::mat4 viewMatrix = createViewMatrix();
+    forward = glm::vec4(0.0f, 0.0f, 1.0f, 0.0f) * viewMatrix;
+    up = glm::vec4(0.0f, -1.0f, 0.0f, 0.0f) * viewMatrix;
     down = up * -1.0f;
     right = glm::normalize(glm::cross(forward, up));
     left = right * -1.0f;
@@ -75,7 +75,7 @@ void PerspectiveCamera::revert() {
     rotation = oldRotation;
 }
 
-std::array<glm::vec3, 8> PerspectiveCamera::getFrustumVertices() {
+std::array<glm::vec3, 8> PerspectiveCamera::createFrustumVertices() {
     glm::vec3 toFarPlane = forward * farPlane;
     glm::vec3 toNearPlane = forward * nearPlane;
     glm::vec3 centerFarPlane = toFarPlane + position;

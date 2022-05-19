@@ -3,17 +3,19 @@
 TerrainRenderer::TerrainRenderer(Renderer* renderer) {
     this->renderer = renderer;
 
-    std::array<VkDescriptorSetLayoutBinding, 2> layoutBindings{};
+    std::array<VkDescriptorSetLayoutBinding, 3> layoutBindings{};
     layoutBindings[0] = {0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, nullptr};
     layoutBindings[1] = {1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, nullptr};
+    layoutBindings[2] = {2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, nullptr};
     descriptorSetLayout = new DescriptorSetLayout(renderer->device->device, static_cast<uint32_t>(layoutBindings.size()), layoutBindings.data());
 
     Terrain::CreateDesriptorSetLayout(renderer->device->device);
 
     CreateGraphicsPipelines();
 
-    std::array<VkDescriptorPoolSize, 1> poolSizes{};
+    std::array<VkDescriptorPoolSize, 2> poolSizes{};
     poolSizes[0] = {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 2 * MAX_FRAMES_IN_FLIGHT};
+    poolSizes[1] = {VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, MAX_FRAMES_IN_FLIGHT};
     descriptorPool = new DescriptorPool(renderer->device->device, static_cast<uint32_t>(poolSizes.size()), poolSizes.data(), MAX_FRAMES_IN_FLIGHT);
 
     std::vector<VkDescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT, descriptorSetLayout->descriptorSetLayout);
@@ -27,6 +29,8 @@ TerrainRenderer::TerrainRenderer(Renderer* renderer) {
 
         fragmentUniformBuffers[i] = new Buffer(renderer->device->physicalDevice, renderer->device->device, sizeof(TerrainRendererFragmentUniformBufferObject), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
         descriptorSets->updateBufferInfo(i, 1, 0, 1, fragmentUniformBuffers[i]->buffer, sizeof(TerrainRendererFragmentUniformBufferObject));
+
+        updateDescriptorSetImageInfos();
     }
 }
 
@@ -63,8 +67,8 @@ void TerrainRenderer::DeleteGraphicsPipelines() {
     delete offScreenGraphicsPipeline;
 }
 
-void TerrainRenderer::render(std::vector<Terrain*> terrains, Light* light, PerspectiveCamera* perspectiveCamera, glm::vec4 clipPlane, CommandBuffers* commandBuffers, bool onScreen) {
-    updateDescriptorSetResources(light, perspectiveCamera);
+void TerrainRenderer::render(std::vector<Terrain*> terrains, Light* light, PerspectiveCamera* perspectiveCamera, OrthographicCamera* orthographicCamera, glm::vec4 clipPlane, CommandBuffers* commandBuffers, bool onScreen) {
+    updateDescriptorSetResources(light, perspectiveCamera, orthographicCamera);
     updatePushConstants(perspectiveCamera, clipPlane);
 
     VkCommandBuffer commandBuffer = commandBuffers->commandBuffers[renderer->currentFrame];
@@ -87,10 +91,18 @@ void TerrainRenderer::render(std::vector<Terrain*> terrains, Light* light, Persp
     }
 }
 
-void TerrainRenderer::updateDescriptorSetResources(Light* light, PerspectiveCamera* perspectiveCamera) {
+void TerrainRenderer::updateDescriptorSetImageInfos() {
+    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+        descriptorSets->updateImageInfo(i, 2, 0, 1, renderer->shadowMapResources->depthResources->image->imageView, renderer->shadowMapResources->sampler->sampler);
+    }
+}
+
+void TerrainRenderer::updateDescriptorSetResources(Light* light, PerspectiveCamera* perspectiveCamera, OrthographicCamera* orthographicCamera) {
     TerrainRendererVertexUniformBufferObject vertexUbo{};
     vertexUbo.projectionMatrix = perspectiveCamera->createProjectionMatrix();
     vertexUbo.lightPosition = light->position;
+    vertexUbo.toShadowMapSpaceMatrix = getToShadowMapSpaceMatrix(light, orthographicCamera);
+    vertexUbo.shadowDistance = perspectiveCamera->farPlane;
     void* vubData;
     vkMapMemory(renderer->device->device, vertexUniformBuffers[renderer->currentFrame]->bufferMemory, 0, sizeof(vertexUbo), 0, &vubData);
     memcpy(vubData, &vertexUbo, sizeof(vertexUbo));
@@ -107,4 +119,12 @@ void TerrainRenderer::updateDescriptorSetResources(Light* light, PerspectiveCame
 void TerrainRenderer::updatePushConstants(PerspectiveCamera* perspectiveCamera, glm::vec4 clipPlane) {
     vertexPushConstants.viewMatrix = perspectiveCamera->createViewMatrix();
     vertexPushConstants.clipPlane = clipPlane;
+}
+
+glm::mat4 TerrainRenderer::getToShadowMapSpaceMatrix(Light* light, OrthographicCamera* orthographicCamera) {
+    glm::mat4 offset(1.0f);
+    offset = glm::translate(offset, glm::vec3(0.5f, -0.5f, 0.5f));
+    offset = glm::scale(offset, glm::vec3(0.5f, 0.5f, 0.5f));
+
+    return offset * orthographicCamera->createProjectionMatrix() * light->viewMatrix;
 }

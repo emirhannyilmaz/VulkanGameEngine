@@ -5,7 +5,7 @@ ShadowMapResources::ShadowMapResources(VkPhysicalDevice& physicalDevice, VkDevic
     sampler = new Sampler(physicalDevice, device, 0);
     renderPass = new RenderPass(device, VK_FORMAT_UNDEFINED, DepthResources::findDepthFormat(physicalDevice), VK_SAMPLE_COUNT_1_BIT, false, false);
 
-    std::array<VkImageView, 2> attachments = {
+    std::array<VkImageView, 1> attachments = {
         depthResources->image->imageView
     };
     framebuffer = new Framebuffer(device, renderPass->renderPass, static_cast<uint32_t>(attachments.size()), attachments.data(), extent);

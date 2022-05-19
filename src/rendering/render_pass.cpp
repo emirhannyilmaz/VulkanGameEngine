@@ -28,7 +28,7 @@ RenderPass::RenderPass(VkDevice& device, VkFormat colorAttachmentFormat, VkForma
     depthAttachmentDescription.finalLayout = onScreen ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
     VkAttachmentReference depthAttachmentReference{};
-    depthAttachmentReference.attachment = 1;
+    depthAttachmentReference.attachment = hasColorAttachment ? 1 : 0;
     depthAttachmentReference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
     VkAttachmentDescription colorAttachmentResolveDescription{};
@@ -47,8 +47,8 @@ RenderPass::RenderPass(VkDevice& device, VkFormat colorAttachmentFormat, VkForma
 
     VkSubpassDescription subpassDescription{};
     subpassDescription.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-    subpassDescription.colorAttachmentCount = 1;
-    subpassDescription.pColorAttachments = &colorAttachmentReference;
+    subpassDescription.colorAttachmentCount = hasColorAttachment ? 1 : 0;
+    subpassDescription.pColorAttachments = hasColorAttachment ? &colorAttachmentReference : nullptr;
     subpassDescription.pDepthStencilAttachment = &depthAttachmentReference;
     subpassDescription.pResolveAttachments = onScreen ? &colorAttachmentResolveReference : nullptr;
 

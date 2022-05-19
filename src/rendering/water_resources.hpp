@@ -18,7 +18,7 @@ public:
     RenderPass* renderPass;
     Framebuffer* reflectionFramebuffer;
     Framebuffer* refractionFramebuffer;
-    WaterResources(VkPhysicalDevice& physicalDevice, VkDevice& device, VkExtent2D& extent, VkFormat colorFormat, VkCommandPool& commandPool, VkQueue& graphicsQueue);
+    WaterResources(VkPhysicalDevice& physicalDevice, VkDevice& device, VkExtent2D& extent, VkFormat colorFormat);
     ~WaterResources();
 };
 

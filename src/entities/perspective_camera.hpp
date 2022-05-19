@@ -30,7 +30,7 @@ public:
     glm::mat4 createProjectionMatrix();
     void invert(float distance);
     void revert();
-    std::array<glm::vec3, 8> getFrustumVertices();
+    std::array<glm::vec3, 8> createFrustumVertices();
 private:
     glm::vec3 oldPosition;
     glm::vec3 oldRotation;

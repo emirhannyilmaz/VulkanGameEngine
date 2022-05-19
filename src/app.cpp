@@ -4,15 +4,18 @@ void App::run() {
     Window* window = new Window(800, 600, "Vulkan Game Engine");
     Input::window = window->window;
     Input::sensitivity = 5.0f;
-    PerspectiveCamera* perspectiveCamera = new PerspectiveCamera(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), 45.0f, (float) window->width / (float) window->height, 0.1f, 1000.0f);
-    Light* light = new Light(glm::vec3(0.0f, -10000.0f, -10000.0f), glm::vec3(1.0f, 1.0f, 1.0f));
+    Light* light = new Light(glm::vec3(10000.0f, -10000.0f, -10000.0f), glm::vec3(1.0f, 1.0f, 1.0f));
+    PerspectiveCamera* perspectiveCamera = new PerspectiveCamera(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), 45.0f, (float) window->width / (float) window->height, 0.1f, 100.0f);
+    OrthographicCamera* orthographicCamera = new OrthographicCamera();
     Renderer* renderer = new Renderer(window, perspectiveCamera);
-    TerrainRenderer* terrainRenderer = new TerrainRenderer(renderer);
     EntityRenderer* entityRenderer = new EntityRenderer(renderer);
+    ShadowMapRenderer* shadowMapRenderer = new ShadowMapRenderer(renderer);
+    TerrainRenderer* terrainRenderer = new TerrainRenderer(renderer);
     SkyboxRenderer* skyboxRenderer = new SkyboxRenderer(renderer);
     WaterRenderer* waterRenderer = new WaterRenderer(renderer);
-    renderer->terrainRenderer = terrainRenderer;
     renderer->entityRenderer = entityRenderer;
+    renderer->shadowMapRenderer = shadowMapRenderer;
+    renderer->terrainRenderer = terrainRenderer;
     renderer->skyboxRenderer = skyboxRenderer;
     renderer->waterRenderer = waterRenderer;
     
@@ -22,13 +25,14 @@ void App::run() {
     std::vector<Terrain*> terrains;
     terrains.push_back(terrain);
 
-    ObjModelData carModelData = ModelLoader::LoadObj("res/models/car.obj");
-    Mesh* carMesh = new Mesh(carModelData.vertices, carModelData.indices, renderer);
-    Texture* carTexture = new Texture("res/textures/car.jpg", 1.0f, 10.0f, renderer);
-    Entity* car = new Entity(carMesh, carTexture, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), renderer);
+    ObjModelData treeModelData = ModelLoader::LoadObj("res/models/tree.obj");
+    Mesh* treeMesh = new Mesh(treeModelData.vertices, treeModelData.indices, renderer);
+    Texture* treeTexture = new Texture("res/textures/tree.png", 1.0f, 10.0f, renderer);
+    Entity* tree = new Entity(treeMesh, treeTexture, glm::vec3(27.0f, -4.0f, 15.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.1f, 0.1f, 0.1f), renderer);
+    std::cout << terrain->getHeightOfTerrain(27.0f, 15.0f) << std::endl;
 
     std::vector<Entity*> entities;
-    entities.push_back(car);
+    entities.push_back(tree);
 
     Texture* skyboxTexture = new Texture({"res/textures/skybox_front.tga", "res/textures/skybox_back.tga", "res/textures/skybox_up.tga", "res/textures/skybox_down.tga", "res/textures/skybox_right.tga", "res/textures/skybox_left.tga"}, renderer);
     Skybox* skybox = new Skybox(skyboxTexture, 500.0f, renderer);
@@ -41,23 +45,28 @@ void App::run() {
     while (!glfwWindowShouldClose(window->window)) {
         glfwPollEvents();
 
-        perspectiveCamera->update(40.0f, renderer->deltaTime);
         light->update(1000.0f, renderer->deltaTime);
+        perspectiveCamera->update(40.0f, renderer->deltaTime);
+        orthographicCamera->update(perspectiveCamera, light->viewMatrix);
 
         renderer->beginDrawing();
 
         renderer->beginRecordingCommands(renderer->offScreenCommandBuffers, false);
 
-        renderer->beginRendering(renderer->waterResources->renderPass, renderer->waterResources->reflectionFramebuffer, renderer->offScreenCommandBuffers);
+        renderer->beginRendering(renderer->shadowMapResources->renderPass, renderer->shadowMapResources->framebuffer, renderer->offScreenCommandBuffers, false);
+        shadowMapRenderer->render(entities, light, orthographicCamera, renderer->offScreenCommandBuffers);
+        renderer->endRendering(renderer->offScreenCommandBuffers);
+
+        renderer->beginRendering(renderer->waterResources->renderPass, renderer->waterResources->reflectionFramebuffer, renderer->offScreenCommandBuffers, true);
         perspectiveCamera->invert(2 * (std::abs(perspectiveCamera->position.y) - std::abs(waterTile->position.y)));
-        terrainRenderer->render(terrains, light, perspectiveCamera, glm::vec4(0.0f, -1.0f, 0.0f, waterTile->position.y + 1.0f), renderer->offScreenCommandBuffers, false);
+        terrainRenderer->render(terrains, light, perspectiveCamera, orthographicCamera, glm::vec4(0.0f, -1.0f, 0.0f, waterTile->position.y + 1.0f), renderer->offScreenCommandBuffers, false);
         entityRenderer->render(entities, light, perspectiveCamera, glm::vec4(0.0f, -1.0f, 0.0f, waterTile->position.y + 1.0f), renderer->offScreenCommandBuffers, false);
         skyboxRenderer->render(skybox, perspectiveCamera, glm::vec4(0.0f, -1.0f, 0.0f, waterTile->position.y + 1.0f), renderer->offScreenCommandBuffers, false);
         perspectiveCamera->revert();
         renderer->endRendering(renderer->offScreenCommandBuffers);
 
-        renderer->beginRendering(renderer->waterResources->renderPass, renderer->waterResources->refractionFramebuffer, renderer->offScreenCommandBuffers);
-        terrainRenderer->render(terrains, light, perspectiveCamera, glm::vec4(0.0f, 1.0f, 0.0f, -waterTile->position.y), renderer->offScreenCommandBuffers, false);
+        renderer->beginRendering(renderer->waterResources->renderPass, renderer->waterResources->refractionFramebuffer, renderer->offScreenCommandBuffers, true);
+        terrainRenderer->render(terrains, light, perspectiveCamera, orthographicCamera, glm::vec4(0.0f, 1.0f, 0.0f, -waterTile->position.y), renderer->offScreenCommandBuffers, false);
         entityRenderer->render(entities, light, perspectiveCamera, glm::vec4(0.0f, 1.0f, 0.0f, -waterTile->position.y), renderer->offScreenCommandBuffers, false);
         skyboxRenderer->render(skybox, perspectiveCamera, glm::vec4(0.0f, 1.0f, 0.0f, -waterTile->position.y), renderer->offScreenCommandBuffers, false);
         renderer->endRendering(renderer->offScreenCommandBuffers);
@@ -66,8 +75,8 @@ void App::run() {
 
         renderer->beginRecordingCommands(renderer->commandBuffers, true);
 
-        renderer->beginRendering(renderer->renderPass, renderer->framebuffers[renderer->currentImageIndex], renderer->commandBuffers);
-        terrainRenderer->render(terrains, light, perspectiveCamera, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), renderer->commandBuffers, true);
+        renderer->beginRendering(renderer->renderPass, renderer->framebuffers[renderer->currentImageIndex], renderer->commandBuffers, true);
+        terrainRenderer->render(terrains, light, perspectiveCamera, orthographicCamera, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), renderer->commandBuffers, true);
         entityRenderer->render(entities, light, perspectiveCamera, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), renderer->commandBuffers, true);
         skyboxRenderer->render(skybox, perspectiveCamera, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), renderer->commandBuffers, true);
         waterRenderer->render(waterTiles, perspectiveCamera, light, renderer->commandBuffers);
@@ -99,10 +108,12 @@ void App::run() {
 
     delete waterRenderer;
     delete skyboxRenderer;
-    delete entityRenderer;
     delete terrainRenderer;
+    delete shadowMapRenderer;
+    delete entityRenderer;
     delete renderer;
-    delete light;
+    delete orthographicCamera;
     delete perspectiveCamera;
+    delete light;
     delete window;
 }

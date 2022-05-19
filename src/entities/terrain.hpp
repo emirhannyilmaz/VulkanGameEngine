@@ -33,16 +33,19 @@ public:
     void updateDescriptorSetResources();
     static void CreateDesriptorSetLayout(VkDevice& device);
     static void DeleteDesriptorSetLayout();
+    float getHeightOfTerrain(float x, float z);
 private:
     DescriptorPool* descriptorPool;
     Renderer* renderer;
     std::vector<Buffer*> vertexUniformBuffers;
     std::vector<Buffer*> fragmentUniformBuffers;
     const float SIZE = 100.0f;
-    const float MAX_HEIGHT = 40.0f;
+    const float MAX_HEIGHT = 20.0f;
+    std::vector<std::vector<float>> heights;
     void createMesh(const std::string& heightMapFileName);
     float getHeight(int x, int z, int width, int height, stbi_uc* heightMapPixels);
     glm::vec3 getNormal(int x, int z, int width, int height, stbi_uc* heightMapPixels);
+    float barycentric(glm::vec3 point1, glm::vec3 point2, glm::vec3 point3, glm::vec2 position);
 };
 
 #endif

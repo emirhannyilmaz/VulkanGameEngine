@@ -11,7 +11,7 @@ public:
     float maxY;
     float minZ;
     float maxZ;
-    void update(PerspectiveCamera* perspectiveCamera);
+    void update(PerspectiveCamera* perspectiveCamera, glm::mat4 transformationMatrix);
     glm::mat4 createProjectionMatrix();
     glm::vec3 getCenter();
 };

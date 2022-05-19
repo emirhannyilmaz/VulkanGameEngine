@@ -21,11 +21,13 @@
 #include "../io/window.hpp"
 #include "../entities/perspective_camera.hpp"
 #include "water_resources.hpp"
+#include "shadow_map_resources.hpp"
 #include <array>
 #include "query_pool.hpp"
 
-class TerrainRenderer;
 class EntityRenderer;
+class ShadowMapRenderer;
+class TerrainRenderer;
 class SkyboxRenderer;
 class WaterRenderer;
 
@@ -44,6 +46,7 @@ public:
     DepthResources* depthResources;
     std::vector<Framebuffer*> framebuffers;
     WaterResources* waterResources;
+    ShadowMapResources* shadowMapResources;
     CommandBuffers* commandBuffers;
     CommandBuffers* offScreenCommandBuffers;
     std::vector<Semaphore*> imageAvailableSemaphores;
@@ -55,6 +58,7 @@ public:
     uint32_t currentImageIndex;
     TerrainRenderer* terrainRenderer;
     EntityRenderer* entityRenderer;
+    ShadowMapRenderer* shadowMapRenderer;
     SkyboxRenderer* skyboxRenderer;
     WaterRenderer* waterRenderer;
     Renderer(Window* window, PerspectiveCamera* perspectiveCamera);
@@ -64,7 +68,7 @@ public:
     void endDrawing();
     void beginRecordingCommands(CommandBuffers* commandBuffers, bool onScreen);
     void endRecordingCommands(CommandBuffers* commandBuffers, bool onScreen);
-    void beginRendering(RenderPass* renderPass, Framebuffer* framebuffer, CommandBuffers* commandBuffers);
+    void beginRendering(RenderPass* renderPass, Framebuffer* framebuffer, CommandBuffers* commandBuffers, bool hasColorAttachment);
     void endRendering(CommandBuffers* commandBuffers);
 private:
     Window* window;

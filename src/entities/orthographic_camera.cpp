@@ -1,10 +1,13 @@
 #include "orthographic_camera.hpp"
 
-void OrthographicCamera::update(PerspectiveCamera* perspectiveCamera) {
-    std::array<glm::vec3, 8> frustumVertices = perspectiveCamera->getFrustumVertices();
+void OrthographicCamera::update(PerspectiveCamera* perspectiveCamera, glm::mat4 transformationMatrix) {
+    std::array<glm::vec3, 8> frustumVertices = perspectiveCamera->createFrustumVertices();
 
     bool first = true;
     for (glm::vec3 frustumVertex : frustumVertices) {
+        glm::vec4 frustumVertexVec4 = glm::vec4(frustumVertex.x, frustumVertex.y, frustumVertex.z, 1.0f) * glm::inverse(transformationMatrix);
+        frustumVertex = glm::vec3(frustumVertexVec4.x, frustumVertexVec4.y, frustumVertexVec4.z);
+
         if (first) {
             minX = frustumVertex.x;
             maxX = frustumVertex.x;
@@ -22,9 +25,9 @@ void OrthographicCamera::update(PerspectiveCamera* perspectiveCamera) {
             minX = frustumVertex.x;
         }
 
-        if (frustumVertex.y > maxY) {
+        if (frustumVertex.y < maxY) {
             maxY = frustumVertex.y;
-        } else if (frustumVertex.y < minY) {
+        } else if (frustumVertex.y > minY) {
             minY = frustumVertex.y;
         }
 
@@ -34,6 +37,8 @@ void OrthographicCamera::update(PerspectiveCamera* perspectiveCamera) {
             minZ = frustumVertex.z;
         }
     }
+
+    maxZ += 10.0f;
 }
 
 glm::mat4 OrthographicCamera::createProjectionMatrix() {
