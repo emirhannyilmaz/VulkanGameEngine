@@ -4,13 +4,13 @@ void App::run() {
     Window* window = new Window(800, 600, "Vulkan Game Engine");
     Input::window = window->window;
     Input::sensitivity = 5.0f;
-    Light* light = new Light(glm::vec3(10000.0f, -10000.0f, -10000.0f), glm::vec3(1.0f, 1.0f, 1.0f));
-    PerspectiveCamera* perspectiveCamera = new PerspectiveCamera(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), 45.0f, (float) window->width / (float) window->height, 0.1f, 100.0f);
+    Light* light = new Light(glm::vec3(0.0f, -10000.0f, -10000.0f), glm::vec3(1.0f, 1.0f, 1.0f));
+    PerspectiveCamera* perspectiveCamera = new PerspectiveCamera(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), 45.0f, (float) window->width / (float) window->height, 0.01f, 1000.0f, 200.0f);
     OrthographicCamera* orthographicCamera = new OrthographicCamera();
     Renderer* renderer = new Renderer(window, perspectiveCamera);
     EntityRenderer* entityRenderer = new EntityRenderer(renderer);
-    ShadowMapRenderer* shadowMapRenderer = new ShadowMapRenderer(renderer);
     TerrainRenderer* terrainRenderer = new TerrainRenderer(renderer);
+    ShadowMapRenderer* shadowMapRenderer = new ShadowMapRenderer(renderer);
     SkyboxRenderer* skyboxRenderer = new SkyboxRenderer(renderer);
     WaterRenderer* waterRenderer = new WaterRenderer(renderer);
     renderer->entityRenderer = entityRenderer;
@@ -25,15 +25,6 @@ void App::run() {
     std::vector<Terrain*> terrains;
     terrains.push_back(terrain);
 
-    ObjModelData treeModelData = ModelLoader::LoadObj("res/models/tree.obj");
-    Mesh* treeMesh = new Mesh(treeModelData.vertices, treeModelData.indices, renderer);
-    Texture* treeTexture = new Texture("res/textures/tree.png", 1.0f, 10.0f, renderer);
-    Entity* tree = new Entity(treeMesh, treeTexture, glm::vec3(27.0f, -4.0f, 15.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.1f, 0.1f, 0.1f), renderer);
-    std::cout << terrain->getHeightOfTerrain(27.0f, 15.0f) << std::endl;
-
-    std::vector<Entity*> entities;
-    entities.push_back(tree);
-
     Texture* skyboxTexture = new Texture({"res/textures/skybox_front.tga", "res/textures/skybox_back.tga", "res/textures/skybox_up.tga", "res/textures/skybox_down.tga", "res/textures/skybox_right.tga", "res/textures/skybox_left.tga"}, renderer);
     Skybox* skybox = new Skybox(skyboxTexture, 500.0f, renderer);
 
@@ -42,11 +33,32 @@ void App::run() {
     std::vector<WaterTile*> waterTiles;
     waterTiles.push_back(waterTile);
 
+    std::vector<Entity*> entities;
+
+    ObjModelData treeModelData = ModelLoader::LoadObj("res/models/tree.obj");
+    float treePreviousX = 0.0f;
+    float treePreviousZ = 0.0f;
+    for (int i = 0; i < 50; i++) {
+        glm::vec3 treePosition;
+        do {
+            float x = std::rand() % 100;
+            float z = std::rand() % 100;
+            treePosition = glm::vec3(x, terrain->getHeightOfTerrain(x, z), z);
+        } while((treePosition.y > waterTile->position.y) || std::abs(treePosition.x - treePreviousX) < 10.0f || std::abs(treePosition.z - treePreviousZ) < 10.0f);
+        treePreviousX = treePosition.x;
+        treePreviousZ = treePosition.z;
+
+        Mesh* treeMesh = new Mesh(treeModelData.vertices, treeModelData.indices, renderer);
+        Texture* treeTexture = new Texture("res/textures/tree.png", 1.f, 10.0f, renderer);
+        Entity* tree = new Entity(treeMesh, treeTexture, treePosition, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.1f, 0.1f, 0.1f), renderer);
+        entities.push_back(tree);
+    }
+
     while (!glfwWindowShouldClose(window->window)) {
         glfwPollEvents();
 
         light->update(1000.0f, renderer->deltaTime);
-        perspectiveCamera->update(40.0f, renderer->deltaTime);
+        perspectiveCamera->update(20.0f, renderer->deltaTime);
         orthographicCamera->update(perspectiveCamera, light->viewMatrix);
 
         renderer->beginDrawing();
@@ -54,7 +66,7 @@ void App::run() {
         renderer->beginRecordingCommands(renderer->offScreenCommandBuffers, false);
 
         renderer->beginRendering(renderer->shadowMapResources->renderPass, renderer->shadowMapResources->framebuffer, renderer->offScreenCommandBuffers, false);
-        shadowMapRenderer->render(entities, light, orthographicCamera, renderer->offScreenCommandBuffers);
+        shadowMapRenderer->render(entities, light, perspectiveCamera, orthographicCamera, renderer->offScreenCommandBuffers);
         renderer->endRendering(renderer->offScreenCommandBuffers);
 
         renderer->beginRendering(renderer->waterResources->renderPass, renderer->waterResources->reflectionFramebuffer, renderer->offScreenCommandBuffers, true);

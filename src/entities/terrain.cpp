@@ -80,19 +80,19 @@ void Terrain::DeleteDesriptorSetLayout() {
 float Terrain::getHeightOfTerrain(float x, float z) {
     float terrainX = x - position.x;
     float terrainZ = z - position.y;
-    float gridSize = SIZE / ((float) heights.size() - 1);
+    float gridSize = SIZE / ((float) vertexPositions.size() - 1);
     int gridX = (int) std::floor(terrainX / gridSize);
     int gridZ = (int) std::floor(terrainZ / gridSize);
-    if (gridX > heights.size() - 1 || gridZ > heights.size() - 1 || gridX < 0 || gridZ < 0) {
+    if (gridX > vertexPositions.size() - 1 || gridZ > vertexPositions.size() - 1 || gridX < 0 || gridZ < 0) {
         return 0.0f;
     }
     float xCoordinate = fmod(terrainX, gridSize) / gridSize;
     float zCoordinate = fmod(terrainZ, gridSize) / gridSize;
     float result;
     if (xCoordinate <= zCoordinate) {
-        barycentric(glm::vec3(0.0f, heights[gridX][gridZ + 1], 1.0f), glm::vec3(1.0f, heights[gridX + 1][gridZ + 1], 1.0f), glm::vec3(0.0f, heights[gridX][gridZ], 0.0f), glm::vec2(xCoordinate, zCoordinate));
+        result = interpolateHeight(glm::vec3(0.0f, vertexPositions[gridX][gridZ].y, 0.0f), glm::vec3(0.0f, vertexPositions[gridX][gridZ + 1].y, 1.0f), glm::vec3(1.0f, vertexPositions[gridX + 1][gridZ + 1].y, 1.0f), xCoordinate, zCoordinate);
     } else {
-        barycentric(glm::vec3(1.0f, heights[gridX + 1][gridZ + 1], 1.0f), glm::vec3(1.0f, heights[gridX + 1][gridZ], 0.0f), glm::vec3(0.0f, heights[gridX][gridZ], 0.0f), glm::vec2(xCoordinate, zCoordinate));
+        result = interpolateHeight(glm::vec3(0.0f, vertexPositions[gridX][gridZ].y, 0.0f), glm::vec3(1.0f, vertexPositions[gridX + 1][gridZ].y, 0.0f), glm::vec3(1.0f, vertexPositions[gridX + 1][gridZ + 1].y, 1.0f), xCoordinate, zCoordinate);
     }
 
     return result;
@@ -110,7 +110,7 @@ void Terrain::createMesh(const std::string& heightMapFileName) {
 
     int vertexCount = imageHeight;
 
-    heights.resize(vertexCount, std::vector<float>(vertexCount)); 
+    vertexPositions.resize(vertexCount, std::vector<glm::vec3>(vertexCount)); 
 
     std::vector<Vertex> vertices;
     vertices.resize(vertexCount * vertexCount);
@@ -119,9 +119,9 @@ void Terrain::createMesh(const std::string& heightMapFileName) {
 	int vertexPointer = 0;
 	for (int z = 0; z < vertexCount; z++) {
 		for (int x = 0; x < vertexCount; x++) {
-            float height = getHeight(x, z, imageWidth, imageHeight, pixels);
-            heights[x][z] = height;
-			vertices[vertexPointer].position = glm::vec3((float) x / ((float) vertexCount - 1) * SIZE, height, (float) z / ((float) vertexCount - 1) * SIZE);
+            glm::vec3 position = glm::vec3((float) x / ((float) vertexCount - 1) * SIZE, getHeight(x, z, imageWidth, imageHeight, pixels), (float) z / ((float) vertexCount - 1) * SIZE);
+            vertexPositions[x][z] = position;
+			vertices[vertexPointer].position = position;
 			vertices[vertexPointer].normal = getNormal(x, z, imageWidth, imageHeight, pixels);
 			vertices[vertexPointer].textureCoordinates = glm::vec2((float) x / ((float) vertexCount - 1), 1.0f - ((float) z / ((float) vertexCount - 1)));
 			vertexPointer++;
@@ -173,10 +173,11 @@ glm::vec3 Terrain::getNormal(int x, int z, int width, int height, stbi_uc* heigh
     return normal;
 }
 
-float Terrain::barycentric(glm::vec3 point1, glm::vec3 point2, glm::vec3 point3, glm::vec2 position) {
-    float det = (point2.z - point3.z) * (point1.x - point3.x) + (point3.x - point2.x) * (point1.z - point3.z);
-    float l1 = ((point2.z - point3.z) * (position.x - point3.x) + (point3.x - point2.x) * (position.y - point3.z)) / det;
-    float l2 = ((point3.z - point1.z) * (position.x - point3.x) + (point1.x - point3.x) * (position.y - point3.z)) / det;
-    float l3 = 1.0f - l1 - l2;
-    return l1 * point1.y + l2 * point2.y + l3 * point3.y;
+float Terrain::interpolateHeight(glm::vec3 pointA, glm::vec3 pointB, glm::vec3 pointC, float x, float z) {
+    float a = (pointB.y - pointA.y) * (pointC.z - pointA.z) - (pointC.y - pointA.y) * (pointB.z - pointA.z);
+    float b = (pointB.z - pointA.z) * (pointC.x - pointA.x) - (pointC.z - pointA.z) * (pointB.x - pointA.x);
+    float c = (pointB.x - pointA.x) * (pointC.y - pointA.y) - (pointC.x - pointA.x) * (pointB.y - pointA.y);
+    float d = (a * pointA.x + b * pointA.y + c * pointA.z) * -1.0f;
+    float y = (a * x + c * z + d) * -1.0f / b;
+    return y;
 }

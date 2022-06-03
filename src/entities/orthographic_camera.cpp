@@ -5,8 +5,8 @@ void OrthographicCamera::update(PerspectiveCamera* perspectiveCamera, glm::mat4 
 
     bool first = true;
     for (glm::vec3 frustumVertex : frustumVertices) {
-        glm::vec4 frustumVertexVec4 = glm::vec4(frustumVertex.x, frustumVertex.y, frustumVertex.z, 1.0f) * glm::inverse(transformationMatrix);
-        frustumVertex = glm::vec3(frustumVertexVec4.x, frustumVertexVec4.y, frustumVertexVec4.z);
+        glm::vec4 transformedFrustumVertex = glm::vec4(frustumVertex.x, frustumVertex.y, frustumVertex.z, 0.0f) * transformationMatrix;
+        frustumVertex = glm::vec3(transformedFrustumVertex.x, transformedFrustumVertex.y, transformedFrustumVertex.z);
 
         if (first) {
             minX = frustumVertex.x;
@@ -25,9 +25,9 @@ void OrthographicCamera::update(PerspectiveCamera* perspectiveCamera, glm::mat4 
             minX = frustumVertex.x;
         }
 
-        if (frustumVertex.y < maxY) {
+        if (frustumVertex.y > maxY) {
             maxY = frustumVertex.y;
-        } else if (frustumVertex.y > minY) {
+        } else if (frustumVertex.y < minY) {
             minY = frustumVertex.y;
         }
 
@@ -37,14 +37,18 @@ void OrthographicCamera::update(PerspectiveCamera* perspectiveCamera, glm::mat4 
             minZ = frustumVertex.z;
         }
     }
-
-    maxZ += 10.0f;
 }
 
 glm::mat4 OrthographicCamera::createProjectionMatrix() {
-    return glm::ortho(minX, maxX, minY, maxY, minZ, maxZ);
+    glm::mat4 matrix(1.0f);
+    matrix[0][0] = 2.0f / (maxX - minX);
+    matrix[1][1] = 2.0f / (maxY - minY);
+    matrix[2][2] = 1.0f / (maxZ - minZ);
+    matrix[3][3] = 1.0f;
+
+    return matrix;
 }
 
-glm::vec3 OrthographicCamera::getCenter() {
-    return glm::vec3((minX + maxX) / 2.0f, (minY + maxY) / 2.0f, (minZ + maxZ) / 2.0f);
+float OrthographicCamera::getCenterOfZ() {
+    return (maxZ - minZ) / 2.0f;
 }

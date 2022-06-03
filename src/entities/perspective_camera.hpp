@@ -14,6 +14,7 @@ public:
     float aspectRatio;
     float nearPlane;
     float farPlane;
+    float fakeFarPlane;
     float nearPlaneWidth;
     float nearPlaneHeight;
     float farPlaneWidth;
@@ -24,7 +25,7 @@ public:
     glm::vec3 down;
     glm::vec3 right;
     glm::vec3 left;
-    PerspectiveCamera(glm::vec3 position, glm::vec3 rotation, float fieldOfView, float aspectRatio, float nearPlane, float farPlane);
+    PerspectiveCamera(glm::vec3 position, glm::vec3 rotation, float fieldOfView, float aspectRatio, float nearPlane, float farPlane, float fakeFarPlane);
     void update(float speed, float deltaTime);
     glm::mat4 createViewMatrix();
     glm::mat4 createProjectionMatrix();

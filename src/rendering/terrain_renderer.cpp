@@ -101,8 +101,8 @@ void TerrainRenderer::updateDescriptorSetResources(Light* light, PerspectiveCame
     TerrainRendererVertexUniformBufferObject vertexUbo{};
     vertexUbo.projectionMatrix = perspectiveCamera->createProjectionMatrix();
     vertexUbo.lightPosition = light->position;
-    vertexUbo.toShadowMapSpaceMatrix = getToShadowMapSpaceMatrix(light, orthographicCamera);
-    vertexUbo.shadowDistance = perspectiveCamera->farPlane;
+    vertexUbo.toShadowMapSpaceMatrix = getToShadowMapSpaceMatrix(light, perspectiveCamera, orthographicCamera);
+    vertexUbo.shadowDistance = perspectiveCamera->fakeFarPlane / 2.0f;
     void* vubData;
     vkMapMemory(renderer->device->device, vertexUniformBuffers[renderer->currentFrame]->bufferMemory, 0, sizeof(vertexUbo), 0, &vubData);
     memcpy(vubData, &vertexUbo, sizeof(vertexUbo));
@@ -110,6 +110,7 @@ void TerrainRenderer::updateDescriptorSetResources(Light* light, PerspectiveCame
 
     TerrainRendererFragmentUniformBufferObject fragmentUbo{};
     fragmentUbo.lightColor = light->color;
+    fragmentUbo.shadowMapSize = (float) SHADOW_MAP_SIZE;
     void* fubData;
     vkMapMemory(renderer->device->device, fragmentUniformBuffers[renderer->currentFrame]->bufferMemory, 0, sizeof(fragmentUbo), 0, &fubData);
     memcpy(fubData, &fragmentUbo, sizeof(fragmentUbo));
@@ -121,10 +122,11 @@ void TerrainRenderer::updatePushConstants(PerspectiveCamera* perspectiveCamera, 
     vertexPushConstants.clipPlane = clipPlane;
 }
 
-glm::mat4 TerrainRenderer::getToShadowMapSpaceMatrix(Light* light, OrthographicCamera* orthographicCamera) {
+glm::mat4 TerrainRenderer::getToShadowMapSpaceMatrix(Light* light, PerspectiveCamera* perspectiveCamera, OrthographicCamera* orthographicCamera) {
     glm::mat4 offset(1.0f);
-    offset = glm::translate(offset, glm::vec3(0.5f, -0.5f, 0.5f));
+    offset = glm::translate(offset, glm::vec3(0.5f, 0.5f, 0.5f));
     offset = glm::scale(offset, glm::vec3(0.5f, 0.5f, 0.5f));
 
-    return offset * orthographicCamera->createProjectionMatrix() * light->viewMatrix;
+    return offset * orthographicCamera->createProjectionMatrix() * light->createViewMatrix(perspectiveCamera->position, orthographicCamera->getCenterOfZ());
+
 }

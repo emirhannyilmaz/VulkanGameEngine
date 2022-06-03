@@ -36,7 +36,7 @@ Renderer::Renderer(Window* window, PerspectiveCamera* perspectiveCamera) {
     }
 
     waterResources = new WaterResources(device->physicalDevice, device->device, swapchain->swapchainExtent, swapchain->swapchainImageFormat);
-    shadowMapResources = new ShadowMapResources(device->physicalDevice, device->device, swapchain->swapchainExtent);
+    shadowMapResources = new ShadowMapResources(device->physicalDevice, device->device, shadowMapExtent);
     commandBuffers = new CommandBuffers(device->device, commandPool->commandPool, MAX_FRAMES_IN_FLIGHT);
     offScreenCommandBuffers = new CommandBuffers(device->device, commandPool->commandPool, MAX_FRAMES_IN_FLIGHT);
 
@@ -245,7 +245,7 @@ void Renderer::recreateSwapchain() {
     }
 
     waterResources = new WaterResources(device->physicalDevice, device->device, swapchain->swapchainExtent, swapchain->swapchainImageFormat);
-    shadowMapResources = new ShadowMapResources(device->physicalDevice, device->device, swapchain->swapchainExtent);
+    shadowMapResources = new ShadowMapResources(device->physicalDevice, device->device, shadowMapExtent);
     waterRenderer->updateDescriptorSetImageInfos();
     terrainRenderer->updateDescriptorSetImageInfos();
     entityRenderer->CreateGraphicsPipelines();

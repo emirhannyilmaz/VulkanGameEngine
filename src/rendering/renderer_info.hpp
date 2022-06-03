@@ -21,5 +21,6 @@ const std::vector<const char*> deviceExtensions = {
 };
 
 const int MAX_FRAMES_IN_FLIGHT = 2;
+const uint32_t SHADOW_MAP_SIZE = 2048;
 
 #endif

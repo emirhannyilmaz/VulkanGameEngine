@@ -41,11 +41,11 @@ private:
     std::vector<Buffer*> fragmentUniformBuffers;
     const float SIZE = 100.0f;
     const float MAX_HEIGHT = 20.0f;
-    std::vector<std::vector<float>> heights;
+    std::vector<std::vector<glm::vec3>> vertexPositions;
     void createMesh(const std::string& heightMapFileName);
     float getHeight(int x, int z, int width, int height, stbi_uc* heightMapPixels);
     glm::vec3 getNormal(int x, int z, int width, int height, stbi_uc* heightMapPixels);
-    float barycentric(glm::vec3 point1, glm::vec3 point2, glm::vec3 point3, glm::vec2 position);
+    float interpolateHeight(glm::vec3 pointA, glm::vec3 pointB, glm::vec3 pointC, float x, float z);
 };
 
 #endif

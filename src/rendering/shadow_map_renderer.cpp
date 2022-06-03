@@ -41,15 +41,15 @@ void ShadowMapRenderer::CreateGraphicsPipeline() {
     descriptorSetLayouts[0] = descriptorSetLayout->descriptorSetLayout;
     descriptorSetLayouts[1] = Entity::descriptorSetLayout->descriptorSetLayout;
 
-    graphicsPipeline = new GraphicsPipeline(renderer->device->device, "res/shaders/shadow_map_shader.vert.spv", "res/shaders/shadow_map_shader.frag.spv", 1, &bindingDescription, static_cast<uint32_t>(attributeDescriptions.size()), attributeDescriptions.data(), static_cast<uint32_t>(descriptorSetLayouts.size()), descriptorSetLayouts.data(), 0, nullptr, renderer->swapchain->swapchainExtent, renderer->shadowMapResources->renderPass->renderPass, VK_SAMPLE_COUNT_1_BIT);
+    graphicsPipeline = new GraphicsPipeline(renderer->device->device, "res/shaders/shadow_map_shader.vert.spv", "res/shaders/shadow_map_shader.frag.spv", 1, &bindingDescription, static_cast<uint32_t>(attributeDescriptions.size()), attributeDescriptions.data(), static_cast<uint32_t>(descriptorSetLayouts.size()), descriptorSetLayouts.data(), 0, nullptr, renderer->shadowMapExtent, renderer->shadowMapResources->renderPass->renderPass, VK_SAMPLE_COUNT_1_BIT);
 }
 
 void ShadowMapRenderer::DeleteGraphicsPipeline() {
     delete graphicsPipeline;
 }
 
-void ShadowMapRenderer::render(std::vector<Entity*> entities, Light* light, OrthographicCamera* orthographicCamera, CommandBuffers* commandBuffers) {
-    updateDescriptorSetResources(light, orthographicCamera);
+void ShadowMapRenderer::render(std::vector<Entity*> entities, Light* light, PerspectiveCamera* perspectiveCamera, OrthographicCamera* orthographicCamera, CommandBuffers* commandBuffers) {
+    updateDescriptorSetResources(light, perspectiveCamera, orthographicCamera);
 
     VkCommandBuffer commandBuffer = commandBuffers->commandBuffers[renderer->currentFrame];
 
@@ -69,9 +69,9 @@ void ShadowMapRenderer::render(std::vector<Entity*> entities, Light* light, Orth
     }
 }
 
-void ShadowMapRenderer::updateDescriptorSetResources(Light* light, OrthographicCamera* orthographicCamera) {
+void ShadowMapRenderer::updateDescriptorSetResources(Light* light, PerspectiveCamera* perspectiveCamera, OrthographicCamera* orthographicCamera) {
     ShadowMapRendererVertexUniformBufferObject vertexUbo{};
-    vertexUbo.viewMatrix = light->createViewMatrix(orthographicCamera->getCenter());
+    vertexUbo.viewMatrix = light->createViewMatrix(perspectiveCamera->position, orthographicCamera->getCenterOfZ());
     vertexUbo.projectionMatrix = orthographicCamera->createProjectionMatrix();
     void* vubData;
     vkMapMemory(renderer->device->device, vertexUniformBuffers[renderer->currentFrame]->bufferMemory, 0, sizeof(vertexUbo), 0, &vubData);

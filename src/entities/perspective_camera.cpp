@@ -1,20 +1,22 @@
 #include "perspective_camera.hpp"
 
-PerspectiveCamera::PerspectiveCamera(glm::vec3 position, glm::vec3 rotation, float fieldOfView, float aspectRatio, float nearPlane, float farPlane) {
+PerspectiveCamera::PerspectiveCamera(glm::vec3 position, glm::vec3 rotation, float fieldOfView, float aspectRatio, float nearPlane, float farPlane, float fakeFarPlane) {
     this->position = position;
     this->rotation = rotation;
     this->fieldOfView = fieldOfView;
     this->aspectRatio = aspectRatio;
     this->nearPlane = nearPlane;
     this->farPlane = farPlane;
+    this->fakeFarPlane = fakeFarPlane;
 
     nearPlaneWidth = nearPlane * glm::tan(glm::radians(fieldOfView));
-    farPlaneWidth = farPlane * glm::tan(glm::radians(fieldOfView));
-    nearPlaneHeight = nearPlaneWidth / aspectRatio;
-    farPlaneHeight = farPlaneWidth / aspectRatio;
+    farPlaneWidth = fakeFarPlane * glm::tan(glm::radians(fieldOfView));
 }
 
 void PerspectiveCamera::update(float speed, float deltaTime) {
+    nearPlaneHeight = nearPlaneWidth / aspectRatio;
+    farPlaneHeight = farPlaneWidth / aspectRatio;
+
     rotation.x += (float) Input::GetMouseDy() * deltaTime;
     if (rotation.x >= 90.0f) {
         rotation.x = 90.0f;
@@ -25,10 +27,12 @@ void PerspectiveCamera::update(float speed, float deltaTime) {
     rotation.y += (float) Input::GetMouseDx() * deltaTime;
 
     glm::mat4 viewMatrix = createViewMatrix();
-    forward = glm::vec4(0.0f, 0.0f, 1.0f, 0.0f) * viewMatrix;
-    up = glm::vec4(0.0f, -1.0f, 0.0f, 0.0f) * viewMatrix;
+    glm::vec4 forwardCalculation = glm::vec4(0.0f, 0.0f, 1.0f, 0.0f) * viewMatrix;
+    forward = glm::normalize(glm::vec3(forwardCalculation.x, forwardCalculation.y, forwardCalculation.z));
+    glm::vec4 upCalculation = glm::vec4(0.0f, -1.0f, 0.0f, 0.0f) * viewMatrix;
+    up = glm::normalize(glm::vec3(upCalculation.x, upCalculation.y, upCalculation.z));
     down = up * -1.0f;
-    right = glm::normalize(glm::cross(forward, up));
+    right = glm::cross(forward, up);
     left = right * -1.0f;
 
     if (Input::GetKey(GLFW_KEY_W)) {
@@ -76,10 +80,10 @@ void PerspectiveCamera::revert() {
 }
 
 std::array<glm::vec3, 8> PerspectiveCamera::createFrustumVertices() {
-    glm::vec3 toFarPlane = forward * farPlane;
     glm::vec3 toNearPlane = forward * nearPlane;
-    glm::vec3 centerFarPlane = toFarPlane + position;
+    glm::vec3 toFarPlane = forward * fakeFarPlane;
     glm::vec3 centerNearPlane = toNearPlane + position;
+    glm::vec3 centerFarPlane = toFarPlane + position;
 
     glm::vec3 nearTop = centerNearPlane + up * nearPlaneHeight;
     glm::vec3 nearBottom = centerNearPlane + down * nearPlaneHeight;

@@ -20,6 +20,7 @@ struct TerrainRendererVertexUniformBufferObject {
 
 struct TerrainRendererFragmentUniformBufferObject {
     alignas(16) glm::vec3 lightColor;
+    alignas(4) float shadowMapSize;
 };
 
 struct TerrainRendererVertexPushConstants {
@@ -47,7 +48,7 @@ private:
     TerrainRendererVertexPushConstants vertexPushConstants{};
     void updateDescriptorSetResources(Light* light, PerspectiveCamera* perspectiveCamera, OrthographicCamera* orthographicCamera);
     void updatePushConstants(PerspectiveCamera* perspectiveCamera, glm::vec4 clipPlane);
-    glm::mat4 getToShadowMapSpaceMatrix(Light* light, OrthographicCamera* orthographicCamera);
+    glm::mat4 getToShadowMapSpaceMatrix(Light* light, PerspectiveCamera* perspectiveCamera, OrthographicCamera* orthographicCamera);
 };
 
 #endif

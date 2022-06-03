@@ -22,7 +22,7 @@ public:
     ~ShadowMapRenderer();
     void CreateGraphicsPipeline();
     void DeleteGraphicsPipeline();
-    void render(std::vector<Entity*> entities, Light* light, OrthographicCamera* orthographicCamera, CommandBuffers* commandBuffers);
+    void render(std::vector<Entity*> entities, Light* light, PerspectiveCamera* perspectiveCamera, OrthographicCamera* orthographicCamera, CommandBuffers* commandBuffers);
 private:
     Renderer* renderer;
     DescriptorSetLayout* descriptorSetLayout;
@@ -30,7 +30,7 @@ private:
     DescriptorPool* descriptorPool;
     DescriptorSets* descriptorSets;
     std::vector<Buffer*> vertexUniformBuffers;
-    void updateDescriptorSetResources(Light* light, OrthographicCamera* orthographicCamera);
+    void updateDescriptorSetResources(Light* light, PerspectiveCamera* perspectiveCamera, OrthographicCamera* orthographicCamera);
 };
 
 #endif
