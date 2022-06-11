@@ -67,8 +67,8 @@ void TerrainRenderer::DeleteGraphicsPipelines() {
     delete offScreenGraphicsPipeline;
 }
 
-void TerrainRenderer::render(std::vector<Terrain*> terrains, Light* light, PerspectiveCamera* perspectiveCamera, OrthographicCamera* orthographicCamera, glm::vec4 clipPlane, CommandBuffers* commandBuffers, bool onScreen) {
-    updateDescriptorSetResources(light, perspectiveCamera, orthographicCamera);
+void TerrainRenderer::render(std::vector<Terrain*> terrains, Light* light, PerspectiveCamera* perspectiveCamera, OrthographicCamera* orthographicCamera, glm::vec3 fogColor, glm::vec4 clipPlane, CommandBuffers* commandBuffers, bool onScreen) {
+    updateDescriptorSetResources(light, perspectiveCamera, orthographicCamera, fogColor);
     updatePushConstants(perspectiveCamera, clipPlane);
 
     VkCommandBuffer commandBuffer = commandBuffers->commandBuffers[renderer->currentFrame];
@@ -97,7 +97,7 @@ void TerrainRenderer::updateDescriptorSetImageInfos() {
     }
 }
 
-void TerrainRenderer::updateDescriptorSetResources(Light* light, PerspectiveCamera* perspectiveCamera, OrthographicCamera* orthographicCamera) {
+void TerrainRenderer::updateDescriptorSetResources(Light* light, PerspectiveCamera* perspectiveCamera, OrthographicCamera* orthographicCamera, glm::vec3 fogColor) {
     TerrainRendererVertexUniformBufferObject vertexUbo{};
     vertexUbo.projectionMatrix = perspectiveCamera->createProjectionMatrix();
     vertexUbo.lightPosition = light->position;
@@ -111,6 +111,7 @@ void TerrainRenderer::updateDescriptorSetResources(Light* light, PerspectiveCame
     TerrainRendererFragmentUniformBufferObject fragmentUbo{};
     fragmentUbo.lightColor = light->color;
     fragmentUbo.shadowMapSize = (float) SHADOW_MAP_SIZE;
+    fragmentUbo.fogColor = fogColor;
     void* fubData;
     vkMapMemory(renderer->device->device, fragmentUniformBuffers[renderer->currentFrame]->bufferMemory, 0, sizeof(fragmentUbo), 0, &fubData);
     memcpy(fubData, &fragmentUbo, sizeof(fragmentUbo));

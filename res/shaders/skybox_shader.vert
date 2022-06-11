@@ -65,6 +65,5 @@ void main() {
     gl_ClipDistance[0] = dot(worldPosition, srvpc.clipPlane);
     gl_Position = srvubo.projectionMatrix * srvpc.viewMatrix * worldPosition;
 
-    vec3 textureCoordinates = vertices[gl_VertexIndex] * vec3(1.0, -1.0, 1.0);
-    fragTextureCoordinates = textureCoordinates;
+    fragTextureCoordinates = worldPosition.xyz * vec3(1.0, -1.0, 1.0);
 }

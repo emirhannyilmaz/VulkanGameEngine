@@ -2,6 +2,7 @@
 
 layout(set = 0, binding = 1) uniform EntityRendererFragmentUniformBufferObject {
     vec3 lightColor;
+    vec3 fogColor;
 } erfubo;
 
 layout(set = 1, binding = 1) uniform EntityFragmentUniformBufferObject {
@@ -15,6 +16,7 @@ layout(location = 0) in vec3 fragNormal;
 layout(location = 1) in vec2 fragTextureCoordinates;
 layout(location = 2) in vec3 fragToLightVector;
 layout(location = 3) in vec3 fragToCameraVector;
+layout(location = 4) in float fragVisibility;
 
 layout(location = 0) out vec4 outColor;
 
@@ -36,4 +38,5 @@ void main() {
     vec3 specularLighting = sDamped * efubo.reflectivity * erfubo.lightColor;
 
     outColor = vec4(diffuseLighting, 1.0) * texture(textureSampler, fragTextureCoordinates) + vec4(specularLighting, 1.0);
+    outColor = mix(vec4(erfubo.fogColor, 1.0), outColor, fragVisibility);
 }

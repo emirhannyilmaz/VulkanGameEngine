@@ -13,6 +13,10 @@ struct SkyboxRendererVertexUniformBufferObject {
     alignas(16) glm::mat4 projectionMatrix;
 };
 
+struct SkyboxRendererFragmentUniformBufferObject {
+    alignas(16) glm::vec3 fogColor;
+};
+
 struct SkyboxRendererVertexPushConstants {
     alignas(16) glm::mat4 viewMatrix;
     alignas(16) glm::vec4 clipPlane;
@@ -24,7 +28,7 @@ public:
     ~SkyboxRenderer();
     void CreateGraphicsPipelines();
     void DeleteGraphicsPipelines();
-    void render(Skybox* skybox, PerspectiveCamera* perspectiveCamera, glm::vec4 clipPlane, CommandBuffers* commandBuffers, bool onScreen);
+    void render(Skybox* skybox, PerspectiveCamera* perspectiveCamera, glm::vec3 fogColor, glm::vec4 clipPlane, CommandBuffers* commandBuffers, bool onScreen);
 private:
     Renderer* renderer;
     DescriptorSetLayout* descriptorSetLayout;
@@ -33,8 +37,9 @@ private:
     DescriptorPool* descriptorPool;
     DescriptorSets* descriptorSets;
     std::vector<Buffer*> vertexUniformBuffers;
+    std::vector<Buffer*> fragmentUniformBuffers;
     SkyboxRendererVertexPushConstants vertexPushConstants{};
-    void updateDescriptorSetResources(PerspectiveCamera* perspectiveCamera);
+    void updateDescriptorSetResources(PerspectiveCamera* perspectiveCamera, glm::vec3 fogColor);
     void updatePushConstants(PerspectiveCamera* perspectiveCamera, glm::vec4 clipPlane);
 };
 

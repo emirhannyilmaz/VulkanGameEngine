@@ -22,6 +22,7 @@ struct WaterRendererFragmentUniformBufferObject {
     alignas(16) glm::vec3 lightColor;
     alignas(4) float nearPlane;
     alignas(4) float farPlane;
+    alignas(16) glm::vec3 fogColor;
 };
 
 class WaterRenderer {
@@ -30,7 +31,7 @@ public:
     ~WaterRenderer();
     void CreateGraphicsPipeline();
     void DeleteGraphicsPipeline();
-    void render(std::vector<WaterTile*> waterTiles, PerspectiveCamera* perspectiveCamera, Light* light, CommandBuffers* commandBuffers);
+    void render(std::vector<WaterTile*> waterTiles, PerspectiveCamera* perspectiveCamera, Light* light, glm::vec3 fogColor, CommandBuffers* commandBuffers);
     void updateDescriptorSetImageInfos();
 private:
     Renderer* renderer;
@@ -44,7 +45,7 @@ private:
     std::vector<Buffer*> fragmentUniformBuffers;
     const float waveSpeed = 0.03f;
     float moveFactor = 0.0f;
-    void updateDescriptorSetResources(PerspectiveCamera* perspectiveCamera, Light* light);
+    void updateDescriptorSetResources(PerspectiveCamera* perspectiveCamera, Light* light, glm::vec3 fogColor);
 };
 
 #endif

@@ -25,9 +25,12 @@ layout(location = 1) out vec2 fragTextureCoordinates;
 layout(location = 2) out vec3 fragToLightVector;
 layout(location = 3) out vec3 fragToCameraVector;
 layout(location = 4) out vec4 fragPositionInShadowMap;
+layout(location = 5) out float fragVisibility;
 
 const float tiling = 40.0;
 const float transitionDistance = 10.0;
+const float fogDensity = 0.01;
+const float fogGradient = 1.2;
 
 void main() {
     vec4 worldPosition = tvubo.modelMatrix * vec4(position, 1.0);
@@ -41,6 +44,9 @@ void main() {
     fragToCameraVector = (inverse(trvpc.viewMatrix) * vec4(0.0, 0.0, 0.0, 1.0)).xyz - worldPosition.xyz;
 
     float distance = length(positionRelativeToCamera.xyz);
+    fragVisibility = exp(-pow(distance * fogDensity, fogGradient));
+    fragVisibility = clamp(fragVisibility, 0.0, 1.0);
+
     distance = distance - (trvubo.shadowDistance - transitionDistance);
     distance = distance / transitionDistance;
     fragPositionInShadowMap.w = clamp(1.0 - distance, 0.0, 1.0);

@@ -22,13 +22,22 @@ layout(location = 0) out vec3 fragNormal;
 layout(location = 1) out vec2 fragTextureCoordinates;
 layout(location = 2) out vec3 fragToLightVector;
 layout(location = 3) out vec3 fragToCameraVector;
+layout(location = 4) out float fragVisibility;
+
+const float fogDensity = 0.01;
+const float fogGradient = 1.2;
 
 void main() {
     vec4 worldPosition = evubo.modelMatrix * vec4(position, 1.0);
     gl_ClipDistance[0] = dot(worldPosition, ervpc.clipPlane);
-    gl_Position = ervubo.projectionMatrix * ervpc.viewMatrix * worldPosition;
+    vec4 positionRelativeToCamera = ervpc.viewMatrix * worldPosition;
+    gl_Position = ervubo.projectionMatrix * positionRelativeToCamera;
     fragNormal = (evubo.modelMatrix * vec4(normal, 0.0)).xyz;
     fragTextureCoordinates = textureCoordinates;
     fragToLightVector = ervubo.lightPosition - worldPosition.xyz;
     fragToCameraVector = (inverse(ervpc.viewMatrix) * vec4(0.0, 0.0, 0.0, 1.0)).xyz - worldPosition.xyz;
+
+    float distance = length(positionRelativeToCamera.xyz);
+    fragVisibility = exp(-pow(distance * fogDensity, fogGradient));
+    fragVisibility = clamp(fragVisibility, 0.0, 1.0);
 }

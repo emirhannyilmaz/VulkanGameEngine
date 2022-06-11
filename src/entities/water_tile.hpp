@@ -7,7 +7,7 @@
 #include "../rendering/descriptor_sets.hpp"
 #include "../rendering/renderer_info.hpp"
 #include "../rendering/renderer.hpp"
-#include "../rendering/buffer.hpp"
+#include "../rendering/mesh.hpp"
 
 struct WaterTileVertexUniformBufferObject {
     alignas(16) glm::mat4 modelMatrix;
@@ -20,6 +20,7 @@ struct WaterTileFragmentUniformBufferObject {
 
 class WaterTile {
 public:
+    Mesh* mesh;
     glm::vec3 position;
     glm::vec2 scale;
     float reflectivity;
@@ -36,6 +37,7 @@ private:
     Renderer* renderer;
     std::vector<Buffer*> vertexUniformBuffers;
     std::vector<Buffer*> fragmentUniformBuffers;
+    void createMesh();
 };
 
 #endif

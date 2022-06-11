@@ -8,6 +8,7 @@ WaterTile::WaterTile(glm::vec3 position, glm::vec2 scale, float reflectivity, fl
     this->reflectivity = reflectivity;
     this->shineDamper = shineDamper;
     this->renderer = renderer;
+    createMesh();
 
     std::array<VkDescriptorPoolSize, 1> poolSizes{};
     poolSizes[0] = {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 2 * MAX_FRAMES_IN_FLIGHT};
@@ -35,6 +36,7 @@ WaterTile::~WaterTile() {
     fragmentUniformBuffers.clear();
     vertexUniformBuffers.clear();
     delete descriptorPool;
+    delete mesh;
 }
 
 void WaterTile::updateDescriptorSetResources() {
@@ -66,4 +68,38 @@ void WaterTile::CreateDesriptorSetLayout(VkDevice& device) {
 
 void WaterTile::DeleteDesriptorSetLayout() {
     delete descriptorSetLayout;
+}
+
+void WaterTile::createMesh() {
+    std::vector<Vertex> vertices;
+    vertices.resize(scale.x * scale.y);
+	std::vector<uint32_t> indices;
+    indices.resize(6 * (scale.x - 1) * (scale.y - 1));
+	int vertexPointer = 0;
+	for (int z = 0; z < scale.y; z++) {
+		for (int x = 0; x < scale.x; x++) {
+            glm::vec3 position = glm::vec3((float) x / ((float) scale.x - 1), 0.0f, (float) z / ((float) scale.y - 1));
+			vertices[vertexPointer].position = position;
+			vertices[vertexPointer].normal = glm::vec3(0.0f, 0.0f, 0.0f);
+			vertices[vertexPointer].textureCoordinates = glm::vec2(0.0f, 0.0f);
+			vertexPointer++;
+		}
+	}
+	int indexPointer = 0;
+	for (int z = 0; z < scale.y - 1; z++) {
+		for (int x = 0; x < scale.x - 1; x++) {
+			int topLeft = ((z + 1) * scale.x) + x;
+			int topRight = topLeft + 1;
+			int bottomLeft = (z * scale.x) + x;
+			int bottomRight = bottomLeft + 1;
+			indices[indexPointer++] = bottomLeft;
+			indices[indexPointer++] = topLeft;
+			indices[indexPointer++] = topRight;
+			indices[indexPointer++] = topRight;
+			indices[indexPointer++] = bottomRight;
+			indices[indexPointer++] = bottomLeft;
+        }
+	}
+
+    mesh = new Mesh(vertices, indices, renderer);
 }

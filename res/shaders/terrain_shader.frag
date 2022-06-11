@@ -3,6 +3,7 @@
 layout(set = 0, binding = 1) uniform TerrainRendererFragmentUniformBufferObject {
     vec3 lightColor;
     float shadowMapSize;
+    vec3 fogColor;
 } trfubo;
 
 layout(set = 1, binding = 1) uniform TerrainFragmentUniformBufferObject {
@@ -18,6 +19,7 @@ layout(location = 1) in vec2 fragTextureCoordinates;
 layout(location = 2) in vec3 fragToLightVector;
 layout(location = 3) in vec3 fragToCameraVector;
 layout(location = 4) in vec4 fragPositionInShadowMap;
+layout(location = 5) in float fragVisibility;
 
 layout(location = 0) out vec4 outColor;
 
@@ -59,4 +61,5 @@ void main() {
     vec3 specularLighting = sDamped * tfubo.reflectivity * trfubo.lightColor;
 
     outColor = vec4(diffuseLighting, 1.0) * texture(textureSampler, fragTextureCoordinates) + vec4(specularLighting, 1.0);
+    outColor = mix(vec4(trfubo.fogColor, 1.0), outColor, fragVisibility);
 }

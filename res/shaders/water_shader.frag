@@ -6,6 +6,7 @@ layout(location = 0) in vec4 fragClipSpace;
 layout(location = 1) in vec2 fragTextureCoordinates;
 layout(location = 2) in vec3 fragToCameraVector;
 layout(location = 3) in vec3 fragFromLightVector;
+layout(location = 4) in float fragVisibility;
 
 layout(set = 0, binding = 1) uniform sampler2D reflectionTexture;
 layout(set = 0, binding = 2) uniform sampler2D refractionTexture;
@@ -17,6 +18,7 @@ layout(set = 0, binding = 6) uniform WaterRendererFragmentUniformBufferObject {
     vec3 lightColor;
     float nearPlane;
     float farPlane;
+    vec3 fogColor;
 } wrfubo;
 
 layout(set = 1, binding = 1) uniform WaterTileFragmentUniformBufferObject {
@@ -69,4 +71,5 @@ void main() {
     outColor = mix(reflectionColor, refractionColor, refractiveFactor);
     outColor = mix(outColor, vec4(0.0, 0.3, 0.5, 1.0), 0.2) + vec4(specularLighting, 0.0);
     outColor.a = clamp(waterDepth / 5.0, 0.0, 1.0);
+    outColor = mix(vec4(wrfubo.fogColor, 1.0), outColor, fragVisibility);
 }

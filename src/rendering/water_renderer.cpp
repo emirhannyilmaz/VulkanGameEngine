@@ -60,19 +60,22 @@ WaterRenderer::~WaterRenderer() {
 }
 
 void WaterRenderer::CreateGraphicsPipeline() {
+    auto bindingDescription = Vertex::getBindingDescription();
+    auto attributeDescriptions = Vertex::getAttributeDescriptions();
+
     std::array<VkDescriptorSetLayout, 2> descriptorSetLayouts{};
     descriptorSetLayouts[0] = descriptorSetLayout->descriptorSetLayout;
     descriptorSetLayouts[1] = WaterTile::descriptorSetLayout->descriptorSetLayout;
 
-    graphicsPipeline = new GraphicsPipeline(renderer->device->device, "res/shaders/water_shader.vert.spv", "res/shaders/water_shader.frag.spv", 0, nullptr, 0, nullptr, static_cast<uint32_t>(descriptorSetLayouts.size()), descriptorSetLayouts.data(), 0, nullptr, renderer->swapchain->swapchainExtent, renderer->renderPass->renderPass, renderer->device->msaaSamples);
+    graphicsPipeline = new GraphicsPipeline(renderer->device->device, "res/shaders/water_shader.vert.spv", "res/shaders/water_shader.frag.spv", 1, &bindingDescription, static_cast<uint32_t>(attributeDescriptions.size()), attributeDescriptions.data(), static_cast<uint32_t>(descriptorSetLayouts.size()), descriptorSetLayouts.data(), 0, nullptr, renderer->swapchain->swapchainExtent, renderer->renderPass->renderPass, renderer->device->msaaSamples);
 }
 
 void WaterRenderer::DeleteGraphicsPipeline() {
     delete graphicsPipeline;
 }
 
-void WaterRenderer::render(std::vector<WaterTile*> waterTiles, PerspectiveCamera* perspectiveCamera, Light* light, CommandBuffers* commandBuffers) {
-    updateDescriptorSetResources(perspectiveCamera, light);
+void WaterRenderer::render(std::vector<WaterTile*> waterTiles, PerspectiveCamera* perspectiveCamera, Light* light, glm::vec3 fogColor, CommandBuffers* commandBuffers) {
+    updateDescriptorSetResources(perspectiveCamera, light, fogColor);
 
     VkCommandBuffer commandBuffer = commandBuffers->commandBuffers[renderer->currentFrame];
 
@@ -82,10 +85,12 @@ void WaterRenderer::render(std::vector<WaterTile*> waterTiles, PerspectiveCamera
     for (WaterTile* waterTile : waterTiles) {
         waterTile->updateDescriptorSetResources();
 
+        VkDeviceSize offsets = 0;
+        vkCmdBindVertexBuffers(commandBuffer, 0, 1, &waterTile->mesh->vertexBuffer->buffer, &offsets);
+        vkCmdBindIndexBuffer(commandBuffer, waterTile->mesh->indexBuffer->buffer, 0, VK_INDEX_TYPE_UINT32);
         descriptorSetsToBind[1] = waterTile->descriptorSets->descriptorSets[renderer->currentFrame];
         vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline->pipelineLayout, 0, static_cast<uint32_t>(descriptorSetsToBind.size()), descriptorSetsToBind.data(), 0, nullptr);
-
-        vkCmdDraw(commandBuffer, 6, 1, 0, 0);
+        vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(waterTile->mesh->indicesSize), 1, 0, 0, 0);
     }
 }
 
@@ -97,7 +102,7 @@ void WaterRenderer::updateDescriptorSetImageInfos() {
     }
 }
 
-void WaterRenderer::updateDescriptorSetResources(PerspectiveCamera* perspectiveCamera, Light* light) {
+void WaterRenderer::updateDescriptorSetResources(PerspectiveCamera* perspectiveCamera, Light* light, glm::vec3 fogColor) {
     WaterRendererVertexUniformBufferObject vertexUbo{};
     vertexUbo.viewMatrix = perspectiveCamera->createViewMatrix();
     vertexUbo.projectionMatrix = perspectiveCamera->createProjectionMatrix();
@@ -114,6 +119,7 @@ void WaterRenderer::updateDescriptorSetResources(PerspectiveCamera* perspectiveC
     fragmentUbo.lightColor = light->color;
     fragmentUbo.nearPlane = perspectiveCamera->nearPlane;
     fragmentUbo.farPlane = perspectiveCamera->farPlane;
+    fragmentUbo.fogColor = fogColor;
     void* fubData;
     vkMapMemory(renderer->device->device, fragmentUniformBuffers[renderer->currentFrame]->bufferMemory, 0, sizeof(fragmentUbo), 0, &fubData);
     memcpy(fubData, &fragmentUbo, sizeof(fragmentUbo));

@@ -21,6 +21,7 @@ struct TerrainRendererVertexUniformBufferObject {
 struct TerrainRendererFragmentUniformBufferObject {
     alignas(16) glm::vec3 lightColor;
     alignas(4) float shadowMapSize;
+    alignas(16) glm::vec3 fogColor;
 };
 
 struct TerrainRendererVertexPushConstants {
@@ -34,7 +35,7 @@ public:
     ~TerrainRenderer();
     void CreateGraphicsPipelines();
     void DeleteGraphicsPipelines();
-    void render(std::vector<Terrain*> terrains, Light* light, PerspectiveCamera* perspectiveCamera, OrthographicCamera* orthographicCamera, glm::vec4 clipPlane, CommandBuffers* commandBuffers, bool onScreen);
+    void render(std::vector<Terrain*> terrains, Light* light, PerspectiveCamera* perspectiveCamera, OrthographicCamera* orthographicCamera, glm::vec3 fogColor, glm::vec4 clipPlane, CommandBuffers* commandBuffers, bool onScreen);
     void updateDescriptorSetImageInfos();
 private:
     Renderer* renderer;
@@ -46,7 +47,7 @@ private:
     std::vector<Buffer*> vertexUniformBuffers;
     std::vector<Buffer*> fragmentUniformBuffers;
     TerrainRendererVertexPushConstants vertexPushConstants{};
-    void updateDescriptorSetResources(Light* light, PerspectiveCamera* perspectiveCamera, OrthographicCamera* orthographicCamera);
+    void updateDescriptorSetResources(Light* light, PerspectiveCamera* perspectiveCamera, OrthographicCamera* orthographicCamera, glm::vec3 fogColor);
     void updatePushConstants(PerspectiveCamera* perspectiveCamera, glm::vec4 clipPlane);
     glm::mat4 getToShadowMapSpaceMatrix(Light* light, PerspectiveCamera* perspectiveCamera, OrthographicCamera* orthographicCamera);
 };

@@ -28,7 +28,7 @@ void App::run() {
     Texture* skyboxTexture = new Texture({"res/textures/skybox_front.tga", "res/textures/skybox_back.tga", "res/textures/skybox_up.tga", "res/textures/skybox_down.tga", "res/textures/skybox_right.tga", "res/textures/skybox_left.tga"}, renderer);
     Skybox* skybox = new Skybox(skyboxTexture, 500.0f, renderer);
 
-    WaterTile* waterTile = new WaterTile(glm::vec3(50.0f, 0.0f, 50.0f), glm::vec2(50.0f, 50.0f), 0.6f, 20.0f, renderer);
+    WaterTile* waterTile = new WaterTile(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec2(100.0f, 100.0f), 0.6f, 20.0f, renderer);
 
     std::vector<WaterTile*> waterTiles;
     waterTiles.push_back(waterTile);
@@ -49,7 +49,7 @@ void App::run() {
         treePreviousZ = treePosition.z;
 
         Mesh* treeMesh = new Mesh(treeModelData.vertices, treeModelData.indices, renderer);
-        Texture* treeTexture = new Texture("res/textures/tree.png", 1.f, 10.0f, renderer);
+        Texture* treeTexture = new Texture("res/textures/tree.png", 0.0f, 0.0f, renderer);
         Entity* tree = new Entity(treeMesh, treeTexture, treePosition, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.1f, 0.1f, 0.1f), renderer);
         entities.push_back(tree);
     }
@@ -71,16 +71,16 @@ void App::run() {
 
         renderer->beginRendering(renderer->waterResources->renderPass, renderer->waterResources->reflectionFramebuffer, renderer->offScreenCommandBuffers, true);
         perspectiveCamera->invert(2 * (std::abs(perspectiveCamera->position.y) - std::abs(waterTile->position.y)));
-        terrainRenderer->render(terrains, light, perspectiveCamera, orthographicCamera, glm::vec4(0.0f, -1.0f, 0.0f, waterTile->position.y + 1.0f), renderer->offScreenCommandBuffers, false);
-        entityRenderer->render(entities, light, perspectiveCamera, glm::vec4(0.0f, -1.0f, 0.0f, waterTile->position.y + 1.0f), renderer->offScreenCommandBuffers, false);
-        skyboxRenderer->render(skybox, perspectiveCamera, glm::vec4(0.0f, -1.0f, 0.0f, waterTile->position.y + 1.0f), renderer->offScreenCommandBuffers, false);
+        terrainRenderer->render(terrains, light, perspectiveCamera, orthographicCamera, fogColor, glm::vec4(0.0f, -1.0f, 0.0f, waterTile->position.y + 1.0f), renderer->offScreenCommandBuffers, false);
+        entityRenderer->render(entities, light, perspectiveCamera, fogColor, glm::vec4(0.0f, -1.0f, 0.0f, waterTile->position.y + 1.0f), renderer->offScreenCommandBuffers, false);
+        skyboxRenderer->render(skybox, perspectiveCamera, fogColor, glm::vec4(0.0f, -1.0f, 0.0f, waterTile->position.y + 1.0f), renderer->offScreenCommandBuffers, false);
         perspectiveCamera->revert();
         renderer->endRendering(renderer->offScreenCommandBuffers);
 
         renderer->beginRendering(renderer->waterResources->renderPass, renderer->waterResources->refractionFramebuffer, renderer->offScreenCommandBuffers, true);
-        terrainRenderer->render(terrains, light, perspectiveCamera, orthographicCamera, glm::vec4(0.0f, 1.0f, 0.0f, -waterTile->position.y), renderer->offScreenCommandBuffers, false);
-        entityRenderer->render(entities, light, perspectiveCamera, glm::vec4(0.0f, 1.0f, 0.0f, -waterTile->position.y), renderer->offScreenCommandBuffers, false);
-        skyboxRenderer->render(skybox, perspectiveCamera, glm::vec4(0.0f, 1.0f, 0.0f, -waterTile->position.y), renderer->offScreenCommandBuffers, false);
+        terrainRenderer->render(terrains, light, perspectiveCamera, orthographicCamera, fogColor, glm::vec4(0.0f, 1.0f, 0.0f, -waterTile->position.y), renderer->offScreenCommandBuffers, false);
+        entityRenderer->render(entities, light, perspectiveCamera, fogColor, glm::vec4(0.0f, 1.0f, 0.0f, -waterTile->position.y), renderer->offScreenCommandBuffers, false);
+        skyboxRenderer->render(skybox, perspectiveCamera, fogColor, glm::vec4(0.0f, 1.0f, 0.0f, -waterTile->position.y), renderer->offScreenCommandBuffers, false);
         renderer->endRendering(renderer->offScreenCommandBuffers);
 
         renderer->endRecordingCommands(renderer->offScreenCommandBuffers, false);
@@ -88,10 +88,10 @@ void App::run() {
         renderer->beginRecordingCommands(renderer->commandBuffers, true);
 
         renderer->beginRendering(renderer->renderPass, renderer->framebuffers[renderer->currentImageIndex], renderer->commandBuffers, true);
-        terrainRenderer->render(terrains, light, perspectiveCamera, orthographicCamera, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), renderer->commandBuffers, true);
-        entityRenderer->render(entities, light, perspectiveCamera, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), renderer->commandBuffers, true);
-        skyboxRenderer->render(skybox, perspectiveCamera, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), renderer->commandBuffers, true);
-        waterRenderer->render(waterTiles, perspectiveCamera, light, renderer->commandBuffers);
+        terrainRenderer->render(terrains, light, perspectiveCamera, orthographicCamera, fogColor, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), renderer->commandBuffers, true);
+        entityRenderer->render(entities, light, perspectiveCamera, fogColor, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), renderer->commandBuffers, true);
+        skyboxRenderer->render(skybox, perspectiveCamera, fogColor, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), renderer->commandBuffers, true);
+        waterRenderer->render(waterTiles, perspectiveCamera, light, fogColor, renderer->commandBuffers);
         renderer->endRendering(renderer->commandBuffers);
 
         renderer->endRecordingCommands(renderer->commandBuffers, true);
