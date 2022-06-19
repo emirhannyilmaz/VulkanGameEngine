@@ -14,6 +14,7 @@ class Texture;
 
 struct AnimatedEntityVertexUniformBufferObject {
     alignas(16) glm::mat4 modelMatrix;
+    alignas(16) glm::mat4 jointTransforms[50];
 };
 
 struct AnimatedEntityFragmentUniformBufferObject {

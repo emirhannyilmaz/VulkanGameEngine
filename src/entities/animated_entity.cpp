@@ -81,6 +81,7 @@ void AnimatedEntity::updateDescriptorSetResources() {
 
     AnimatedEntityVertexUniformBufferObject vertexUbo{};
     vertexUbo.modelMatrix = matrix;
+    vertexUbo.jointTransforms = getJointTransforms().data();
 
     void* data;
     vkMapMemory(renderer->device->device, vertexUniformBuffers[renderer->currentFrame]->bufferMemory, 0, sizeof(vertexUbo), 0, &data);
