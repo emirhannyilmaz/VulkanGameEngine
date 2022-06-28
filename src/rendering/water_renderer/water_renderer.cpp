@@ -60,8 +60,8 @@ WaterRenderer::~WaterRenderer() {
 }
 
 void WaterRenderer::CreateGraphicsPipeline() {
-    auto bindingDescription = Vertex::getBindingDescription();
-    auto attributeDescriptions = Vertex::getAttributeDescriptions();
+    auto bindingDescription = WaterVertex::getBindingDescription();
+    auto attributeDescriptions = WaterVertex::getAttributeDescriptions();
 
     std::array<VkDescriptorSetLayout, 2> descriptorSetLayouts{};
     descriptorSetLayouts[0] = descriptorSetLayout->descriptorSetLayout;

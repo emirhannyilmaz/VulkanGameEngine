@@ -5,11 +5,9 @@
 #include <string>
 #include "joint_transform.hpp"
 
-class Keyframe {
-public:
+struct Keyframe {
     float timestamp;
     std::unordered_map<std::string, JointTransform> pose;
-    Keyframe(float timestamp, std::unordered_map<std::string, JointTransform> pose);
 };
 
 #endif

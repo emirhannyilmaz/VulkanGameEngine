@@ -4,7 +4,6 @@
 #include <vulkan/vulkan.h>
 #include "shader_module.hpp"
 #include <stdexcept>
-#include "vertex.hpp"
 
 class GraphicsPipeline {
 public:

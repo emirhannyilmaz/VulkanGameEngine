@@ -1,21 +1,22 @@
-#ifndef animated_vertex_hpp
-#define animated_vertex_hpp
+#ifndef terrain_vertex_hpp
+#define terrain_vertex_hpp
 
 #include <vulkan/vulkan.h>
 #include <array>
 #include <glm/glm.hpp>
 
-struct AnimatedVertex {
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/hash.hpp>
+
+struct TerrainVertex {
     glm::vec3 position;
     glm::vec3 normal;
     glm::vec2 textureCoordinates;
-    glm::ivec3 jointIDs;
-    glm::vec3 jointWeights;
 
     static VkVertexInputBindingDescription getBindingDescription() {
         VkVertexInputBindingDescription bindingDescription{};
         bindingDescription.binding = 0;
-        bindingDescription.stride = sizeof(AnimatedVertex);
+        bindingDescription.stride = sizeof(TerrainVertex);
         bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
         return bindingDescription;
@@ -26,27 +27,17 @@ struct AnimatedVertex {
         attributeDescriptions[0].binding = 0;
         attributeDescriptions[0].location = 0;
         attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
-        attributeDescriptions[0].offset = offsetof(AnimatedVertex, position);
+        attributeDescriptions[0].offset = offsetof(TerrainVertex, position);
 
         attributeDescriptions[1].binding = 0;
         attributeDescriptions[1].location = 1;
         attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
-        attributeDescriptions[1].offset = offsetof(AnimatedVertex, normal);
+        attributeDescriptions[1].offset = offsetof(TerrainVertex, normal);
 
         attributeDescriptions[2].binding = 0;
         attributeDescriptions[2].location = 2;
         attributeDescriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
-        attributeDescriptions[2].offset = offsetof(AnimatedVertex, textureCoordinates);
-
-        attributeDescriptions[3].binding = 0;
-        attributeDescriptions[3].location = 3;
-        attributeDescriptions[3].format = VK_FORMAT_R32G32B32_SINT;
-        attributeDescriptions[3].offset = offsetof(AnimatedVertex, jointIDs);
-
-        attributeDescriptions[4].binding = 0;
-        attributeDescriptions[4].location = 4;
-        attributeDescriptions[4].format = VK_FORMAT_R32G32B32_SFLOAT;
-        attributeDescriptions[4].offset = offsetof(AnimatedVertex, jointWeights);
+        attributeDescriptions[2].offset = offsetof(TerrainVertex, textureCoordinates);
 
         return attributeDescriptions;
     }

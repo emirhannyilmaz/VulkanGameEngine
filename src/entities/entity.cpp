@@ -1,6 +1,6 @@
 #include "entity.hpp"
-#include "../rendering/texture.hpp"
-#include "../rendering/renderer.hpp"
+#include "../rendering/renderer/texture.hpp"
+#include "../rendering/renderer/renderer.hpp"
 
 DescriptorSetLayout* Entity::descriptorSetLayout = nullptr;
 

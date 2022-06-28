@@ -1,13 +1,13 @@
 #ifndef entity_hpp
 #define entity_hpp
 
-#include "../rendering/mesh.hpp"
+#include "../rendering/entity_renderer/mesh.hpp"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include "../rendering/descriptor_pool.hpp"
-#include "../rendering/descriptor_set_layout.hpp"
-#include "../rendering/descriptor_sets.hpp"
-#include "../rendering/renderer_info.hpp"
+#include "../rendering/renderer/descriptor_pool.hpp"
+#include "../rendering/renderer/descriptor_set_layout.hpp"
+#include "../rendering/renderer/descriptor_sets.hpp"
+#include "../rendering/renderer/renderer_info.hpp"
 
 class Texture;
 

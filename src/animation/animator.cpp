@@ -17,6 +17,7 @@ void Animator::update() {
 
     increaseTime();
     std::unordered_map<std::string, glm::mat4> currentPose = calculateCurrentPose();
+    applyPoseToJoints(currentPose, entity->rootJoint, glm::mat4(1.0f));
 }
 
 void Animator::increaseTime() {
@@ -27,13 +28,23 @@ void Animator::increaseTime() {
 }
 
 std::unordered_map<std::string, glm::mat4> Animator::calculateCurrentPose() {
-    std::array<Keyframe> frames = getPreviousAndNextFrames();
+    std::array<Keyframe, 2> frames = getPreviousAndNextFrames();
     float progression = calculateProgression(frames[0], frames[1]);
 
     return interpolatePoses(frames[0], frames[1], progression);
 }
 
-std::array<Keyframe> Animator::getPreviousAndNextFrames() {
+void Animator::applyPoseToJoints(std::unordered_map<std::string, glm::mat4>& currentPose, Joint& joint, glm::mat4 parentTransform) {
+    glm::mat4 currentLocalTransform = currentPose[joint.name];
+    glm::mat4 currentTransform = parentTransform * currentLocalTransform;
+    for (Joint child : joint.children) {
+        applyPoseToJoints(currentPose, child, currentTransform);
+    }
+    currentTransform *= joint.inverseBindTransform;
+    joint.animatedTransform = currentTransform;
+}
+
+std::array<Keyframe, 2> Animator::getPreviousAndNextFrames() {
     std::vector<Keyframe> keyframes = animation->keyframes;
     Keyframe previousFrame = keyframes[0];
     Keyframe nextFrame = keyframes[0];
@@ -45,7 +56,7 @@ std::array<Keyframe> Animator::getPreviousAndNextFrames() {
         previousFrame = keyframes[i];
     }
 
-    return {previousFrame, nextFrame};
+    return std::array<Keyframe, 2> {previousFrame, nextFrame};
 }
 
 float Animator::calculateProgression(Keyframe& previousFrame, Keyframe& nextFrame) {

@@ -18,10 +18,10 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <chrono>
-#include "../io/window.hpp"
-#include "../entities/perspective_camera.hpp"
-#include "water_resources.hpp"
-#include "shadow_map_resources.hpp"
+#include "../../io/window.hpp"
+#include "../../entities/perspective_camera.hpp"
+#include "../water_renderer/water_resources.hpp"
+#include "../shadow_map_renderer/shadow_map_resources.hpp"
 #include <array>
 #include "query_pool.hpp"
 

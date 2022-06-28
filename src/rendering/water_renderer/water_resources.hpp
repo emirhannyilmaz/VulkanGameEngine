@@ -1,11 +1,11 @@
 #ifndef water_resources_hpp
 #define water_resources_hpp
 
-#include "color_resources.hpp"
-#include "depth_resources.hpp"
-#include "sampler.hpp"
-#include "render_pass.hpp"
-#include "framebuffer.hpp"
+#include "../renderer/color_resources.hpp"
+#include "../renderer/depth_resources.hpp"
+#include "../renderer/sampler.hpp"
+#include "../renderer/render_pass.hpp"
+#include "../renderer/framebuffer.hpp"
 #include <array>
 
 class WaterResources {

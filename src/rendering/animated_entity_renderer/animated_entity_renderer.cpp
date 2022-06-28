@@ -1,4 +1,4 @@
-#include "entity_renderer.hpp"
+#include "animated_entity_renderer.hpp"
 
 AnimatedEntityRenderer::AnimatedEntityRenderer(Renderer* renderer) {
     this->renderer = renderer;

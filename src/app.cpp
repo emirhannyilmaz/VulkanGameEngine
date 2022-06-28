@@ -34,7 +34,7 @@ void App::run() {
     waterTiles.push_back(waterTile);
 
     std::vector<Entity*> entities;
-
+/*
     ObjModelData treeModelData = ModelLoader::LoadObj("res/models/tree.obj");
     float treePreviousX = 0.0f;
     float treePreviousZ = 0.0f;
@@ -53,7 +53,7 @@ void App::run() {
         Entity* tree = new Entity(treeMesh, treeTexture, treePosition, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.1f, 0.1f, 0.1f), renderer);
         entities.push_back(tree);
     }
-
+*/
     while (!glfwWindowShouldClose(window->window)) {
         glfwPollEvents();
 

@@ -1,15 +1,15 @@
 #ifndef shadow_map_renderer_hpp
 #define shadow_map_renderer_hpp
 
-#include "renderer.hpp"
-#include "../entities/entity.hpp"
-#include "../entities/light.hpp"
-#include "../entities/orthographic_camera.hpp"
-#include "graphics_pipeline.hpp"
-#include "descriptor_set_layout.hpp"
-#include "descriptor_pool.hpp"
-#include "descriptor_sets.hpp"
-#include "buffer.hpp"
+#include "../renderer/renderer.hpp"
+#include "../../entities/entity.hpp"
+#include "../../entities/light.hpp"
+#include "../../entities/orthographic_camera.hpp"
+#include "../renderer/graphics_pipeline.hpp"
+#include "../renderer/descriptor_set_layout.hpp"
+#include "../renderer/descriptor_pool.hpp"
+#include "../renderer/descriptor_sets.hpp"
+#include "../renderer/buffer.hpp"
 
 struct ShadowMapRendererVertexUniformBufferObject {
     alignas(16) glm::mat4 viewMatrix;

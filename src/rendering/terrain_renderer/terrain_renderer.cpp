@@ -48,8 +48,8 @@ TerrainRenderer::~TerrainRenderer() {
 }
 
 void TerrainRenderer::CreateGraphicsPipelines() {
-    auto bindingDescription = Vertex::getBindingDescription();
-    auto attributeDescriptions = Vertex::getAttributeDescriptions();
+    auto bindingDescription = TerrainVertex::getBindingDescription();
+    auto attributeDescriptions = TerrainVertex::getAttributeDescriptions();
 
     std::array<VkDescriptorSetLayout, 2> descriptorSetLayouts{};
     descriptorSetLayouts[0] = descriptorSetLayout->descriptorSetLayout;

@@ -1,9 +1,9 @@
 #include "renderer.hpp"
-#include "entity_renderer.hpp"
-#include "shadow_map_renderer.hpp"
-#include "terrain_renderer.hpp"
-#include "skybox_renderer.hpp"
-#include "water_renderer.hpp"
+#include "../entity_renderer/entity_renderer.hpp"
+#include "../shadow_map_renderer/shadow_map_renderer.hpp"
+#include "../terrain_renderer/terrain_renderer.hpp"
+#include "../skybox_renderer/skybox_renderer.hpp"
+#include "../water_renderer/water_renderer.hpp"
 
 Renderer::Renderer(Window* window, PerspectiveCamera* perspectiveCamera) {
     this->window = window;

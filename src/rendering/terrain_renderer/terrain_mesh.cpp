@@ -1,7 +1,7 @@
-#include "mesh.hpp"
-#include "renderer.hpp"
+#include "terrain_mesh.hpp"
+#include "../renderer/renderer.hpp"
 
-Mesh::Mesh(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, Renderer* renderer) {
+TerrainMesh::TerrainMesh(std::vector<TerrainVertex>& vertices, std::vector<uint32_t>& indices, Renderer* renderer) {
     this->indicesSize = indices.size();
 
     // Vertex buffer
@@ -29,7 +29,7 @@ Mesh::Mesh(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, Render
     delete stagingBufferForIndexBuffer;
 }
 
-Mesh::~Mesh() {
+TerrainMesh::~TerrainMesh() {
     delete vertexBuffer;
     delete indexBuffer;
 }

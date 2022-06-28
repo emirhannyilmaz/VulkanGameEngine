@@ -1,15 +1,15 @@
 #ifndef water_renderer_hpp
 #define water_renderer_hpp
 
-#include "renderer.hpp"
-#include "../entities/water_tile.hpp"
-#include "graphics_pipeline.hpp"
-#include "descriptor_set_layout.hpp"
-#include "descriptor_pool.hpp"
-#include "descriptor_sets.hpp"
-#include "texture.hpp"
-#include "buffer.hpp"
-#include "../entities/light.hpp"
+#include "../renderer/renderer.hpp"
+#include "../../entities/water_tile.hpp"
+#include "../renderer/graphics_pipeline.hpp"
+#include "../renderer/descriptor_set_layout.hpp"
+#include "../renderer/descriptor_pool.hpp"
+#include "../renderer/descriptor_sets.hpp"
+#include "../renderer/texture.hpp"
+#include "../renderer/buffer.hpp"
+#include "../../entities/light.hpp"
 
 struct WaterRendererVertexUniformBufferObject {
     alignas(16) glm::mat4 viewMatrix;

@@ -3,7 +3,7 @@
 
 #include <vector>
 #include "vertex.hpp"
-#include "buffer.hpp"
+#include "../renderer/buffer.hpp"
 
 class Renderer;
 

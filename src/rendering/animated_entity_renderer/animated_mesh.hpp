@@ -4,6 +4,7 @@
 #include <vector>
 #include "animated_vertex.hpp"
 #include "../renderer/renderer.hpp"
+#include "../renderer/buffer.hpp"
 
 class AnimatedMesh {
 public:

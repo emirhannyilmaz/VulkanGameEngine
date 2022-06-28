@@ -67,7 +67,7 @@ std::vector<glm::mat4> AnimatedEntity::getJointTransforms() {
 void AnimatedEntity::addJointTransformToVector(Joint& parentJoint, std::vector<glm::mat4>& jointTransforms) {
     jointTransforms[parentJoint.index] = parentJoint.animatedTransform;
     for (Joint childJoint : parentJoint.children) {
-        childJoint.addJointTransformToVector(childJoint, jointTransforms);
+        addJointTransformToVector(childJoint, jointTransforms);
     }
 }
 
@@ -81,7 +81,8 @@ void AnimatedEntity::updateDescriptorSetResources() {
 
     AnimatedEntityVertexUniformBufferObject vertexUbo{};
     vertexUbo.modelMatrix = matrix;
-    vertexUbo.jointTransforms = getJointTransforms().data();
+    std::vector<glm::mat4> jointTransforms = getJointTransforms();
+    memcpy(vertexUbo.jointTransforms, jointTransforms.data(), sizeof(glm::mat4) * jointTransforms.size());
 
     void* data;
     vkMapMemory(renderer->device->device, vertexUniformBuffers[renderer->currentFrame]->bufferMemory, 0, sizeof(vertexUbo), 0, &data);

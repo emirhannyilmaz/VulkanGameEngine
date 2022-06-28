@@ -3,7 +3,6 @@
 
 #include <vulkan/vulkan.h>
 #include <vector>
-#include "vertex.hpp"
 #include <stdexcept>
 #include "command_buffers.hpp"
 

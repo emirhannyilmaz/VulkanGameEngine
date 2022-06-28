@@ -26,7 +26,7 @@ class AnimatedEntity {
 public:
     AnimatedMesh* mesh;
     Texture* texture;
-    Joint rootJoint;
+    Joint rootJoint{};
     int jointCount;
     static DescriptorSetLayout* descriptorSetLayout;
     DescriptorSets* descriptorSets;

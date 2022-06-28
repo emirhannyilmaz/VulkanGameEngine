@@ -1,13 +1,13 @@
 #ifndef skybox_renderer_hpp
 #define skybox_renderer_hpp
 
-#include "renderer.hpp"
-#include "../entities/skybox.hpp"
-#include "graphics_pipeline.hpp"
-#include "descriptor_set_layout.hpp"
-#include "descriptor_pool.hpp"
-#include "descriptor_sets.hpp"
-#include "buffer.hpp"
+#include "../renderer/renderer.hpp"
+#include "../../entities/skybox.hpp"
+#include "../renderer/graphics_pipeline.hpp"
+#include "../renderer/descriptor_set_layout.hpp"
+#include "../renderer/descriptor_pool.hpp"
+#include "../renderer/descriptor_sets.hpp"
+#include "../renderer/buffer.hpp"
 
 struct SkyboxRendererVertexUniformBufferObject {
     alignas(16) glm::mat4 projectionMatrix;
