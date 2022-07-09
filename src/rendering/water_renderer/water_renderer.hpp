@@ -43,7 +43,7 @@ private:
     Texture* normalMap;
     std::vector<Buffer*> vertexUniformBuffers;
     std::vector<Buffer*> fragmentUniformBuffers;
-    const float waveSpeed = 0.03f;
+    const float waveSpeed = 0.2f;
     float moveFactor = 0.0f;
     void updateDescriptorSetResources(PerspectiveCamera* perspectiveCamera, Light* light, glm::vec3 fogColor);
 };

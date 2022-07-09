@@ -90,6 +90,34 @@ void Renderer::beginDrawing() {
         throw std::runtime_error("Failed to acquire swap chain image!");
     }
 
+    if (!isFirstTimeFrameRender[currentFrame]) {
+        if (previousTime == -1.0f) {
+            previousTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
+        }
+        if (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count() - previousTime >= 1000.0f) {
+            float sum = 0.0f;
+            for (float dt : deltaTimes) {
+                sum += dt;
+            }
+            deltaTime = sum / deltaTimes.size();
+            previousTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
+            deltaTimes.clear();
+        }
+
+        std::array<uint64_t, 2> offScreenTimestamps{};
+        vkGetQueryPoolResults(device->device, offScreenQueryPool->queryPool, currentFrame * 2, 2, sizeof(offScreenTimestamps), offScreenTimestamps.data(), sizeof(uint64_t), VK_QUERY_RESULT_64_BIT);
+        double offScreenDeltaTimeInNanoseconds = ((double) (offScreenTimestamps[1] - offScreenTimestamps[0])) * (double) device->timestampPeriod;
+
+        std::array<uint64_t, 2> onScreenTimestamps{};
+        vkGetQueryPoolResults(device->device, queryPool->queryPool, currentFrame * 2, 2, sizeof(onScreenTimestamps), onScreenTimestamps.data(), sizeof(uint64_t), VK_QUERY_RESULT_64_BIT);
+        double onScreenDeltaTimeInNanoseconds = ((double) (onScreenTimestamps[1] - onScreenTimestamps[0])) * (double) device->timestampPeriod;
+
+        float newDeltaTime = (offScreenDeltaTimeInNanoseconds + onScreenDeltaTimeInNanoseconds) / 1000000000.0f;
+        deltaTimes.push_back(newDeltaTime);
+    } else {
+        isFirstTimeFrameRender[currentFrame] = false;
+    }
+
     vkResetFences(device->device, 1, &inFlightFences[currentFrame]->fence);
     vkResetCommandBuffer(commandBuffers->commandBuffers[currentFrame], 0);
     vkResetCommandBuffer(offScreenCommandBuffers->commandBuffers[currentFrame], 0);
@@ -148,16 +176,6 @@ void Renderer::endDrawing() {
         throw std::runtime_error("Failed to present swap chain image!");
     }
 
-    std::array<uint64_t, 2> offScreenTimestamps{};
-    vkGetQueryPoolResults(device->device, offScreenQueryPool->queryPool, currentFrame * 2, 2, sizeof(offScreenTimestamps), offScreenTimestamps.data(), sizeof(uint64_t), VK_QUERY_RESULT_WAIT_BIT | VK_QUERY_RESULT_64_BIT);
-    double offScreenDeltaTime = double(offScreenTimestamps[1] - offScreenTimestamps[0]) * device->timestampPeriod;
-
-    std::array<uint64_t, 2> onScreenTimestamps{};
-    vkGetQueryPoolResults(device->device, queryPool->queryPool, currentFrame * 2, 2, sizeof(onScreenTimestamps), onScreenTimestamps.data(), sizeof(uint64_t), VK_QUERY_RESULT_WAIT_BIT | VK_QUERY_RESULT_64_BIT);
-    double onScreenDeltaTime = double(onScreenTimestamps[1] - onScreenTimestamps[0]) * device->timestampPeriod;
-
-    deltaTime = (offScreenDeltaTime + onScreenDeltaTime) / 1000000000.0f;
-
     currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
 
@@ -198,7 +216,7 @@ void Renderer::beginRendering(RenderPass* renderPass, Framebuffer* framebuffer, 
     renderPassBeginInfo.renderPass = renderPass->renderPass;
     renderPassBeginInfo.framebuffer = framebuffer->framebuffer;
     renderPassBeginInfo.renderArea.offset = {0, 0};
-    renderPassBeginInfo.renderArea.extent = swapchain->swapchainExtent;
+    renderPassBeginInfo.renderArea.extent = framebuffer->extent;
     std::vector<VkClearValue> clearValues{};
     if (hasColorAttachment) {
         clearValues.push_back({{0.0f, 0.0f, 0.0f, 1.0f}});
@@ -254,7 +272,7 @@ void Renderer::recreateSwapchain() {
     terrainRenderer->CreateGraphicsPipelines();
     waterRenderer->CreateGraphicsPipeline();
 
-    perspectiveCamera->aspectRatio = (float) swapchain->swapchainExtent.width / (float) swapchain->swapchainExtent.height;
+    perspectiveCamera->aspectRatio = (float) width / (float) height;
 }
 
 void Renderer::cleanUpSwapchain() {

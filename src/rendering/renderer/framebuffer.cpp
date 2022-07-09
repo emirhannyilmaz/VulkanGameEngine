@@ -2,6 +2,7 @@
 
 Framebuffer::Framebuffer(VkDevice& device, VkRenderPass& renderPass, uint32_t attachmentCount, VkImageView* attachments, VkExtent2D& extent) {
     this->device = device;
+    this->extent = extent;
 
     VkFramebufferCreateInfo framebufferCreateInfo{};
     framebufferCreateInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;

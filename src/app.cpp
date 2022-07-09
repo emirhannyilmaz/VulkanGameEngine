@@ -3,7 +3,7 @@
 void App::run() {
     Window* window = new Window(800, 600, "Vulkan Game Engine");
     Input::window = window->window;
-    Input::sensitivity = 5.0f;
+    Input::sensitivity = 0.2f;
     Light* light = new Light(glm::vec3(0.0f, -10000.0f, -10000.0f), glm::vec3(1.0f, 1.0f, 1.0f));
     PerspectiveCamera* perspectiveCamera = new PerspectiveCamera(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), 45.0f, (float) window->width / (float) window->height, 0.01f, 1000.0f, 200.0f);
     OrthographicCamera* orthographicCamera = new OrthographicCamera();
@@ -28,12 +28,13 @@ void App::run() {
     Texture* skyboxTexture = new Texture({"res/textures/skybox_front.tga", "res/textures/skybox_back.tga", "res/textures/skybox_up.tga", "res/textures/skybox_down.tga", "res/textures/skybox_right.tga", "res/textures/skybox_left.tga"}, renderer);
     Skybox* skybox = new Skybox(skyboxTexture, 500.0f, renderer);
 
-    WaterTile* waterTile = new WaterTile(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec2(100.0f, 100.0f), 0.6f, 20.0f, renderer);
+    WaterTile* waterTile = new WaterTile(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec2(800.0f, 800.0f), 0.6f, 20.0f, renderer);
 
     std::vector<WaterTile*> waterTiles;
     waterTiles.push_back(waterTile);
 
     std::vector<Entity*> entities;
+
 /*
     ObjModelData treeModelData = ModelLoader::LoadObj("res/models/tree.obj");
     float treePreviousX = 0.0f;
@@ -54,11 +55,18 @@ void App::run() {
         entities.push_back(tree);
     }
 */
+
+    MeshData characterMeshData = ColladaLoader::LoadMesh("res/models/character.dae");
+    Mesh* characterMesh = new Mesh(characterMeshData.vertices, characterMeshData.indices, renderer);
+    Texture* characterTexture = new Texture("res/textures/character.png", 0.0f, 0.0f, renderer);
+    Entity* character = new Entity(characterMesh, characterTexture, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(90.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), renderer);
+    entities.push_back(character);
+
     while (!glfwWindowShouldClose(window->window)) {
         glfwPollEvents();
 
         light->update(1000.0f, renderer->deltaTime);
-        perspectiveCamera->update(20.0f, renderer->deltaTime);
+        perspectiveCamera->update(250.0f, renderer->deltaTime);
         orthographicCamera->update(perspectiveCamera, light->viewMatrix);
 
         renderer->beginDrawing();

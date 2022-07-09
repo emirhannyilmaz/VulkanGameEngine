@@ -8,9 +8,15 @@ bool Input::GetKey(int key) {
 }
 
 double Input::GetMouseDx() {
+    static bool firstRun = true;
     static double previousPosition;
     double position;
     glfwGetCursorPos(window, &position, nullptr);
+
+    if (firstRun) {
+        previousPosition = position;
+        firstRun = false;
+    }
 
     double d = position - previousPosition;
     previousPosition = position;
@@ -18,9 +24,15 @@ double Input::GetMouseDx() {
 }
 
 double Input::GetMouseDy() {
+    static bool firstRun = true;
     static double previousPosition;
     double position;
     glfwGetCursorPos(window, nullptr, &position);
+
+    if (firstRun) {
+        previousPosition = position;
+        firstRun = false;
+    }
 
     double d = position - previousPosition;
     previousPosition = position;

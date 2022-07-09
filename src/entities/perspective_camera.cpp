@@ -17,14 +17,14 @@ void PerspectiveCamera::update(float speed, float deltaTime) {
     nearPlaneHeight = nearPlaneWidth / aspectRatio;
     farPlaneHeight = farPlaneWidth / aspectRatio;
 
-    rotation.x += (float) Input::GetMouseDy() * deltaTime;
+    rotation.x += (float) Input::GetMouseDy();
     if (rotation.x >= 90.0f) {
         rotation.x = 90.0f;
     }
     if (rotation.x <= -90.0f) {
         rotation.x = -90.0f;
     }
-    rotation.y += (float) Input::GetMouseDx() * deltaTime;
+    rotation.y += (float) Input::GetMouseDx();
 
     glm::mat4 viewMatrix = createViewMatrix();
     glm::vec4 forwardCalculation = glm::vec4(0.0f, 0.0f, 1.0f, 0.0f) * viewMatrix;

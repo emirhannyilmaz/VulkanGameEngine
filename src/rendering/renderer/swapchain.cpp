@@ -106,22 +106,17 @@ VkPresentModeKHR Swapchain::chooseSwapchainPresentMode(std::vector<VkPresentMode
 }
     
 VkExtent2D Swapchain::chooseSwapchainExtent(VkSurfaceCapabilitiesKHR& capabilities, GLFWwindow* window) {
-    if (capabilities.currentExtent.width != UINT32_MAX) {
-        return capabilities.currentExtent;
-    } else {
-        int width;
-        int height;
-        glfwGetFramebufferSize(window, &width, &height);
+    int width;
+    int height;
+    glfwGetFramebufferSize(window, &width, &height);
 
-        VkExtent2D actualExtent = {
-            static_cast<uint32_t>(width),
-            static_cast<uint32_t>(height)
-        };
+    VkExtent2D actualExtent = {
+        static_cast<uint32_t>(width),
+        static_cast<uint32_t>(height)
+    };
 
-        actualExtent.width = std::clamp(actualExtent.width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width);
-        actualExtent.height = std::clamp(actualExtent.height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height);
+    actualExtent.width = std::clamp(actualExtent.width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width);
+    actualExtent.height = std::clamp(actualExtent.height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height);
 
-        return actualExtent;
-    }
+    return actualExtent;
 }
-
