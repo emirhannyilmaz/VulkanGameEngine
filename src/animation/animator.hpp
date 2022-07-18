@@ -22,7 +22,7 @@ private:
     float time = 0.0f;
     void increaseTime();
     std::unordered_map<std::string, glm::mat4> calculateCurrentPose();
-    void applyPoseToJoints(std::unordered_map<std::string, glm::mat4>& currentPose, Joint& joint, glm::mat4 parentTransform);
+    void applyPoseToJoints(std::unordered_map<std::string, glm::mat4>& currentPose, Joint* joint, glm::mat4 parentTransform);
     std::array<Keyframe, 2> getPreviousAndNextFrames();
     float calculateProgression(Keyframe& previousFrame, Keyframe& nextFrame);
     std::unordered_map<std::string, glm::mat4> interpolatePoses(Keyframe& x, Keyframe& y, float a);

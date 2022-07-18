@@ -34,14 +34,14 @@ std::unordered_map<std::string, glm::mat4> Animator::calculateCurrentPose() {
     return interpolatePoses(frames[0], frames[1], progression);
 }
 
-void Animator::applyPoseToJoints(std::unordered_map<std::string, glm::mat4>& currentPose, Joint& joint, glm::mat4 parentTransform) {
-    glm::mat4 currentLocalTransform = currentPose[joint.name];
+void Animator::applyPoseToJoints(std::unordered_map<std::string, glm::mat4>& currentPose, Joint* joint, glm::mat4 parentTransform) {
+    glm::mat4 currentLocalTransform = currentPose[joint->name];
     glm::mat4 currentTransform = parentTransform * currentLocalTransform;
-    for (Joint child : joint.children) {
+    for (Joint* child : joint->children) {
         applyPoseToJoints(currentPose, child, currentTransform);
     }
-    currentTransform *= joint.inverseBindTransform;
-    joint.animatedTransform = currentTransform;
+    currentTransform *= joint->inverseBindTransform;
+    joint->animatedTransform = currentTransform;
 }
 
 std::array<Keyframe, 2> Animator::getPreviousAndNextFrames() {

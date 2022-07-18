@@ -4,7 +4,7 @@ void App::run() {
     Window* window = new Window(800, 600, "Vulkan Game Engine");
     Input::window = window->window;
     Input::sensitivity = 0.2f;
-    Light* light = new Light(glm::vec3(0.0f, -10000.0f, -10000.0f), glm::vec3(1.0f, 1.0f, 1.0f));
+    Light* light = new Light(glm::vec3(0.0f, -1000.0f, -1000.0f), glm::vec3(1.0f, 1.0f, 1.0f));
     PerspectiveCamera* perspectiveCamera = new PerspectiveCamera(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), 45.0f, (float) window->width / (float) window->height, 0.01f, 1000.0f, 200.0f);
     OrthographicCamera* orthographicCamera = new OrthographicCamera();
     Renderer* renderer = new Renderer(window, perspectiveCamera);
@@ -59,8 +59,11 @@ void App::run() {
     MeshData characterMeshData = ColladaLoader::LoadMesh("res/models/character.dae");
     Mesh* characterMesh = new Mesh(characterMeshData.vertices, characterMeshData.indices, renderer);
     Texture* characterTexture = new Texture("res/textures/character.png", 0.0f, 0.0f, renderer);
-    Entity* character = new Entity(characterMesh, characterTexture, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(90.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), renderer);
+    Entity* character = new Entity(characterMesh, characterTexture, glm::vec3(10.0f, 0.0f, 10.0f), glm::vec3(90.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), renderer);
     entities.push_back(character);
+
+    ColladaLoader::LoadAnimatedMesh("res/models/character.dae");
+    ColladaLoader::LoadAnimation("res/models/character.dae");
 
     while (!glfwWindowShouldClose(window->window)) {
         glfwPollEvents();

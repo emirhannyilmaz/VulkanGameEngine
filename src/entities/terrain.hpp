@@ -40,7 +40,7 @@ private:
     std::vector<Buffer*> vertexUniformBuffers;
     std::vector<Buffer*> fragmentUniformBuffers;
     const float SIZE = 800.0f;
-    const float MAX_HEIGHT = 80.0f;
+    const float MAX_HEIGHT = 40.0f;
     std::vector<std::vector<glm::vec3>> vertexPositions;
     void createMesh(const std::string& heightMapFileName);
     float getHeight(int x, int z, int width, int height, stbi_uc* heightMapPixels);

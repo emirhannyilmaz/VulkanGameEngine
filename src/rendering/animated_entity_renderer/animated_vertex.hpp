@@ -5,6 +5,9 @@
 #include <array>
 #include <glm/glm.hpp>
 
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/hash.hpp>
+
 struct AnimatedVertex {
     glm::vec3 position;
     glm::vec3 normal;
@@ -50,6 +53,18 @@ struct AnimatedVertex {
 
         return attributeDescriptions;
     }
+
+    bool operator==(const AnimatedVertex& other) const {
+        return position == other.position && normal == other.normal && textureCoordinates == other.textureCoordinates;
+    }
 };
+
+namespace std {
+    template<> struct hash<AnimatedVertex> {
+        size_t operator()(AnimatedVertex const& vertex) const {
+            return ((hash<glm::vec3>()(vertex.position) ^ (hash<glm::vec3>()(vertex.normal) << 1)) >> 1) ^ (hash<glm::vec2>()(vertex.textureCoordinates) << 1);
+        }
+    };
+}
 
 #endif

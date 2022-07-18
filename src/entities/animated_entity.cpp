@@ -4,7 +4,7 @@
 
 DescriptorSetLayout* AnimatedEntity::descriptorSetLayout = nullptr;
 
-AnimatedEntity::AnimatedEntity(AnimatedMesh* mesh, Texture* texture, Joint rootJoint, int jointCount, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale, Renderer* renderer) {
+AnimatedEntity::AnimatedEntity(AnimatedMesh* mesh, Texture* texture, Joint* rootJoint, int jointCount, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale, Renderer* renderer) {
     this->mesh = mesh;
     this->texture = texture;
     this->rootJoint = rootJoint;
@@ -14,7 +14,7 @@ AnimatedEntity::AnimatedEntity(AnimatedMesh* mesh, Texture* texture, Joint rootJ
     this->scale = scale;
     this->renderer = renderer;
     
-    rootJoint.calculateInverseBindTransform(glm::mat4(1.0f));
+    rootJoint->calculateInverseBindTransform(glm::mat4(1.0f));
 
     std::array<VkDescriptorPoolSize, 2> poolSizes{};
     poolSizes[0] = {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 2 * MAX_FRAMES_IN_FLIGHT};
@@ -56,6 +56,7 @@ AnimatedEntity::~AnimatedEntity() {
     delete descriptorPool;
     delete mesh;
     delete texture;
+    delete rootJoint;
 }
 
 std::vector<glm::mat4> AnimatedEntity::getJointTransforms() {
@@ -64,9 +65,9 @@ std::vector<glm::mat4> AnimatedEntity::getJointTransforms() {
     return jointTransforms;
 }
 
-void AnimatedEntity::addJointTransformToVector(Joint& parentJoint, std::vector<glm::mat4>& jointTransforms) {
-    jointTransforms[parentJoint.index] = parentJoint.animatedTransform;
-    for (Joint childJoint : parentJoint.children) {
+void AnimatedEntity::addJointTransformToVector(Joint* parentJoint, std::vector<glm::mat4>& jointTransforms) {
+    jointTransforms[parentJoint->index] = parentJoint->animatedTransform;
+    for (Joint* childJoint : parentJoint->children) {
         addJointTransformToVector(childJoint, jointTransforms);
     }
 }

@@ -2,22 +2,38 @@
 #define collada_loader_hpp
 
 #include "../rendering/entity_renderer/vertex.hpp"
+#include "../rendering/animated_entity_renderer/animated_vertex.hpp"
+#include "../entities/joint.hpp"
+#include "../animation/animation.hpp"
 #include <string>
 #include <vector>
 #include <array>
 #include <iostream>
 #include <fstream>
 #include <unordered_map>
-#include <glm/gtx/string_cast.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 struct MeshData {
     std::vector<Vertex> vertices;
     std::vector<uint32_t> indices;
 };
 
+struct AnimatedMeshData {
+    std::vector<AnimatedVertex> vertices;
+    std::vector<uint32_t> indices;
+};
+
+struct AnimationData {
+    Joint* rootJoint;
+};
+
 class ColladaLoader {
 public:
     static MeshData LoadMesh(const std::string& fileName);
+    static AnimatedMeshData LoadAnimatedMesh(const std::string& fileName);
+    static AnimationData LoadAnimation(const std::string& fileName);
+private:
+    static void AddJointToChildren(Joint* rootJoint, std::string parentJointName, Joint* newJoint);
 };
 
 #endif

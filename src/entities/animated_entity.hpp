@@ -26,17 +26,17 @@ class AnimatedEntity {
 public:
     AnimatedMesh* mesh;
     Texture* texture;
-    Joint rootJoint{};
+    Joint* rootJoint;
     int jointCount;
     static DescriptorSetLayout* descriptorSetLayout;
     DescriptorSets* descriptorSets;
     glm::vec3 position;
     glm::vec3 rotation;
     glm::vec3 scale;
-    AnimatedEntity(AnimatedMesh* mesh, Texture* texture, Joint rootJoint, int jointCount, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale, Renderer* renderer);
+    AnimatedEntity(AnimatedMesh* mesh, Texture* texture, Joint* rootJoint, int jointCount, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale, Renderer* renderer);
     ~AnimatedEntity();
     std::vector<glm::mat4> getJointTransforms();
-    void addJointTransformToVector(Joint& parentJoint, std::vector<glm::mat4>& jointTransforms);
+    void addJointTransformToVector(Joint* parentJoint, std::vector<glm::mat4>& jointTransforms);
     void updateDescriptorSetResources();
     static void CreateDesriptorSetLayout(VkDevice& device);
     static void DeleteDesriptorSetLayout();
