@@ -1,5 +1,6 @@
 #include "renderer.hpp"
 #include "../entity_renderer/entity_renderer.hpp"
+#include "../animated_entity_renderer/animated_entity_renderer.hpp"
 #include "../shadow_map_renderer/shadow_map_renderer.hpp"
 #include "../terrain_renderer/terrain_renderer.hpp"
 #include "../skybox_renderer/skybox_renderer.hpp"
@@ -267,6 +268,7 @@ void Renderer::recreateSwapchain() {
     waterRenderer->updateDescriptorSetImageInfos();
     terrainRenderer->updateDescriptorSetImageInfos();
     entityRenderer->CreateGraphicsPipelines();
+    animatedEntityRenderer->CreateGraphicsPipelines();
     shadowMapRenderer->CreateGraphicsPipeline();
     skyboxRenderer->CreateGraphicsPipelines();
     terrainRenderer->CreateGraphicsPipelines();
@@ -280,6 +282,7 @@ void Renderer::cleanUpSwapchain() {
     terrainRenderer->DeleteGraphicsPipelines();
     skyboxRenderer->DeleteGraphicsPipelines();
     shadowMapRenderer->DeleteGraphicsPipeline();
+    animatedEntityRenderer->DeleteGraphicsPipelines();
     entityRenderer->DeleteGraphicsPipelines();
     delete shadowMapResources;
     delete waterResources;

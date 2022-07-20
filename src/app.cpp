@@ -9,11 +9,13 @@ void App::run() {
     OrthographicCamera* orthographicCamera = new OrthographicCamera();
     Renderer* renderer = new Renderer(window, perspectiveCamera);
     EntityRenderer* entityRenderer = new EntityRenderer(renderer);
+    AnimatedEntityRenderer* animatedEntityRenderer = new AnimatedEntityRenderer(renderer);
     TerrainRenderer* terrainRenderer = new TerrainRenderer(renderer);
     ShadowMapRenderer* shadowMapRenderer = new ShadowMapRenderer(renderer);
     SkyboxRenderer* skyboxRenderer = new SkyboxRenderer(renderer);
     WaterRenderer* waterRenderer = new WaterRenderer(renderer);
     renderer->entityRenderer = entityRenderer;
+    renderer->animatedEntityRenderer = animatedEntityRenderer;
     renderer->shadowMapRenderer = shadowMapRenderer;
     renderer->terrainRenderer = terrainRenderer;
     renderer->skyboxRenderer = skyboxRenderer;
@@ -56,14 +58,17 @@ void App::run() {
     }
 */
 
-    MeshData characterMeshData = ColladaLoader::LoadMesh("res/models/character.dae");
-    Mesh* characterMesh = new Mesh(characterMeshData.vertices, characterMeshData.indices, renderer);
-    Texture* characterTexture = new Texture("res/textures/character.png", 0.0f, 0.0f, renderer);
-    Entity* character = new Entity(characterMesh, characterTexture, glm::vec3(10.0f, 0.0f, 10.0f), glm::vec3(90.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), renderer);
-    entities.push_back(character);
+    std::vector<AnimatedEntity*> animatedEntities;
 
-    ColladaLoader::LoadAnimatedMesh("res/models/character.dae");
-    ColladaLoader::LoadAnimation("res/models/character.dae");
+    AnimatedMeshData characterMeshData = ColladaLoader::LoadAnimatedMesh("res/models/character.dae");
+    AnimationData characterAnimationData = ColladaLoader::LoadAnimation("res/models/character.dae");
+    AnimatedMesh* characterMesh = new AnimatedMesh(characterMeshData.vertices, characterMeshData.indices, renderer);
+    Texture* characterTexture = new Texture("res/textures/character.png", 0.0f, 0.0f, renderer);
+    AnimatedEntity* character = new AnimatedEntity(characterMesh, characterTexture, characterAnimationData.rootJoint, characterAnimationData.jointCount, glm::vec3(10.0f, -10.0f, 10.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), renderer);
+    animatedEntities.push_back(character);
+
+    Animator* animator = new Animator(character, renderer);
+    animator->setAnimation(&characterAnimationData.animation);
 
     while (!glfwWindowShouldClose(window->window)) {
         glfwPollEvents();
@@ -71,6 +76,7 @@ void App::run() {
         light->update(1000.0f, renderer->deltaTime);
         perspectiveCamera->update(250.0f, renderer->deltaTime);
         orthographicCamera->update(perspectiveCamera, light->viewMatrix);
+        animator->update();
 
         renderer->beginDrawing();
 
@@ -101,6 +107,7 @@ void App::run() {
         renderer->beginRendering(renderer->renderPass, renderer->framebuffers[renderer->currentImageIndex], renderer->commandBuffers, true);
         terrainRenderer->render(terrains, light, perspectiveCamera, orthographicCamera, fogColor, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), renderer->commandBuffers, true);
         entityRenderer->render(entities, light, perspectiveCamera, fogColor, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), renderer->commandBuffers, true);
+        animatedEntityRenderer->render(animatedEntities, light, perspectiveCamera, fogColor, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), renderer->commandBuffers, true);
         skyboxRenderer->render(skybox, perspectiveCamera, fogColor, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), renderer->commandBuffers, true);
         waterRenderer->render(waterTiles, perspectiveCamera, light, fogColor, renderer->commandBuffers);
         renderer->endRendering(renderer->commandBuffers);
@@ -112,17 +119,22 @@ void App::run() {
 
     renderer->waitIdle();
 
+    for (size_t i = 0; i < animatedEntities.size(); i++) {
+        delete animatedEntities[i];
+    }
+    animatedEntities.clear();
+
+    for (size_t i = 0; i < entities.size(); i++) {
+        delete entities[i];
+    }
+    entities.clear();
+
     for (size_t i = 0; i < waterTiles.size(); i++) {
         delete waterTiles[i];
     }
     waterTiles.clear();
 
     delete skybox;
-
-    for (size_t i = 0; i < entities.size(); i++) {
-        delete entities[i];
-    }
-    entities.clear();
 
     for (size_t i = 0; i < terrains.size(); i++) {
         delete terrains[i];
@@ -133,6 +145,7 @@ void App::run() {
     delete skyboxRenderer;
     delete terrainRenderer;
     delete shadowMapRenderer;
+    delete animatedEntityRenderer;
     delete entityRenderer;
     delete renderer;
     delete orthographicCamera;

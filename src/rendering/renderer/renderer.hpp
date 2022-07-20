@@ -26,6 +26,7 @@
 #include "query_pool.hpp"
 
 class EntityRenderer;
+class AnimatedEntityRenderer;
 class ShadowMapRenderer;
 class TerrainRenderer;
 class SkyboxRenderer;
@@ -62,6 +63,7 @@ public:
     uint32_t currentImageIndex;
     TerrainRenderer* terrainRenderer;
     EntityRenderer* entityRenderer;
+    AnimatedEntityRenderer* animatedEntityRenderer;
     ShadowMapRenderer* shadowMapRenderer;
     SkyboxRenderer* skyboxRenderer;
     WaterRenderer* waterRenderer;

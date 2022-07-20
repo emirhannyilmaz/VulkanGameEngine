@@ -199,7 +199,7 @@ AnimatedMeshData ColladaLoader::LoadAnimatedMesh(const std::string& fileName) {
                                     weightsToLimit.push_back(jointWeights[valuesInt[k * 2 + 1]]);
                                 }
                                 std::sort(weightsToLimit.data(), weightsToLimit.data() + weightsToLimit.size(), std::greater<float>());
-                                glm::vec3 weights = glm::vec3(weightsToLimit[0], weightsToLimit[1], weightsToLimit[2]);
+                                glm::vec3 weights = glm::normalize(glm::vec3(weightsToLimit[0], weightsToLimit[1], weightsToLimit[2]));
                                 int firstWeightIndex = std::find(jointWeights.data(), jointWeights.data() + jointWeights.size(), weights.x) - jointWeights.data();
                                 int secondWeightIndex = std::find(jointWeights.data(), jointWeights.data() + jointWeights.size(), weights.y) - jointWeights.data();
                                 int thirdWeightIndex = std::find(jointWeights.data(), jointWeights.data() + jointWeights.size(), weights.z) - jointWeights.data();
@@ -209,13 +209,11 @@ AnimatedMeshData ColladaLoader::LoadAnimatedMesh(const std::string& fileName) {
                                 glm::ivec3 IDs = glm::ivec3(valuesInt[firstJointID - 1], valuesInt[secondJointID - 1], valuesInt[thirdJointID - 1]);
                                 map[IDs] = weights;
                             } else {
-                                int element = 0;
                                 glm::vec3 weights;
                                 glm::ivec3 IDs;
                                 for (int k = 0; k < jointsAffectedCount[j]; k++) {
-                                    IDs[element] = valuesInt[k * 2];
-                                    weights[element] = jointWeights[valuesInt[k * 2 + 1]];
-                                    element++;
+                                    IDs[k] = valuesInt[k * 2];
+                                    weights[k] = jointWeights[valuesInt[k * 2 + 1]];
                                 }
                                 map[IDs] = weights;
                             }
@@ -256,13 +254,11 @@ AnimatedMeshData ColladaLoader::LoadAnimatedMesh(const std::string& fileName) {
                     glm::ivec3 IDs = glm::ivec3(valuesInt[firstJointID - 1], valuesInt[secondJointID - 1], valuesInt[thirdJointID - 1]);
                     map[IDs] = weights;
                 } else {
-                    int element = 0;
                     glm::vec3 weights;
                     glm::ivec3 IDs;
                     for (int k = 0; k < jointsAffectedCount[j]; k++) {
-                        IDs[element] = valuesInt[k * 2];
-                        weights[element] = jointWeights[valuesInt[k * 2 + 1]];
-                        element++;
+                        IDs[k] = valuesInt[k * 2];
+                        weights[k] = jointWeights[valuesInt[k * 2 + 1]];
                     }
                     map[IDs] = weights;
                 }
@@ -270,6 +266,9 @@ AnimatedMeshData ColladaLoader::LoadAnimatedMesh(const std::string& fileName) {
             }
         }
     }
+
+    file.clear();
+    file.seekg(0);
 
     while (getline(file, line)) {
         if (line.find("positions-array") != std::string::npos && line.find("accessor") == std::string::npos) {
@@ -358,8 +357,8 @@ AnimatedMeshData ColladaLoader::LoadAnimatedMesh(const std::string& fileName) {
                         vertex.position = positions[std::stoi(values[0])];
                         vertex.normal = normals[std::stoi(values[1])];
                         vertex.textureCoordinates = textureCoordinates[std::stoi(values[2])];
-                        vertex.jointIDs = jointsThatAffectVertex[j].begin()->first;
-                        vertex.jointWeights = jointsThatAffectVertex[j].begin()->second;
+                        vertex.jointIDs = jointsThatAffectVertex[std::stoi(values[0])].begin()->first;
+                        vertex.jointWeights = jointsThatAffectVertex[std::stoi(values[0])].begin()->second;
                         if (uniqueVertices.count(vertex) == 0) {
                             uniqueVertices[vertex] = static_cast<uint32_t>(meshData.vertices.size());
                             meshData.vertices.push_back(vertex);
@@ -383,8 +382,8 @@ AnimatedMeshData ColladaLoader::LoadAnimatedMesh(const std::string& fileName) {
             vertex.position = positions[std::stoi(values[0])];
             vertex.normal = normals[std::stoi(values[1])];
             vertex.textureCoordinates = textureCoordinates[std::stoi(values[2])];
-            vertex.jointIDs = jointsThatAffectVertex[j].begin()->first;
-            vertex.jointWeights = jointsThatAffectVertex[j].begin()->second;
+            vertex.jointIDs = jointsThatAffectVertex[std::stoi(values[0])].begin()->first;
+            vertex.jointWeights = jointsThatAffectVertex[std::stoi(values[0])].begin()->second;
             if (uniqueVertices.count(vertex) == 0) {
                 uniqueVertices[vertex] = static_cast<uint32_t>(meshData.vertices.size());
                 meshData.vertices.push_back(vertex);
@@ -400,6 +399,9 @@ AnimationData ColladaLoader::LoadAnimation(const std::string& fileName) {
     AnimationData animationData{};
     std::vector<std::string> jointNames;
     std::vector<std::string> jointHierarchy;
+    std::vector<Keyframe> keyframes;
+    std::vector<JointTransform> jointTransforms;
+    float length;
     Joint* rootJoint = nullptr;
     bool insideArmature = false;
 
@@ -407,6 +409,85 @@ AnimationData ColladaLoader::LoadAnimation(const std::string& fileName) {
     std::string line;
 
     while (getline(file, line)) {
+        if (keyframes.empty()) {
+            if (line.find("input-array") != std::string::npos && line.find("accessor") == std::string::npos) {
+                size_t offset = line.find(">") + 1;
+                size_t length = line.find("</") - offset;
+                std::string characters = line.substr(offset, length);
+                std::vector<std::string> timestamps;
+                timestamps.push_back("");
+                int i = 0;
+
+                for (auto character : characters) {
+                    if (character == ' ') {
+                        Keyframe keyframe{std::stof(timestamps[i])};
+                        keyframes.push_back(keyframe);
+                        i++;
+                        timestamps.push_back("");
+                        continue;
+                    }
+
+                    timestamps[i] += character;
+                }
+
+                length = std::stof(timestamps.back());
+            }
+        }
+
+        if (line.find("output-array") != std::string::npos && line.find("accessor") == std::string::npos) {
+            jointTransforms.clear();
+            size_t offset = line.find(">") + 1;
+            size_t length = line.find("</") - offset;
+            std::string characters = line.substr(offset, length);
+            std::vector<std::string> matrixRows;
+            matrixRows.push_back("");
+            int i = 0;
+
+            for (auto character : characters) {
+                if (character == ' ') {
+                    i++;
+                    if (i == 16) {
+                        std::array<float, 16> matrixArray {
+                            std::stof(matrixRows[0]), std::stof(matrixRows[1]), std::stof(matrixRows[2]), std::stof(matrixRows[3]),
+                            std::stof(matrixRows[4]), std::stof(matrixRows[5]), std::stof(matrixRows[6]), std::stof(matrixRows[7]),
+                            std::stof(matrixRows[8]), std::stof(matrixRows[9]), std::stof(matrixRows[10]), std::stof(matrixRows[11]),
+                            std::stof(matrixRows[12]), std::stof(matrixRows[13]), std::stof(matrixRows[14]), std::stof(matrixRows[15])
+                        };
+                        glm::mat4 matrix = glm::make_mat4(matrixArray.data());
+                        float* matrixElements = glm::value_ptr(matrix);
+                        JointTransform jointTransform{glm::vec3(matrixElements[3], matrixElements[7], matrixElements[11]), glm::quat_cast(matrix)};
+                        jointTransforms.push_back(jointTransform);
+                        i = 0;
+                        matrixRows.clear();
+                    }
+                    matrixRows.push_back("");
+                    continue;
+                }
+
+                matrixRows[i] += character;
+            }
+            std::array<float, 16> matrixArray {
+                std::stof(matrixRows[0]), std::stof(matrixRows[1]), std::stof(matrixRows[2]), std::stof(matrixRows[3]),
+                std::stof(matrixRows[4]), std::stof(matrixRows[5]), std::stof(matrixRows[6]), std::stof(matrixRows[7]),
+                std::stof(matrixRows[8]), std::stof(matrixRows[9]), std::stof(matrixRows[10]), std::stof(matrixRows[11]),
+                std::stof(matrixRows[12]), std::stof(matrixRows[13]), std::stof(matrixRows[14]), std::stof(matrixRows[15])
+            };
+            glm::mat4 matrix = glm::make_mat4(matrixArray.data());
+            float* matrixElements = glm::value_ptr(matrix);
+            JointTransform jointTransform{glm::vec3(matrixElements[3], matrixElements[7], matrixElements[11]), glm::quat_cast(matrix)};
+            jointTransforms.push_back(jointTransform);
+        }
+
+        if (line.find("<channel") != std::string::npos) {
+            size_t offset = line.find("target=") + 8;
+            size_t length = line.find("/") - offset;
+            std::string jointName = line.substr(offset, length);
+            
+            for (int i = 0; i < keyframes.size(); i++) {
+                keyframes[i].pose.insert({jointName, jointTransforms[i]});
+            }
+        }
+
         if (line.find("joints-array") != std::string::npos && line.find("accessor") == std::string::npos) {
             size_t offset = line.find(">") + 1;
             size_t length = line.find("</") - offset;
@@ -489,7 +570,9 @@ AnimationData ColladaLoader::LoadAnimation(const std::string& fileName) {
         }
     }
 
+    animationData.animation = Animation{length, keyframes};
     animationData.rootJoint = rootJoint;
+    animationData.jointCount = jointNames.size();
 
     return animationData;
 }

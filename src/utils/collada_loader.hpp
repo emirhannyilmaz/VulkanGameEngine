@@ -24,7 +24,9 @@ struct AnimatedMeshData {
 };
 
 struct AnimationData {
+    Animation animation;
     Joint* rootJoint;
+    int jointCount;
 };
 
 class ColladaLoader {
