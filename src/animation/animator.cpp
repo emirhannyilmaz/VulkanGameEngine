@@ -23,8 +23,7 @@ void Animator::update() {
 void Animator::increaseTime() {
     time += (float) renderer->deltaTime;
     if (time > animation->length) {
-        time = 0.0f;
-//        time = fmod(time, animation->length);
+        time = fmod(time, animation->length);
     }
 }
 
