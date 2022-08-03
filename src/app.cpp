@@ -64,11 +64,11 @@ void App::run() {
     AnimationData characterAnimationData = ColladaLoader::LoadAnimation("res/models/character.dae");
     AnimatedMesh* characterMesh = new AnimatedMesh(characterMeshData.vertices, characterMeshData.indices, renderer);
     Texture* characterTexture = new Texture("res/textures/character.png", 0.0f, 0.0f, renderer);
-    AnimatedEntity* character = new AnimatedEntity(characterMesh, characterTexture, characterAnimationData.rootJoint, characterAnimationData.jointCount, glm::vec3(10.0f, -10.0f, 10.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), renderer);
+    AnimatedEntity* character = new AnimatedEntity(characterMesh, characterTexture, characterAnimationData.rootJoint, characterAnimationData.jointCount, glm::vec3(10.0f, 0.0f, 10.0f), glm::vec3(90.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), renderer);
     animatedEntities.push_back(character);
 
-    Animator* animator = new Animator(character, renderer);
-    animator->setAnimation(&characterAnimationData.animation);
+    Animator* characterAnimator = new Animator(character, renderer);
+    characterAnimator->setAnimation(&characterAnimationData.animation);
 
     while (!glfwWindowShouldClose(window->window)) {
         glfwPollEvents();
@@ -76,7 +76,7 @@ void App::run() {
         light->update(1000.0f, renderer->deltaTime);
         perspectiveCamera->update(250.0f, renderer->deltaTime);
         orthographicCamera->update(perspectiveCamera, light->viewMatrix);
-        animator->update();
+        characterAnimator->update(2.0f);
 
         renderer->beginDrawing();
 
@@ -119,6 +119,8 @@ void App::run() {
 
     renderer->waitIdle();
 
+    delete characterAnimator;
+
     for (size_t i = 0; i < animatedEntities.size(); i++) {
         delete animatedEntities[i];
     }
@@ -147,6 +149,12 @@ void App::run() {
     delete shadowMapRenderer;
     delete animatedEntityRenderer;
     delete entityRenderer;
+    renderer->entityRenderer = nullptr;
+    renderer->animatedEntityRenderer = nullptr;
+    renderer->shadowMapRenderer = nullptr;
+    renderer->terrainRenderer = nullptr;
+    renderer->skyboxRenderer = nullptr;
+    renderer->waterRenderer = nullptr;
     delete renderer;
     delete orthographicCamera;
     delete perspectiveCamera;

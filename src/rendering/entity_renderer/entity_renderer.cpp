@@ -39,6 +39,7 @@ EntityRenderer::~EntityRenderer() {
     fragmentUniformBuffers.clear();
 
     delete descriptorPool;
+    DeleteGraphicsPipelines();
     Entity::DeleteDesriptorSetLayout();
     delete descriptorSetLayout;
 }

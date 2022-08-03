@@ -55,6 +55,7 @@ WaterRenderer::~WaterRenderer() {
     delete normalMap;
     delete dudvMap;
     delete descriptorPool;
+    DeleteGraphicsPipeline();
     WaterTile::DeleteDesriptorSetLayout();
     delete descriptorSetLayout;
 }

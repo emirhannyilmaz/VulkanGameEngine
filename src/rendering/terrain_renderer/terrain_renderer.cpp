@@ -43,6 +43,7 @@ TerrainRenderer::~TerrainRenderer() {
     fragmentUniformBuffers.clear();
 
     delete descriptorPool;
+    DeleteGraphicsPipelines();
     Terrain::DeleteDesriptorSetLayout();
     delete descriptorSetLayout;
 }

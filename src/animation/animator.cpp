@@ -10,18 +10,18 @@ void Animator::setAnimation(Animation* animation) {
     this->animation = animation;
 }
 
-void Animator::update() {
+void Animator::update(float speed) {
     if (animation == nullptr) {
         return;
     }
 
-    increaseTime();
+    increaseTime(speed);
     std::unordered_map<std::string, glm::mat4> currentPose = calculateCurrentPose();
     applyPoseToJoints(currentPose, entity->rootJoint, glm::mat4(1.0f));
 }
 
-void Animator::increaseTime() {
-    time += (float) renderer->deltaTime;
+void Animator::increaseTime(float speed) {
+    time += speed * renderer->deltaTime;
     if (time > animation->length) {
         time = fmod(time, animation->length);
     }

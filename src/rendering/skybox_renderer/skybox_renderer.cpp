@@ -39,6 +39,7 @@ SkyboxRenderer::~SkyboxRenderer() {
     fragmentUniformBuffers.clear();
 
     delete descriptorPool;
+    DeleteGraphicsPipelines();
     Skybox::DeleteDesriptorSetLayout();
     delete descriptorSetLayout;
 }

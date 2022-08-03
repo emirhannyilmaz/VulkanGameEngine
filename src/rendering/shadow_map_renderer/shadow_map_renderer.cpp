@@ -30,6 +30,7 @@ ShadowMapRenderer::~ShadowMapRenderer() {
     vertexUniformBuffers.clear();
 
     delete descriptorPool;
+    DeleteGraphicsPipeline();
     delete descriptorSetLayout;
 }
 

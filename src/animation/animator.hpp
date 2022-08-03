@@ -14,13 +14,13 @@ class Animator {
 public:
     Animator(AnimatedEntity* entity, Renderer* renderer);
     void setAnimation(Animation* animation);
-    void update();
+    void update(float speed);
 private:
     AnimatedEntity* entity;
     Renderer* renderer;
     Animation* animation = nullptr;
     float time = 0.0f;
-    void increaseTime();
+    void increaseTime(float speed);
     std::unordered_map<std::string, glm::mat4> calculateCurrentPose();
     void applyPoseToJoints(std::unordered_map<std::string, glm::mat4>& currentPose, Joint* joint, glm::mat4 parentTransform);
     std::array<Keyframe, 2> getPreviousAndNextFrames();

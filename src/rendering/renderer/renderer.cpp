@@ -278,12 +278,14 @@ void Renderer::recreateSwapchain() {
 }
 
 void Renderer::cleanUpSwapchain() {
-    waterRenderer->DeleteGraphicsPipeline();
-    terrainRenderer->DeleteGraphicsPipelines();
-    skyboxRenderer->DeleteGraphicsPipelines();
-    shadowMapRenderer->DeleteGraphicsPipeline();
-    animatedEntityRenderer->DeleteGraphicsPipelines();
-    entityRenderer->DeleteGraphicsPipelines();
+    if (entityRenderer != nullptr) {
+        waterRenderer->DeleteGraphicsPipeline();
+        terrainRenderer->DeleteGraphicsPipelines();
+        skyboxRenderer->DeleteGraphicsPipelines();
+        shadowMapRenderer->DeleteGraphicsPipeline();
+        animatedEntityRenderer->DeleteGraphicsPipelines();
+        entityRenderer->DeleteGraphicsPipelines();
+    }
     delete shadowMapResources;
     delete waterResources;
 

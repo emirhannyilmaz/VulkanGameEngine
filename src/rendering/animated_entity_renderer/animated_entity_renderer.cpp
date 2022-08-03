@@ -39,6 +39,7 @@ AnimatedEntityRenderer::~AnimatedEntityRenderer() {
     fragmentUniformBuffers.clear();
 
     delete descriptorPool;
+    DeleteGraphicsPipelines();
     AnimatedEntity::DeleteDesriptorSetLayout();
     delete descriptorSetLayout;
 }

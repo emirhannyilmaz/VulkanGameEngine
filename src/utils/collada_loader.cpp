@@ -19,7 +19,7 @@ MeshData ColladaLoader::LoadMesh(const std::string& fileName) {
             for (auto character : characters) {
                 if (character == ' ') {
                     if (i == 2) {
-                        positions.push_back(glm::vec3(std::stof(position[0]), std::stof(position[1]) * -1.0f, std::stof(position[2])));
+                        positions.push_back(glm::vec3(std::stof(position[0]), std::stof(position[1]), std::stof(position[2])));
                         i = 0;
                         position[0] = "";
                         position[1] = "";
@@ -32,7 +32,7 @@ MeshData ColladaLoader::LoadMesh(const std::string& fileName) {
 
                 position[i] += character;
             }
-            positions.push_back(glm::vec3(std::stof(position[0]), std::stof(position[1]) * -1.0f, std::stof(position[2])));
+            positions.push_back(glm::vec3(std::stof(position[0]), std::stof(position[1]), std::stof(position[2])));
         }
         if (line.find("normals-array") != std::string::npos && line.find("accessor") == std::string::npos) {
             size_t offset = line.find(">") + 1;
@@ -43,7 +43,7 @@ MeshData ColladaLoader::LoadMesh(const std::string& fileName) {
             for (auto character : characters) {
                 if (character == ' ') {
                     if (i == 2) {
-                        normals.push_back(glm::vec3(std::stof(normal[0]), std::stof(normal[1]) * -1.0f, std::stof(normal[2])));
+                        normals.push_back(glm::vec3(std::stof(normal[0]), std::stof(normal[1]), std::stof(normal[2])));
                         i = 0;
                         normal[0] = "";
                         normal[1] = "";
@@ -56,7 +56,7 @@ MeshData ColladaLoader::LoadMesh(const std::string& fileName) {
 
                 normal[i] += character;
             }
-            normals.push_back(glm::vec3(std::stof(normal[0]), std::stof(normal[1]) * -1.0f, std::stof(normal[2])));
+            normals.push_back(glm::vec3(std::stof(normal[0]), std::stof(normal[1]), std::stof(normal[2])));
         }
         if (line.find("map-0-array") != std::string::npos && line.find("accessor") == std::string::npos) {
             size_t offset = line.find(">") + 1;
@@ -99,7 +99,7 @@ MeshData ColladaLoader::LoadMesh(const std::string& fileName) {
                             uniqueVertices[vertex] = static_cast<uint32_t>(meshData.vertices.size());
                             meshData.vertices.push_back(vertex);
                         }
-                        meshData.indices.push_back(uniqueVertices[vertex]);
+                        meshData.indices.insert(meshData.indices.begin(), uniqueVertices[vertex]);
                         i = 0;
                         values[0] = "";
                         values[1] = "";
@@ -121,7 +121,7 @@ MeshData ColladaLoader::LoadMesh(const std::string& fileName) {
                 uniqueVertices[vertex] = static_cast<uint32_t>(meshData.vertices.size());
                 meshData.vertices.push_back(vertex);
             }
-            meshData.indices.push_back(uniqueVertices[vertex]);
+            meshData.indices.insert(meshData.indices.begin(), uniqueVertices[vertex]);
         }
     }
 
@@ -293,7 +293,7 @@ AnimatedMeshData ColladaLoader::LoadAnimatedMesh(const std::string& fileName) {
             for (auto character : characters) {
                 if (character == ' ') {
                     if (i == 2) {
-                        positions.push_back(glm::vec3(std::stof(position[0]), std::stof(position[1]) * -1.0f, std::stof(position[2])));
+                        positions.push_back(glm::vec3(std::stof(position[0]), std::stof(position[1]), std::stof(position[2])));
                         i = 0;
                         position[0] = "";
                         position[1] = "";
@@ -306,7 +306,7 @@ AnimatedMeshData ColladaLoader::LoadAnimatedMesh(const std::string& fileName) {
 
                 position[i] += character;
             }
-            positions.push_back(glm::vec3(std::stof(position[0]), std::stof(position[1]) * -1.0f, std::stof(position[2])));
+            positions.push_back(glm::vec3(std::stof(position[0]), std::stof(position[1]), std::stof(position[2])));
         }
         if (line.find("normals-array") != std::string::npos && line.find("accessor") == std::string::npos) {
             size_t offset = line.find(">") + 1;
@@ -317,7 +317,7 @@ AnimatedMeshData ColladaLoader::LoadAnimatedMesh(const std::string& fileName) {
             for (auto character : characters) {
                 if (character == ' ') {
                     if (i == 2) {
-                        normals.push_back(glm::vec3(std::stof(normal[0]), std::stof(normal[1]) * -1.0f, std::stof(normal[2])));
+                        normals.push_back(glm::vec3(std::stof(normal[0]), std::stof(normal[1]), std::stof(normal[2])));
                         i = 0;
                         normal[0] = "";
                         normal[1] = "";
@@ -330,7 +330,7 @@ AnimatedMeshData ColladaLoader::LoadAnimatedMesh(const std::string& fileName) {
 
                 normal[i] += character;
             }
-            normals.push_back(glm::vec3(std::stof(normal[0]), std::stof(normal[1]) * -1.0f, std::stof(normal[2])));
+            normals.push_back(glm::vec3(std::stof(normal[0]), std::stof(normal[1]), std::stof(normal[2])));
         }
         if (line.find("map-0-array") != std::string::npos && line.find("accessor") == std::string::npos) {
             size_t offset = line.find(">") + 1;
@@ -375,7 +375,7 @@ AnimatedMeshData ColladaLoader::LoadAnimatedMesh(const std::string& fileName) {
                             uniqueVertices[vertex] = static_cast<uint32_t>(meshData.vertices.size());
                             meshData.vertices.push_back(vertex);
                         }
-                        meshData.indices.push_back(uniqueVertices[vertex]);
+                        meshData.indices.insert(meshData.indices.begin(), uniqueVertices[vertex]);
                         i = 0;
                         values[0] = "";
                         values[1] = "";
@@ -399,7 +399,7 @@ AnimatedMeshData ColladaLoader::LoadAnimatedMesh(const std::string& fileName) {
                 uniqueVertices[vertex] = static_cast<uint32_t>(meshData.vertices.size());
                 meshData.vertices.push_back(vertex);
             }
-            meshData.indices.push_back(uniqueVertices[vertex]);
+            meshData.indices.insert(meshData.indices.begin(), uniqueVertices[vertex]);
         }
     }
 
@@ -468,8 +468,7 @@ AnimationData ColladaLoader::LoadAnimation(const std::string& fileName) {
                         };
                         glm::mat4 matrix = glm::make_mat4(matrixArray.data());
                         matrix = glm::transpose(matrix);
-                        float* matrixElements = glm::value_ptr(matrix);
-                        JointTransform jointTransform{glm::vec3(matrixElements[3], matrixElements[7] * -1.0f, matrixElements[11]), glm::quat_cast(matrix)};
+                        JointTransform jointTransform{glm::vec3(matrix[3][0], matrix[3][1], matrix[3][2]), glm::quat_cast(matrix)};
                         jointTransforms.push_back(jointTransform);
                         i = 0;
                         matrixRows.clear();
@@ -488,8 +487,7 @@ AnimationData ColladaLoader::LoadAnimation(const std::string& fileName) {
             };
             glm::mat4 matrix = glm::make_mat4(matrixArray.data());
             matrix = glm::transpose(matrix);
-            float* matrixElements = glm::value_ptr(matrix);
-            JointTransform jointTransform{glm::vec3(matrixElements[3], matrixElements[7] * -1.0f, matrixElements[11]), glm::quat_cast(matrix)};
+            JointTransform jointTransform{glm::vec3(matrix[3][0], matrix[3][1], matrix[3][2]), glm::quat_cast(matrix)};
             jointTransforms.push_back(jointTransform);
         }
 
@@ -558,7 +556,7 @@ AnimationData ColladaLoader::LoadAnimation(const std::string& fileName) {
 
             std::array<float, 16> matrixArray {
                 std::stof(matrixRows[0]), std::stof(matrixRows[1]), std::stof(matrixRows[2]), std::stof(matrixRows[3]),
-                std::stof(matrixRows[4]), std::stof(matrixRows[5]), std::stof(matrixRows[6]), std::stof(matrixRows[7]) * -1.0f,
+                std::stof(matrixRows[4]), std::stof(matrixRows[5]), std::stof(matrixRows[6]), std::stof(matrixRows[7]),
                 std::stof(matrixRows[8]), std::stof(matrixRows[9]), std::stof(matrixRows[10]), std::stof(matrixRows[11]),
                 std::stof(matrixRows[12]), std::stof(matrixRows[13]), std::stof(matrixRows[14]), std::stof(matrixRows[15])
             };
