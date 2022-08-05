@@ -71,7 +71,7 @@ void WaterTile::DeleteDesriptorSetLayout() {
 }
 
 void WaterTile::createMesh() {
-    std::vector<Vertex> vertices;
+    std::vector<WaterVertex> vertices;
     vertices.resize(scale.x * scale.y);
 	std::vector<uint32_t> indices;
     indices.resize(6 * (scale.x - 1) * (scale.y - 1));
@@ -80,8 +80,6 @@ void WaterTile::createMesh() {
 		for (int x = 0; x < scale.x; x++) {
             glm::vec3 position = glm::vec3((float) x / ((float) scale.x - 1), 0.0f, (float) z / ((float) scale.y - 1));
 			vertices[vertexPointer].position = position;
-			vertices[vertexPointer].normal = glm::vec3(0.0f, 0.0f, 0.0f);
-			vertices[vertexPointer].textureCoordinates = glm::vec2(0.0f, 0.0f);
 			vertexPointer++;
 		}
 	}
@@ -101,5 +99,5 @@ void WaterTile::createMesh() {
         }
 	}
 
-    mesh = new Mesh(vertices, indices, renderer);
+    mesh = new WaterMesh(vertices, indices, renderer);
 }

@@ -2,12 +2,12 @@
 #define water_tile_hpp
 
 #include <glm/glm.hpp>
-#include "../rendering/descriptor_pool.hpp"
-#include "../rendering/descriptor_set_layout.hpp"
-#include "../rendering/descriptor_sets.hpp"
-#include "../rendering/renderer_info.hpp"
-#include "../rendering/renderer.hpp"
-#include "../rendering/mesh.hpp"
+#include "../rendering/renderer/descriptor_pool.hpp"
+#include "../rendering/renderer/descriptor_set_layout.hpp"
+#include "../rendering/renderer/descriptor_sets.hpp"
+#include "../rendering/renderer/renderer_info.hpp"
+#include "../rendering/renderer/renderer.hpp"
+#include "../rendering/water_renderer/water_mesh.hpp"
 
 struct WaterTileVertexUniformBufferObject {
     alignas(16) glm::mat4 modelMatrix;
@@ -20,7 +20,7 @@ struct WaterTileFragmentUniformBufferObject {
 
 class WaterTile {
 public:
-    Mesh* mesh;
+    WaterMesh* mesh;
     glm::vec3 position;
     glm::vec2 scale;
     float reflectivity;

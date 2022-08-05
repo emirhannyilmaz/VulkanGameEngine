@@ -1,13 +1,13 @@
 #ifndef terrain_hpp
 #define terrain_hpp
 
-#include "../rendering/mesh.hpp"
+#include "../rendering/terrain_renderer/terrain_mesh.hpp"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include "../rendering/descriptor_pool.hpp"
-#include "../rendering/descriptor_set_layout.hpp"
-#include "../rendering/descriptor_sets.hpp"
-#include "../rendering/renderer_info.hpp"
+#include "../rendering/renderer/descriptor_pool.hpp"
+#include "../rendering/renderer/descriptor_set_layout.hpp"
+#include "../rendering/renderer/descriptor_sets.hpp"
+#include "../rendering/renderer/renderer_info.hpp"
 #include <stb_image.h>
 
 class Texture;
@@ -23,7 +23,7 @@ struct TerrainFragmentUniformBufferObject {
 
 class Terrain {
 public:
-    Mesh* mesh;
+    TerrainMesh* mesh;
     Texture* texture;
     static DescriptorSetLayout* descriptorSetLayout;
     DescriptorSets* descriptorSets;
@@ -39,8 +39,8 @@ private:
     Renderer* renderer;
     std::vector<Buffer*> vertexUniformBuffers;
     std::vector<Buffer*> fragmentUniformBuffers;
-    const float SIZE = 100.0f;
-    const float MAX_HEIGHT = 20.0f;
+    const float SIZE = 800.0f;
+    const float MAX_HEIGHT = 40.0f;
     std::vector<std::vector<glm::vec3>> vertexPositions;
     void createMesh(const std::string& heightMapFileName);
     float getHeight(int x, int z, int width, int height, stbi_uc* heightMapPixels);

@@ -29,8 +29,8 @@ layout(location = 5) out float fragVisibility;
 
 const float tiling = 40.0;
 const float transitionDistance = 10.0;
-const float fogDensity = 0.01;
-const float fogGradient = 1.2;
+const float fogDensity = 0.004;
+const float fogGradient = 1.5;
 
 void main() {
     vec4 worldPosition = tvubo.modelMatrix * vec4(position, 1.0);

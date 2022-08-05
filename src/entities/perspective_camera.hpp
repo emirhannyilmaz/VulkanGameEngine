@@ -1,6 +1,7 @@
 #ifndef perspective_camera_hpp
 #define perspective_camera_hpp
 
+#include "../rendering/renderer/renderer_info.hpp"
 #include "../io/input.hpp"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -14,7 +15,6 @@ public:
     float aspectRatio;
     float nearPlane;
     float farPlane;
-    float fakeFarPlane;
     float nearPlaneWidth;
     float nearPlaneHeight;
     float farPlaneWidth;
@@ -25,7 +25,7 @@ public:
     glm::vec3 down;
     glm::vec3 right;
     glm::vec3 left;
-    PerspectiveCamera(glm::vec3 position, glm::vec3 rotation, float fieldOfView, float aspectRatio, float nearPlane, float farPlane, float fakeFarPlane);
+    PerspectiveCamera(glm::vec3 position, glm::vec3 rotation, float fieldOfView, float aspectRatio, float nearPlane, float farPlane);
     void update(float speed, float deltaTime);
     glm::mat4 createViewMatrix();
     glm::mat4 createProjectionMatrix();

@@ -1,12 +1,12 @@
 #ifndef skybox_hpp
 #define skybox_hpp
 
-#include "../rendering/texture.hpp"
-#include "../rendering/descriptor_pool.hpp"
-#include "../rendering/descriptor_set_layout.hpp"
-#include "../rendering/descriptor_sets.hpp"
-#include "../rendering/renderer_info.hpp"
-#include "../rendering/buffer.hpp"
+#include "../rendering/renderer/texture.hpp"
+#include "../rendering/renderer/descriptor_pool.hpp"
+#include "../rendering/renderer/descriptor_set_layout.hpp"
+#include "../rendering/renderer/descriptor_sets.hpp"
+#include "../rendering/renderer/renderer_info.hpp"
+#include "../rendering/renderer/buffer.hpp"
 
 struct SkyboxVertexUniformBufferObject {
     alignas(4) float size;

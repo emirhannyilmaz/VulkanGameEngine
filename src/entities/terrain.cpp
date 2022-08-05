@@ -1,6 +1,6 @@
 #include "terrain.hpp"
-#include "../rendering/texture.hpp"
-#include "../rendering/renderer.hpp"
+#include "../rendering/renderer/texture.hpp"
+#include "../rendering/renderer/renderer.hpp"
 
 DescriptorSetLayout* Terrain::descriptorSetLayout = nullptr;
 
@@ -112,7 +112,7 @@ void Terrain::createMesh(const std::string& heightMapFileName) {
 
     vertexPositions.resize(vertexCount, std::vector<glm::vec3>(vertexCount)); 
 
-    std::vector<Vertex> vertices;
+    std::vector<TerrainVertex> vertices;
     vertices.resize(vertexCount * vertexCount);
 	std::vector<uint32_t> indices;
     indices.resize(6 * (vertexCount - 1) * (vertexCount - 1));
@@ -143,7 +143,7 @@ void Terrain::createMesh(const std::string& heightMapFileName) {
         }
 	}
 
-    mesh = new Mesh(vertices, indices, renderer);
+    mesh = new TerrainMesh(vertices, indices, renderer);
 }
 
 float Terrain::getHeight(int x, int z, int width, int height, stbi_uc* heightMapPixels) {
@@ -165,8 +165,8 @@ float Terrain::getHeight(int x, int z, int width, int height, stbi_uc* heightMap
 glm::vec3 Terrain::getNormal(int x, int z, int width, int height, stbi_uc* heightMapPixels) {
     float heightL = getHeight(x - 1, z, width, height, heightMapPixels);
     float heightR = getHeight(x + 1, z, width, height, heightMapPixels);
-    float heightD = getHeight(z, z - 1, width, height, heightMapPixels);
-    float heightU = getHeight(z, z + 1, width, height, heightMapPixels);
+    float heightD = getHeight(x, z + 1, width, height, heightMapPixels);
+    float heightU = getHeight(x, z - 1, width, height, heightMapPixels);
     glm::vec3 normal = glm::vec3(heightL - heightR, -2.0f, heightD - heightU);
     normal = glm::normalize(normal);
 

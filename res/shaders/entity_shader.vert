@@ -24,8 +24,8 @@ layout(location = 2) out vec3 fragToLightVector;
 layout(location = 3) out vec3 fragToCameraVector;
 layout(location = 4) out float fragVisibility;
 
-const float fogDensity = 0.01;
-const float fogGradient = 1.2;
+const float fogDensity = 0.004;
+const float fogGradient = 1.5;
 
 void main() {
     vec4 worldPosition = evubo.modelMatrix * vec4(position, 1.0);

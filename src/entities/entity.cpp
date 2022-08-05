@@ -1,10 +1,10 @@
 #include "entity.hpp"
-#include "../rendering/texture.hpp"
-#include "../rendering/renderer.hpp"
+#include "../rendering/renderer/texture.hpp"
+#include "../rendering/renderer/renderer.hpp"
 
 DescriptorSetLayout* Entity::descriptorSetLayout = nullptr;
 
-Entity::Entity(Mesh* mesh, Texture* texture, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale, Renderer* renderer) {
+Entity::Entity(EntityMesh* mesh, Texture* texture, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale, Renderer* renderer) {
     this->mesh = mesh;
     this->texture = texture;
     this->position = position;
