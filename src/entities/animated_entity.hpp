@@ -1,7 +1,7 @@
 #ifndef animated_entity_hpp
 #define animated_entity_hpp
 
-#include "../rendering/animated_entity_renderer/animated_mesh.hpp"
+#include "../rendering/animated_entity_renderer/animated_entity_mesh.hpp"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include "../rendering/renderer/descriptor_pool.hpp"
@@ -24,7 +24,7 @@ struct AnimatedEntityFragmentUniformBufferObject {
 
 class AnimatedEntity {
 public:
-    AnimatedMesh* mesh;
+    AnimatedEntityMesh* mesh;
     Texture* texture;
     Joint* rootJoint;
     int jointCount;
@@ -33,7 +33,7 @@ public:
     glm::vec3 position;
     glm::vec3 rotation;
     glm::vec3 scale;
-    AnimatedEntity(AnimatedMesh* mesh, Texture* texture, Joint* rootJoint, int jointCount, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale, Renderer* renderer);
+    AnimatedEntity(AnimatedEntityMesh* mesh, Texture* texture, Joint* rootJoint, int jointCount, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale, Renderer* renderer);
     ~AnimatedEntity();
     std::vector<glm::mat4> getJointTransforms();
     void addJointTransformToVector(Joint* parentJoint, std::vector<glm::mat4>& jointTransforms);

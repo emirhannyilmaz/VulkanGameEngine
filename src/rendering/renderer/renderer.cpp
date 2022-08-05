@@ -1,7 +1,8 @@
 #include "renderer.hpp"
 #include "../entity_renderer/entity_renderer.hpp"
 #include "../animated_entity_renderer/animated_entity_renderer.hpp"
-#include "../shadow_map_renderer/shadow_map_renderer.hpp"
+#include "../shadow_map_renderer/entity_shadow_map_renderer.hpp"
+#include "../shadow_map_renderer/animated_entity_shadow_map_renderer.hpp"
 #include "../terrain_renderer/terrain_renderer.hpp"
 #include "../skybox_renderer/skybox_renderer.hpp"
 #include "../water_renderer/water_renderer.hpp"
@@ -12,7 +13,7 @@ Renderer::Renderer(Window* window, PerspectiveCamera* perspectiveCamera) {
 
     instance = new Instance(window->title);
 
-    if (enableValidationLayers) {
+    if (ENABLE_VALIDATION_LAYERS) {
         messenger = new Messenger(instance->instance);
     }
 
@@ -269,7 +270,8 @@ void Renderer::recreateSwapchain() {
     terrainRenderer->updateDescriptorSetImageInfos();
     entityRenderer->CreateGraphicsPipelines();
     animatedEntityRenderer->CreateGraphicsPipelines();
-    shadowMapRenderer->CreateGraphicsPipeline();
+    entityShadowMapRenderer->CreateGraphicsPipeline();
+    animatedEntityShadowMapRenderer->CreateGraphicsPipeline();
     skyboxRenderer->CreateGraphicsPipelines();
     terrainRenderer->CreateGraphicsPipelines();
     waterRenderer->CreateGraphicsPipeline();
@@ -282,7 +284,8 @@ void Renderer::cleanUpSwapchain() {
         waterRenderer->DeleteGraphicsPipeline();
         terrainRenderer->DeleteGraphicsPipelines();
         skyboxRenderer->DeleteGraphicsPipelines();
-        shadowMapRenderer->DeleteGraphicsPipeline();
+        animatedEntityShadowMapRenderer->DeleteGraphicsPipeline();
+        entityShadowMapRenderer->DeleteGraphicsPipeline();
         animatedEntityRenderer->DeleteGraphicsPipelines();
         entityRenderer->DeleteGraphicsPipelines();
     }

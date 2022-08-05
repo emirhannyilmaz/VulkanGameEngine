@@ -1,8 +1,8 @@
 #ifndef collada_loader_hpp
 #define collada_loader_hpp
 
-#include "../rendering/entity_renderer/vertex.hpp"
-#include "../rendering/animated_entity_renderer/animated_vertex.hpp"
+#include "../rendering/entity_renderer/entity_vertex.hpp"
+#include "../rendering/animated_entity_renderer/animated_entity_vertex.hpp"
 #include "../entities/joint.hpp"
 #include "../animation/animation.hpp"
 #include <string>
@@ -15,12 +15,12 @@
 #include <glm/gtx/string_cast.hpp>
 
 struct MeshData {
-    std::vector<Vertex> vertices;
+    std::vector<EntityVertex> vertices;
     std::vector<uint32_t> indices;
 };
 
 struct AnimatedMeshData {
-    std::vector<AnimatedVertex> vertices;
+    std::vector<AnimatedEntityVertex> vertices;
     std::vector<uint32_t> indices;
 };
 

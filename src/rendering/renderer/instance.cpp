@@ -1,7 +1,7 @@
 #include "instance.hpp"
 
 Instance::Instance(std::string applicationName) {
-    if (enableValidationLayers && !checkValidationLayerSupport()) {
+    if (ENABLE_VALIDATION_LAYERS && !checkValidationLayerSupport()) {
         throw std::runtime_error("Validation layers requested, but not available!");
     }
     
@@ -23,9 +23,9 @@ Instance::Instance(std::string applicationName) {
     instanceCreateInfo.ppEnabledExtensionNames = extensions.data();
     
     VkDebugUtilsMessengerCreateInfoEXT messengerCreateInfo{};
-    if (enableValidationLayers) {
-        instanceCreateInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
-        instanceCreateInfo.ppEnabledLayerNames = validationLayers.data();
+    if (ENABLE_VALIDATION_LAYERS) {
+        instanceCreateInfo.enabledLayerCount = static_cast<uint32_t>(VALIDATION_LAYERS.size());
+        instanceCreateInfo.ppEnabledLayerNames = VALIDATION_LAYERS.data();
         
         messengerCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
         messengerCreateInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
@@ -56,7 +56,7 @@ bool Instance::checkValidationLayerSupport() {
     std::vector<VkLayerProperties> availableLayers(layerCount);
     vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
     
-    for (const char* layerName : validationLayers) {
+    for (const char* layerName : VALIDATION_LAYERS) {
         bool layerFound = false;
         
         for (const auto& layerProperties : availableLayers) {
@@ -81,7 +81,7 @@ std::vector<const char*> Instance::getRequiredExtensions() {
     
     std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
     
-    if (enableValidationLayers) {
+    if (ENABLE_VALIDATION_LAYERS) {
         extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
     }
     

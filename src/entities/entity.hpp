@@ -1,7 +1,7 @@
 #ifndef entity_hpp
 #define entity_hpp
 
-#include "../rendering/entity_renderer/mesh.hpp"
+#include "../rendering/entity_renderer/entity_mesh.hpp"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include "../rendering/renderer/descriptor_pool.hpp"
@@ -22,14 +22,14 @@ struct EntityFragmentUniformBufferObject {
 
 class Entity {
 public:
-    Mesh* mesh;
+    EntityMesh* mesh;
     Texture* texture;
     static DescriptorSetLayout* descriptorSetLayout;
     DescriptorSets* descriptorSets;
     glm::vec3 position;
     glm::vec3 rotation;
     glm::vec3 scale;
-    Entity(Mesh* mesh, Texture* texture, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale, Renderer* renderer);
+    Entity(EntityMesh* mesh, Texture* texture, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale, Renderer* renderer);
     ~Entity();
     void updateDescriptorSetResources();
     static void CreateDesriptorSetLayout(VkDevice& device);

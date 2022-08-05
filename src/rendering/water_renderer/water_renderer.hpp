@@ -31,7 +31,7 @@ public:
     ~WaterRenderer();
     void CreateGraphicsPipeline();
     void DeleteGraphicsPipeline();
-    void render(std::vector<WaterTile*> waterTiles, PerspectiveCamera* perspectiveCamera, Light* light, glm::vec3 fogColor, CommandBuffers* commandBuffers);
+    void render(std::vector<WaterTile*> waterTiles, PerspectiveCamera* perspectiveCamera, Light* light, CommandBuffers* commandBuffers);
     void updateDescriptorSetImageInfos();
 private:
     Renderer* renderer;
@@ -45,7 +45,7 @@ private:
     std::vector<Buffer*> fragmentUniformBuffers;
     const float waveSpeed = 0.2f;
     float moveFactor = 0.0f;
-    void updateDescriptorSetResources(PerspectiveCamera* perspectiveCamera, Light* light, glm::vec3 fogColor);
+    void updateDescriptorSetResources(PerspectiveCamera* perspectiveCamera, Light* light);
 };
 
 #endif

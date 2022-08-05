@@ -1,7 +1,7 @@
-#include "mesh.hpp"
+#include "entity_mesh.hpp"
 #include "../renderer/renderer.hpp"
 
-Mesh::Mesh(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, Renderer* renderer) {
+EntityMesh::EntityMesh(std::vector<EntityVertex>& vertices, std::vector<uint32_t>& indices, Renderer* renderer) {
     this->indicesSize = indices.size();
 
     // Vertex buffer
@@ -29,7 +29,7 @@ Mesh::Mesh(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, Render
     delete stagingBufferForIndexBuffer;
 }
 
-Mesh::~Mesh() {
+EntityMesh::~EntityMesh() {
     delete vertexBuffer;
     delete indexBuffer;
 }

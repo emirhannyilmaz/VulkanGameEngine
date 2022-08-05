@@ -1,16 +1,15 @@
 #include "perspective_camera.hpp"
 
-PerspectiveCamera::PerspectiveCamera(glm::vec3 position, glm::vec3 rotation, float fieldOfView, float aspectRatio, float nearPlane, float farPlane, float fakeFarPlane) {
+PerspectiveCamera::PerspectiveCamera(glm::vec3 position, glm::vec3 rotation, float fieldOfView, float aspectRatio, float nearPlane, float farPlane) {
     this->position = position;
     this->rotation = rotation;
     this->fieldOfView = fieldOfView;
     this->aspectRatio = aspectRatio;
     this->nearPlane = nearPlane;
     this->farPlane = farPlane;
-    this->fakeFarPlane = fakeFarPlane;
 
     nearPlaneWidth = nearPlane * glm::tan(glm::radians(fieldOfView));
-    farPlaneWidth = fakeFarPlane * glm::tan(glm::radians(fieldOfView));
+    farPlaneWidth = SHADOW_DISTANCE * glm::tan(glm::radians(fieldOfView));
 }
 
 void PerspectiveCamera::update(float speed, float deltaTime) {
@@ -81,7 +80,7 @@ void PerspectiveCamera::revert() {
 
 std::array<glm::vec3, 8> PerspectiveCamera::createFrustumVertices() {
     glm::vec3 toNearPlane = forward * nearPlane;
-    glm::vec3 toFarPlane = forward * fakeFarPlane;
+    glm::vec3 toFarPlane = forward * SHADOW_DISTANCE;
     glm::vec3 centerNearPlane = toNearPlane + position;
     glm::vec3 centerFarPlane = toFarPlane + position;
 

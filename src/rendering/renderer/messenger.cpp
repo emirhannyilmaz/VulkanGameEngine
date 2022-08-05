@@ -3,7 +3,7 @@
 Messenger::Messenger(VkInstance& instance) {
     this->instance = instance;
 
-    if (!enableValidationLayers) {
+    if (!ENABLE_VALIDATION_LAYERS) {
         return;
     }
     
@@ -22,7 +22,7 @@ Messenger::Messenger(VkInstance& instance) {
 }
 
 Messenger::~Messenger() {
-    if (enableValidationLayers) {
+    if (ENABLE_VALIDATION_LAYERS) {
         auto func = (PFN_vkDestroyDebugUtilsMessengerEXT) vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
         func(instance, messenger, nullptr);
     }

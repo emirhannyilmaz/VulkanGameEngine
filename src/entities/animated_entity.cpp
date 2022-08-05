@@ -4,7 +4,7 @@
 
 DescriptorSetLayout* AnimatedEntity::descriptorSetLayout = nullptr;
 
-AnimatedEntity::AnimatedEntity(AnimatedMesh* mesh, Texture* texture, Joint* rootJoint, int jointCount, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale, Renderer* renderer) {
+AnimatedEntity::AnimatedEntity(AnimatedEntityMesh* mesh, Texture* texture, Joint* rootJoint, int jointCount, glm::vec3 position, glm::vec3 rotation, glm::vec3 scale, Renderer* renderer) {
     this->mesh = mesh;
     this->texture = texture;
     this->rootJoint = rootJoint;

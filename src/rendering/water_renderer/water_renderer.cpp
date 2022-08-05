@@ -75,8 +75,8 @@ void WaterRenderer::DeleteGraphicsPipeline() {
     delete graphicsPipeline;
 }
 
-void WaterRenderer::render(std::vector<WaterTile*> waterTiles, PerspectiveCamera* perspectiveCamera, Light* light, glm::vec3 fogColor, CommandBuffers* commandBuffers) {
-    updateDescriptorSetResources(perspectiveCamera, light, fogColor);
+void WaterRenderer::render(std::vector<WaterTile*> waterTiles, PerspectiveCamera* perspectiveCamera, Light* light, CommandBuffers* commandBuffers) {
+    updateDescriptorSetResources(perspectiveCamera, light);
 
     VkCommandBuffer commandBuffer = commandBuffers->commandBuffers[renderer->currentFrame];
 
@@ -103,7 +103,7 @@ void WaterRenderer::updateDescriptorSetImageInfos() {
     }
 }
 
-void WaterRenderer::updateDescriptorSetResources(PerspectiveCamera* perspectiveCamera, Light* light, glm::vec3 fogColor) {
+void WaterRenderer::updateDescriptorSetResources(PerspectiveCamera* perspectiveCamera, Light* light) {
     WaterRendererVertexUniformBufferObject vertexUbo{};
     vertexUbo.viewMatrix = perspectiveCamera->createViewMatrix();
     vertexUbo.projectionMatrix = perspectiveCamera->createProjectionMatrix();
@@ -120,7 +120,7 @@ void WaterRenderer::updateDescriptorSetResources(PerspectiveCamera* perspectiveC
     fragmentUbo.lightColor = light->color;
     fragmentUbo.nearPlane = perspectiveCamera->nearPlane;
     fragmentUbo.farPlane = perspectiveCamera->farPlane;
-    fragmentUbo.fogColor = fogColor;
+    fragmentUbo.fogColor = FOG_COLOR;
     void* fubData;
     vkMapMemory(renderer->device->device, fragmentUniformBuffers[renderer->currentFrame]->bufferMemory, 0, sizeof(fragmentUbo), 0, &fubData);
     memcpy(fubData, &fragmentUbo, sizeof(fragmentUbo));

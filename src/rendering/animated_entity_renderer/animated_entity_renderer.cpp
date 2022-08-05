@@ -45,8 +45,8 @@ AnimatedEntityRenderer::~AnimatedEntityRenderer() {
 }
 
 void AnimatedEntityRenderer::CreateGraphicsPipelines() {
-    auto bindingDescription = AnimatedVertex::getBindingDescription();
-    auto attributeDescriptions = AnimatedVertex::getAttributeDescriptions();
+    auto bindingDescription = AnimatedEntityVertex::getBindingDescription();
+    auto attributeDescriptions = AnimatedEntityVertex::getAttributeDescriptions();
 
     std::array<VkDescriptorSetLayout, 2> descriptorSetLayouts{};
     descriptorSetLayouts[0] = descriptorSetLayout->descriptorSetLayout;
@@ -64,8 +64,8 @@ void AnimatedEntityRenderer::DeleteGraphicsPipelines() {
     delete offScreenGraphicsPipeline;
 }
 
-void AnimatedEntityRenderer::render(std::vector<AnimatedEntity*> animatedEntities, Light* light, PerspectiveCamera* perspectiveCamera, glm::vec3 fogColor, glm::vec4 clipPlane, CommandBuffers* commandBuffers, bool onScreen) {
-    updateDescriptorSetResources(light, perspectiveCamera, fogColor);
+void AnimatedEntityRenderer::render(std::vector<AnimatedEntity*> animatedEntities, Light* light, PerspectiveCamera* perspectiveCamera, glm::vec4 clipPlane, CommandBuffers* commandBuffers, bool onScreen) {
+    updateDescriptorSetResources(light, perspectiveCamera);
     updatePushConstants(perspectiveCamera, clipPlane);
 
     VkCommandBuffer commandBuffer = commandBuffers->commandBuffers[renderer->currentFrame];
@@ -88,7 +88,7 @@ void AnimatedEntityRenderer::render(std::vector<AnimatedEntity*> animatedEntitie
     }
 }
 
-void AnimatedEntityRenderer::updateDescriptorSetResources(Light* light, PerspectiveCamera* perspectiveCamera, glm::vec3 fogColor) {
+void AnimatedEntityRenderer::updateDescriptorSetResources(Light* light, PerspectiveCamera* perspectiveCamera) {
     AnimatedEntityRendererVertexUniformBufferObject vertexUbo{};
     vertexUbo.projectionMatrix = perspectiveCamera->createProjectionMatrix();
     vertexUbo.lightPosition = light->position;
@@ -99,7 +99,7 @@ void AnimatedEntityRenderer::updateDescriptorSetResources(Light* light, Perspect
 
     AnimatedEntityRendererFragmentUniformBufferObject fragmentUbo{};
     fragmentUbo.lightColor = light->color;
-    fragmentUbo.fogColor = fogColor;
+    fragmentUbo.fogColor = FOG_COLOR;
     void* fubData;
     vkMapMemory(renderer->device->device, fragmentUniformBuffers[renderer->currentFrame]->bufferMemory, 0, sizeof(fragmentUbo), 0, &fubData);
     memcpy(fubData, &fragmentUbo, sizeof(fragmentUbo));

@@ -27,7 +27,8 @@
 
 class EntityRenderer;
 class AnimatedEntityRenderer;
-class ShadowMapRenderer;
+class EntityShadowMapRenderer;
+class AnimatedEntityShadowMapRenderer;
 class TerrainRenderer;
 class SkyboxRenderer;
 class WaterRenderer;
@@ -64,7 +65,8 @@ public:
     TerrainRenderer* terrainRenderer;
     EntityRenderer* entityRenderer;
     AnimatedEntityRenderer* animatedEntityRenderer;
-    ShadowMapRenderer* shadowMapRenderer;
+    EntityShadowMapRenderer* entityShadowMapRenderer;
+    AnimatedEntityShadowMapRenderer* animatedEntityShadowMapRenderer;
     SkyboxRenderer* skyboxRenderer;
     WaterRenderer* waterRenderer;
     Renderer(Window* window, PerspectiveCamera* perspectiveCamera);

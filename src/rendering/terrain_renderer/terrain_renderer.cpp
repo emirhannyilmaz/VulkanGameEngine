@@ -68,8 +68,8 @@ void TerrainRenderer::DeleteGraphicsPipelines() {
     delete offScreenGraphicsPipeline;
 }
 
-void TerrainRenderer::render(std::vector<Terrain*> terrains, Light* light, PerspectiveCamera* perspectiveCamera, OrthographicCamera* orthographicCamera, glm::vec3 fogColor, glm::vec4 clipPlane, CommandBuffers* commandBuffers, bool onScreen) {
-    updateDescriptorSetResources(light, perspectiveCamera, orthographicCamera, fogColor);
+void TerrainRenderer::render(std::vector<Terrain*> terrains, Light* light, PerspectiveCamera* perspectiveCamera, OrthographicCamera* orthographicCamera, glm::vec4 clipPlane, CommandBuffers* commandBuffers, bool onScreen) {
+    updateDescriptorSetResources(light, perspectiveCamera, orthographicCamera);
     updatePushConstants(perspectiveCamera, clipPlane);
 
     VkCommandBuffer commandBuffer = commandBuffers->commandBuffers[renderer->currentFrame];
@@ -98,12 +98,12 @@ void TerrainRenderer::updateDescriptorSetImageInfos() {
     }
 }
 
-void TerrainRenderer::updateDescriptorSetResources(Light* light, PerspectiveCamera* perspectiveCamera, OrthographicCamera* orthographicCamera, glm::vec3 fogColor) {
+void TerrainRenderer::updateDescriptorSetResources(Light* light, PerspectiveCamera* perspectiveCamera, OrthographicCamera* orthographicCamera) {
     TerrainRendererVertexUniformBufferObject vertexUbo{};
     vertexUbo.projectionMatrix = perspectiveCamera->createProjectionMatrix();
     vertexUbo.lightPosition = light->position;
     vertexUbo.toShadowMapSpaceMatrix = getToShadowMapSpaceMatrix(light, perspectiveCamera, orthographicCamera);
-    vertexUbo.shadowDistance = perspectiveCamera->fakeFarPlane / 2.0f;
+    vertexUbo.shadowDistance = SHADOW_DISTANCE / 2.0f;
     void* vubData;
     vkMapMemory(renderer->device->device, vertexUniformBuffers[renderer->currentFrame]->bufferMemory, 0, sizeof(vertexUbo), 0, &vubData);
     memcpy(vubData, &vertexUbo, sizeof(vertexUbo));
@@ -112,7 +112,7 @@ void TerrainRenderer::updateDescriptorSetResources(Light* light, PerspectiveCame
     TerrainRendererFragmentUniformBufferObject fragmentUbo{};
     fragmentUbo.lightColor = light->color;
     fragmentUbo.shadowMapSize = (float) SHADOW_MAP_SIZE;
-    fragmentUbo.fogColor = fogColor;
+    fragmentUbo.fogColor = FOG_COLOR;
     void* fubData;
     vkMapMemory(renderer->device->device, fragmentUniformBuffers[renderer->currentFrame]->bufferMemory, 0, sizeof(fragmentUbo), 0, &fubData);
     memcpy(fubData, &fragmentUbo, sizeof(fragmentUbo));

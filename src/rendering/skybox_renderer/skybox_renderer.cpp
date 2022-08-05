@@ -61,8 +61,8 @@ void SkyboxRenderer::DeleteGraphicsPipelines() {
     delete offScreenGraphicsPipeline;
 }
 
-void SkyboxRenderer::render(Skybox* skybox, PerspectiveCamera* perspectiveCamera, glm::vec3 fogColor, glm::vec4 clipPlane, CommandBuffers* commandBuffers, bool onScreen) {
-    updateDescriptorSetResources(perspectiveCamera, fogColor);
+void SkyboxRenderer::render(Skybox* skybox, PerspectiveCamera* perspectiveCamera, glm::vec4 clipPlane, CommandBuffers* commandBuffers, bool onScreen) {
+    updateDescriptorSetResources(perspectiveCamera);
     updatePushConstants(perspectiveCamera, clipPlane);
 
     VkCommandBuffer commandBuffer = commandBuffers->commandBuffers[renderer->currentFrame];
@@ -79,7 +79,7 @@ void SkyboxRenderer::render(Skybox* skybox, PerspectiveCamera* perspectiveCamera
     vkCmdDraw(commandBuffer, 36, 1, 0, 0);
 }
 
-void SkyboxRenderer::updateDescriptorSetResources(PerspectiveCamera* perspectiveCamera, glm::vec3 fogColor) {
+void SkyboxRenderer::updateDescriptorSetResources(PerspectiveCamera* perspectiveCamera) {
     SkyboxRendererVertexUniformBufferObject vertexUbo{};
     vertexUbo.projectionMatrix = perspectiveCamera->createProjectionMatrix();
     void* vubData;
@@ -88,7 +88,7 @@ void SkyboxRenderer::updateDescriptorSetResources(PerspectiveCamera* perspective
     vkUnmapMemory(renderer->device->device, vertexUniformBuffers[renderer->currentFrame]->bufferMemory);
 
     SkyboxRendererFragmentUniformBufferObject fragmentUbo{};
-    fragmentUbo.fogColor = fogColor;
+    fragmentUbo.fogColor = FOG_COLOR;
     void* fubData;
     vkMapMemory(renderer->device->device, fragmentUniformBuffers[renderer->currentFrame]->bufferMemory, 0, sizeof(fragmentUbo), 0, &fubData);
     memcpy(fubData, &fragmentUbo, sizeof(fragmentUbo));

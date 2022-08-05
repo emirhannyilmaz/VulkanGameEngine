@@ -82,7 +82,7 @@ MeshData ColladaLoader::LoadMesh(const std::string& fileName) {
             textureCoordinates.push_back(glm::vec2(std::stof(textureCoordinate[0]), 1.0f - std::stof(textureCoordinate[1])));
         }
         if (line.find("<p>") != std::string::npos) {
-            std::unordered_map<Vertex, uint32_t> uniqueVertices{};
+            std::unordered_map<EntityVertex, uint32_t> uniqueVertices{};
             size_t offset = line.find(">") + 1;
             size_t length = line.find("</") - offset;
             std::string characters = line.substr(offset, length);
@@ -91,7 +91,7 @@ MeshData ColladaLoader::LoadMesh(const std::string& fileName) {
             for (auto character : characters) {
                 if (character == ' ') {
                     if (i == 3) {
-                        Vertex vertex{};
+                        EntityVertex vertex{};
                         vertex.position = positions[std::stoi(values[0])];
                         vertex.normal = normals[std::stoi(values[1])];
                         vertex.textureCoordinates = textureCoordinates[std::stoi(values[2])];
@@ -113,7 +113,7 @@ MeshData ColladaLoader::LoadMesh(const std::string& fileName) {
 
                 values[i] += character;
             }
-            Vertex vertex{};
+            EntityVertex vertex{};
             vertex.position = positions[std::stoi(values[0])];
             vertex.normal = normals[std::stoi(values[1])];
             vertex.textureCoordinates = textureCoordinates[std::stoi(values[2])];
@@ -356,7 +356,7 @@ AnimatedMeshData ColladaLoader::LoadAnimatedMesh(const std::string& fileName) {
             textureCoordinates.push_back(glm::vec2(std::stof(textureCoordinate[0]), 1.0f - std::stof(textureCoordinate[1])));
         }
         if (line.find("<p>") != std::string::npos) {
-            std::unordered_map<AnimatedVertex, uint32_t> uniqueVertices{};
+            std::unordered_map<AnimatedEntityVertex, uint32_t> uniqueVertices{};
             size_t offset = line.find(">") + 1;
             size_t length = line.find("</") - offset;
             std::string characters = line.substr(offset, length);
@@ -365,7 +365,7 @@ AnimatedMeshData ColladaLoader::LoadAnimatedMesh(const std::string& fileName) {
             for (auto character : characters) {
                 if (character == ' ') {
                     if (i == 3) {
-                        AnimatedVertex vertex{};
+                        AnimatedEntityVertex vertex{};
                         vertex.position = positions[std::stoi(values[0])];
                         vertex.normal = normals[std::stoi(values[1])];
                         vertex.textureCoordinates = textureCoordinates[std::stoi(values[2])];
@@ -389,7 +389,7 @@ AnimatedMeshData ColladaLoader::LoadAnimatedMesh(const std::string& fileName) {
 
                 values[i] += character;
             }
-            AnimatedVertex vertex{};
+            AnimatedEntityVertex vertex{};
             vertex.position = positions[std::stoi(values[0])];
             vertex.normal = normals[std::stoi(values[1])];
             vertex.textureCoordinates = textureCoordinates[std::stoi(values[2])];

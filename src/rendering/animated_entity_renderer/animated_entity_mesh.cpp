@@ -1,6 +1,6 @@
-#include "animated_mesh.hpp"
+#include "animated_entity_mesh.hpp"
 
-AnimatedMesh::AnimatedMesh(std::vector<AnimatedVertex> vertices, std::vector<uint32_t> indices, Renderer* renderer) {
+AnimatedEntityMesh::AnimatedEntityMesh(std::vector<AnimatedEntityVertex> vertices, std::vector<uint32_t> indices, Renderer* renderer) {
     this->indicesSize = indices.size();
 
     // Vertex buffer
@@ -28,7 +28,7 @@ AnimatedMesh::AnimatedMesh(std::vector<AnimatedVertex> vertices, std::vector<uin
     delete stagingBufferForIndexBuffer;
 }
 
-AnimatedMesh::~AnimatedMesh() {
+AnimatedEntityMesh::~AnimatedEntityMesh() {
     delete vertexBuffer;
     delete indexBuffer;
 }

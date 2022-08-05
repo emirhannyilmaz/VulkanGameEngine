@@ -1,6 +1,6 @@
-#include "shadow_map_renderer.hpp"
+#include "entity_shadow_map_renderer.hpp"
 
-ShadowMapRenderer::ShadowMapRenderer(Renderer* renderer) {
+EntityShadowMapRenderer::EntityShadowMapRenderer(Renderer* renderer) {
     this->renderer = renderer;
 
     std::array<VkDescriptorSetLayoutBinding, 1> layoutBindings{};
@@ -18,12 +18,12 @@ ShadowMapRenderer::ShadowMapRenderer(Renderer* renderer) {
 
     vertexUniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-        vertexUniformBuffers[i] = new Buffer(renderer->device->physicalDevice, renderer->device->device, sizeof(ShadowMapRendererVertexUniformBufferObject), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-        descriptorSets->updateBufferInfo(i, 0, 0, 1, vertexUniformBuffers[i]->buffer, sizeof(ShadowMapRendererVertexUniformBufferObject));
+        vertexUniformBuffers[i] = new Buffer(renderer->device->physicalDevice, renderer->device->device, sizeof(EntityShadowMapRendererVertexUniformBufferObject), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+        descriptorSets->updateBufferInfo(i, 0, 0, 1, vertexUniformBuffers[i]->buffer, sizeof(EntityShadowMapRendererVertexUniformBufferObject));
     }
 }
 
-ShadowMapRenderer::~ShadowMapRenderer() {
+EntityShadowMapRenderer::~EntityShadowMapRenderer() {
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         delete vertexUniformBuffers[i];
     }
@@ -34,22 +34,22 @@ ShadowMapRenderer::~ShadowMapRenderer() {
     delete descriptorSetLayout;
 }
 
-void ShadowMapRenderer::CreateGraphicsPipeline() {
-    auto bindingDescription = Vertex::getBindingDescription();
-    auto attributeDescriptions = Vertex::getAttributeDescriptions();
+void EntityShadowMapRenderer::CreateGraphicsPipeline() {
+    auto bindingDescription = EntityVertex::getBindingDescription();
+    auto attributeDescriptions = EntityVertex::getAttributeDescriptions();
 
     std::array<VkDescriptorSetLayout, 2> descriptorSetLayouts{};
     descriptorSetLayouts[0] = descriptorSetLayout->descriptorSetLayout;
     descriptorSetLayouts[1] = Entity::descriptorSetLayout->descriptorSetLayout;
 
-    graphicsPipeline = new GraphicsPipeline(renderer->device->device, "res/shaders/shadow_map_shader.vert.spv", "res/shaders/shadow_map_shader.frag.spv", 1, &bindingDescription, static_cast<uint32_t>(attributeDescriptions.size()), attributeDescriptions.data(), static_cast<uint32_t>(descriptorSetLayouts.size()), descriptorSetLayouts.data(), 0, nullptr, renderer->shadowMapExtent, renderer->shadowMapResources->renderPass->renderPass, VK_SAMPLE_COUNT_1_BIT);
+    graphicsPipeline = new GraphicsPipeline(renderer->device->device, "res/shaders/entity_shadow_map_shader.vert.spv", "res/shaders/entity_shadow_map_shader.frag.spv", 1, &bindingDescription, static_cast<uint32_t>(attributeDescriptions.size()), attributeDescriptions.data(), static_cast<uint32_t>(descriptorSetLayouts.size()), descriptorSetLayouts.data(), 0, nullptr, renderer->shadowMapExtent, renderer->shadowMapResources->renderPass->renderPass, VK_SAMPLE_COUNT_1_BIT);
 }
 
-void ShadowMapRenderer::DeleteGraphicsPipeline() {
+void EntityShadowMapRenderer::DeleteGraphicsPipeline() {
     delete graphicsPipeline;
 }
 
-void ShadowMapRenderer::render(std::vector<Entity*> entities, Light* light, PerspectiveCamera* perspectiveCamera, OrthographicCamera* orthographicCamera, CommandBuffers* commandBuffers) {
+void EntityShadowMapRenderer::render(std::vector<Entity*> entities, Light* light, PerspectiveCamera* perspectiveCamera, OrthographicCamera* orthographicCamera, CommandBuffers* commandBuffers) {
     updateDescriptorSetResources(light, perspectiveCamera, orthographicCamera);
 
     VkCommandBuffer commandBuffer = commandBuffers->commandBuffers[renderer->currentFrame];
@@ -70,8 +70,8 @@ void ShadowMapRenderer::render(std::vector<Entity*> entities, Light* light, Pers
     }
 }
 
-void ShadowMapRenderer::updateDescriptorSetResources(Light* light, PerspectiveCamera* perspectiveCamera, OrthographicCamera* orthographicCamera) {
-    ShadowMapRendererVertexUniformBufferObject vertexUbo{};
+void EntityShadowMapRenderer::updateDescriptorSetResources(Light* light, PerspectiveCamera* perspectiveCamera, OrthographicCamera* orthographicCamera) {
+    EntityShadowMapRendererVertexUniformBufferObject vertexUbo{};
     vertexUbo.viewMatrix = light->createViewMatrix(perspectiveCamera->position, orthographicCamera->getCenterOfZ());
     vertexUbo.projectionMatrix = orthographicCamera->createProjectionMatrix();
     void* vubData;
