@@ -2,7 +2,6 @@
 #define animator_hpp
 
 #include "../entities/animated_entity.hpp"
-#include "../rendering/renderer/renderer.hpp"
 #include "animation.hpp"
 #include <unordered_map>
 #include <array>
@@ -12,15 +11,14 @@
 
 class Animator {
 public:
-    Animator(AnimatedEntity* entity, Renderer* renderer);
+    Animator(AnimatedEntity* entity);
     void setAnimation(Animation* animation);
-    void update(float speed);
+    void update(float speed, float deltaTime);
 private:
     AnimatedEntity* entity;
-    Renderer* renderer;
     Animation* animation = nullptr;
     float time = 0.0f;
-    void increaseTime(float speed);
+    void increaseTime(float speed, float deltaTime);
     std::unordered_map<std::string, glm::mat4> calculateCurrentPose();
     void applyPoseToJoints(std::unordered_map<std::string, glm::mat4>& currentPose, Joint* joint, glm::mat4 parentTransform);
     std::array<Keyframe, 2> getPreviousAndNextFrames();

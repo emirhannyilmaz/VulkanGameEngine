@@ -18,8 +18,8 @@ const std::vector<const char*> DEVICE_EXTENSIONS = {
 };
 
 const int MAX_FRAMES_IN_FLIGHT = 2;
-const uint32_t SHADOW_MAP_SIZE = 2048;
-const float SHADOW_DISTANCE = 700.0f;
+const uint32_t SHADOW_MAP_SIZE = 4096;
+const float SHADOW_DISTANCE = 400.0f;
 const glm::vec3 FOG_COLOR = glm::vec3(0.5444f, 0.62f, 0.69f);
 
 #endif

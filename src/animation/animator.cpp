@@ -1,8 +1,7 @@
 #include "animator.hpp"
 
-Animator::Animator(AnimatedEntity* entity, Renderer* renderer) {
+Animator::Animator(AnimatedEntity* entity) {
     this->entity = entity;
-    this->renderer = renderer;
 }
 
 void Animator::setAnimation(Animation* animation) {
@@ -10,18 +9,18 @@ void Animator::setAnimation(Animation* animation) {
     this->animation = animation;
 }
 
-void Animator::update(float speed) {
+void Animator::update(float speed, float deltaTime) {
     if (animation == nullptr) {
         return;
     }
 
-    increaseTime(speed);
+    increaseTime(speed, deltaTime);
     std::unordered_map<std::string, glm::mat4> currentPose = calculateCurrentPose();
     applyPoseToJoints(currentPose, entity->rootJoint, glm::mat4(1.0f));
 }
 
-void Animator::increaseTime(float speed) {
-    time += speed * renderer->deltaTime;
+void Animator::increaseTime(float speed, float deltaTime) {
+    time += speed * deltaTime;
     if (time > animation->length) {
         time = fmod(time, animation->length);
     }

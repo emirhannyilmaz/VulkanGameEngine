@@ -23,7 +23,6 @@ Renderer::Renderer(Window* window, PerspectiveCamera* perspectiveCamera) {
     renderPass = new RenderPass(device->device, swapchain->swapchainImageFormat, DepthResources::findDepthFormat(device->physicalDevice), device->msaaSamples, true, true);
     commandPool = new CommandPool(device->device, device->indices.graphicsFamily.value(), VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
     queryPool = new QueryPool(device->device, 2 * MAX_FRAMES_IN_FLIGHT);
-    offScreenQueryPool = new QueryPool(device->device, 2 * MAX_FRAMES_IN_FLIGHT);
     colorResources = new ColorResources(device->physicalDevice, device->device, swapchain->swapchainExtent, device->msaaSamples, swapchain->swapchainImageFormat, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT);
     depthResources = new DepthResources(device->physicalDevice, device->device, swapchain->swapchainExtent, device->msaaSamples, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT);
 
@@ -68,7 +67,6 @@ Renderer::~Renderer() {
     renderFinishedSemaphores.clear();
     imageAvailableSemaphores.clear();
 
-    delete offScreenQueryPool;
     delete queryPool;
     delete commandPool;
     delete device;
@@ -106,15 +104,11 @@ void Renderer::beginDrawing() {
             deltaTimes.clear();
         }
 
-        std::array<uint64_t, 2> offScreenTimestamps{};
-        vkGetQueryPoolResults(device->device, offScreenQueryPool->queryPool, currentFrame * 2, 2, sizeof(offScreenTimestamps), offScreenTimestamps.data(), sizeof(uint64_t), VK_QUERY_RESULT_64_BIT);
-        double offScreenDeltaTimeInNanoseconds = ((double) (offScreenTimestamps[1] - offScreenTimestamps[0])) * (double) device->timestampPeriod;
+        std::array<uint64_t, 2> timestamps{};
+        vkGetQueryPoolResults(device->device, queryPool->queryPool, currentFrame * 2, 2, sizeof(timestamps), timestamps.data(), sizeof(uint64_t), VK_QUERY_RESULT_64_BIT);
+        double deltaTimeInNanoseconds = ((double) (timestamps[1] - timestamps[0])) * (double) device->timestampPeriod;
 
-        std::array<uint64_t, 2> onScreenTimestamps{};
-        vkGetQueryPoolResults(device->device, queryPool->queryPool, currentFrame * 2, 2, sizeof(onScreenTimestamps), onScreenTimestamps.data(), sizeof(uint64_t), VK_QUERY_RESULT_64_BIT);
-        double onScreenDeltaTimeInNanoseconds = ((double) (onScreenTimestamps[1] - onScreenTimestamps[0])) * (double) device->timestampPeriod;
-
-        float newDeltaTime = (offScreenDeltaTimeInNanoseconds + onScreenDeltaTimeInNanoseconds) / 1000000000.0f;
+        float newDeltaTime = deltaTimeInNanoseconds / 1000000000.0f;
         deltaTimes.push_back(newDeltaTime);
     } else {
         isFirstTimeFrameRender[currentFrame] = false;
@@ -181,7 +175,7 @@ void Renderer::endDrawing() {
     currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
 
-void Renderer::beginRecordingCommands(CommandBuffers* commandBuffers, bool onScreen) {
+void Renderer::beginRecordingCommands(CommandBuffers* commandBuffers) {
     if (acquireNextImageResult == VK_ERROR_OUT_OF_DATE_KHR) {
         return;
     }
@@ -192,16 +186,16 @@ void Renderer::beginRecordingCommands(CommandBuffers* commandBuffers, bool onScr
         throw std::runtime_error("Failed to begin recording command buffer!");
     }
 
-    vkCmdResetQueryPool(commandBuffers->commandBuffers[currentFrame], onScreen ? queryPool->queryPool : offScreenQueryPool->queryPool, currentFrame * 2, 2);
-    vkCmdWriteTimestamp(commandBuffers->commandBuffers[currentFrame], VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, onScreen ? queryPool->queryPool : offScreenQueryPool->queryPool, currentFrame * 2);
+    vkCmdResetQueryPool(commandBuffers->commandBuffers[currentFrame], queryPool->queryPool, currentFrame * 2, 2);
+    vkCmdWriteTimestamp(commandBuffers->commandBuffers[currentFrame], VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, queryPool->queryPool, currentFrame * 2);
 }
 
-void Renderer::endRecordingCommands(CommandBuffers* commandBuffers, bool onScreen) {
+void Renderer::endRecordingCommands(CommandBuffers* commandBuffers) {
     if (acquireNextImageResult == VK_ERROR_OUT_OF_DATE_KHR) {
         return;
     }
 
-    vkCmdWriteTimestamp(commandBuffers->commandBuffers[currentFrame], VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, onScreen ? queryPool->queryPool : offScreenQueryPool->queryPool, currentFrame * 2 + 1);
+    vkCmdWriteTimestamp(commandBuffers->commandBuffers[currentFrame], VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, queryPool->queryPool, currentFrame * 2 + 1);
 
     if (vkEndCommandBuffer(commandBuffers->commandBuffers[currentFrame]) != VK_SUCCESS) {
         throw std::runtime_error("Failed to record command buffer!");

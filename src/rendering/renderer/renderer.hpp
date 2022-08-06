@@ -43,7 +43,6 @@ public:
     RenderPass* renderPass;
     CommandPool* commandPool;
     QueryPool* queryPool;
-    QueryPool* offScreenQueryPool;
     ColorResources* colorResources;
     DepthResources* depthResources;
     std::vector<Framebuffer*> framebuffers;
@@ -74,8 +73,8 @@ public:
     void waitIdle();
     void beginDrawing();
     void endDrawing();
-    void beginRecordingCommands(CommandBuffers* commandBuffers, bool onScreen);
-    void endRecordingCommands(CommandBuffers* commandBuffers, bool onScreen);
+    void beginRecordingCommands(CommandBuffers* commandBuffers);
+    void endRecordingCommands(CommandBuffers* commandBuffers);
     void beginRendering(RenderPass* renderPass, Framebuffer* framebuffer, CommandBuffers* commandBuffers, bool hasColorAttachment);
     void endRendering(CommandBuffers* commandBuffers);
 private:

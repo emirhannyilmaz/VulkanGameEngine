@@ -58,20 +58,20 @@ void App::run() {
     AnimatedEntity* character = new AnimatedEntity(new AnimatedEntityMesh(characterMeshData.vertices, characterMeshData.indices, renderer), new Texture("res/textures/character.png", 0.0f, 0.0f, renderer), characterAnimationData.rootJoint, characterAnimationData.jointCount, glm::vec3(20.0f, 0.0f, 20.0f), glm::vec3(90.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), renderer);
     animatedEntities.push_back(character);
 
-    Animator* characterAnimator = new Animator(character, renderer);
+    Animator* characterAnimator = new Animator(character);
     characterAnimator->setAnimation(&characterAnimationData.animation);
 
     while (!glfwWindowShouldClose(window->window)) {
         glfwPollEvents();
 
         light->update(1000.0f, renderer->deltaTime);
-        perspectiveCamera->update(250.0f, renderer->deltaTime);
+        perspectiveCamera->update(400.0f, renderer->deltaTime);
         orthographicCamera->update(perspectiveCamera, light->viewMatrix);
-        characterAnimator->update(2.0f);
+        characterAnimator->update(7.0f, renderer->deltaTime);
 
         renderer->beginDrawing();
 
-        renderer->beginRecordingCommands(renderer->offScreenCommandBuffers, false);
+        renderer->beginRecordingCommands(renderer->offScreenCommandBuffers);
 
         renderer->beginRendering(renderer->shadowMapResources->renderPass, renderer->shadowMapResources->framebuffer, renderer->offScreenCommandBuffers, false);
         entityShadowMapRenderer->render(entities, light, perspectiveCamera, orthographicCamera, renderer->offScreenCommandBuffers);
@@ -93,9 +93,9 @@ void App::run() {
         skyboxRenderer->render(skybox, perspectiveCamera, glm::vec4(0.0f, 1.0f, 0.0f, -waterTile->position.y), renderer->offScreenCommandBuffers, false);
         renderer->endRendering(renderer->offScreenCommandBuffers);
 
-        renderer->endRecordingCommands(renderer->offScreenCommandBuffers, false);
+        renderer->endRecordingCommands(renderer->offScreenCommandBuffers);
 
-        renderer->beginRecordingCommands(renderer->commandBuffers, true);
+        renderer->beginRecordingCommands(renderer->commandBuffers);
 
         renderer->beginRendering(renderer->renderPass, renderer->framebuffers[renderer->currentImageIndex], renderer->commandBuffers, true);
         terrainRenderer->render(terrains, light, perspectiveCamera, orthographicCamera, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), renderer->commandBuffers, true);
@@ -105,7 +105,7 @@ void App::run() {
         waterRenderer->render(waterTiles, perspectiveCamera, light, renderer->commandBuffers);
         renderer->endRendering(renderer->commandBuffers);
 
-        renderer->endRecordingCommands(renderer->commandBuffers, true);
+        renderer->endRecordingCommands(renderer->commandBuffers);
 
         renderer->endDrawing();
     }
