@@ -5,7 +5,7 @@
 #include <GLFW/glfw3.h>
 #include <vector>
 #include <stdexcept>
-#include "renderer_info.hpp"
+#include "common.hpp"
 #include <iostream>
 
 class Instance {

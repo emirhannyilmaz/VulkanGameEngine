@@ -5,7 +5,7 @@
 #include <optional>
 #include <set>
 #include <stdexcept>
-#include "renderer_info.hpp"
+#include "common.hpp"
 
 struct QueueFamilyIndices {
     std::optional<uint32_t> graphicsFamily;

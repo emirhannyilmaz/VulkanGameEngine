@@ -1,7 +1,7 @@
 #ifndef perspective_camera_hpp
 #define perspective_camera_hpp
 
-#include "../rendering/renderer/renderer_info.hpp"
+#include "../rendering/renderer/common.hpp"
 #include "../io/input.hpp"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
