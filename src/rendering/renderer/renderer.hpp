@@ -32,6 +32,7 @@ class AnimatedEntityShadowMapRenderer;
 class TerrainRenderer;
 class SkyboxRenderer;
 class WaterRenderer;
+class ParticleRenderer;
 
 class Renderer {
 public:
@@ -68,6 +69,7 @@ public:
     AnimatedEntityShadowMapRenderer* animatedEntityShadowMapRenderer;
     SkyboxRenderer* skyboxRenderer;
     WaterRenderer* waterRenderer;
+    ParticleRenderer* particleRenderer;
     Renderer(Window* window, PerspectiveCamera* perspectiveCamera);
     ~Renderer();
     void waitIdle();

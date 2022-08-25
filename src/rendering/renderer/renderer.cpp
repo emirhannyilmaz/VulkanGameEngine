@@ -6,6 +6,7 @@
 #include "../terrain_renderer/terrain_renderer.hpp"
 #include "../skybox_renderer/skybox_renderer.hpp"
 #include "../water_renderer/water_renderer.hpp"
+#include "../particle_renderer/particle_renderer.hpp"
 
 Renderer::Renderer(Window* window, PerspectiveCamera* perspectiveCamera) {
     this->window = window;
@@ -269,12 +270,14 @@ void Renderer::recreateSwapchain() {
     skyboxRenderer->CreateGraphicsPipelines();
     terrainRenderer->CreateGraphicsPipelines();
     waterRenderer->CreateGraphicsPipeline();
+    particleRenderer->CreateGraphicsPipelines();
 
     perspectiveCamera->aspectRatio = (float) width / (float) height;
 }
 
 void Renderer::cleanUpSwapchain() {
     if (entityRenderer != nullptr) {
+        particleRenderer->DeleteGraphicsPipelines();
         waterRenderer->DeleteGraphicsPipeline();
         terrainRenderer->DeleteGraphicsPipelines();
         skyboxRenderer->DeleteGraphicsPipelines();

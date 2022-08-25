@@ -18,6 +18,7 @@ struct ParticleRendererFragmentUniformBufferObject {
 };
 
 struct ParticleRendererVertexPushConstants {
+    alignas(16) glm::mat4 viewMatrix;
     alignas(16) glm::vec4 clipPlane;
 };
 
@@ -39,7 +40,7 @@ private:
     std::vector<Buffer*> fragmentUniformBuffers;
     ParticleRendererVertexPushConstants vertexPushConstants{};
     void updateDescriptorSetResources(PerspectiveCamera* perspectiveCamera);
-    void updatePushConstants(glm::vec4 clipPlane);
+    void updatePushConstants(PerspectiveCamera* perspectiveCamera, glm::vec4 clipPlane);
 };
 
 #endif

@@ -10,6 +10,7 @@
 #include "rendering/terrain_renderer/terrain_renderer.hpp"
 #include "rendering/skybox_renderer/skybox_renderer.hpp"
 #include "rendering/water_renderer/water_renderer.hpp"
+#include "rendering/particle_renderer/particle_renderer.hpp"
 #include "utils/collada_loader.hpp"
 #include "animation/animator.hpp"
 

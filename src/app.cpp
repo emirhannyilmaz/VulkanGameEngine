@@ -15,6 +15,7 @@ void App::run() {
     AnimatedEntityShadowMapRenderer* animatedEntityShadowMapRenderer = new AnimatedEntityShadowMapRenderer(renderer);
     SkyboxRenderer* skyboxRenderer = new SkyboxRenderer(renderer);
     WaterRenderer* waterRenderer = new WaterRenderer(renderer);
+    ParticleRenderer* particleRenderer = new ParticleRenderer(renderer);
     renderer->entityRenderer = entityRenderer;
     renderer->animatedEntityRenderer = animatedEntityRenderer;
     renderer->entityShadowMapRenderer = entityShadowMapRenderer;
@@ -22,6 +23,7 @@ void App::run() {
     renderer->terrainRenderer = terrainRenderer;
     renderer->skyboxRenderer = skyboxRenderer;
     renderer->waterRenderer = waterRenderer;
+    renderer->particleRenderer = particleRenderer;
     
     Texture* terrainTexture = new Texture("res/textures/grass.png", 0.0f, 0.0f, renderer);
     Terrain* terrain = new Terrain(terrainTexture, "res/textures/terrain_heightmap.png", glm::vec2(0.0f, 0.0f), renderer);
@@ -40,7 +42,7 @@ void App::run() {
     std::vector<Entity*> entities;
 
     MeshData treeMeshData = ColladaLoader::LoadMesh("res/models/tree.dae");
-    for (int i = 0; i < 100; i++) {
+    for (size_t i = 0; i < 100; i++) {
         glm::vec3 treePosition;
         do {
             float x = std::rand() % 800;
@@ -61,6 +63,8 @@ void App::run() {
     Animator* characterAnimator = new Animator(character);
     characterAnimator->setAnimation(&characterAnimationData.animation);
 
+    std::vector<Particle*> particles;
+
     while (!glfwWindowShouldClose(window->window)) {
         glfwPollEvents();
 
@@ -68,6 +72,17 @@ void App::run() {
         perspectiveCamera->update(400.0f, renderer->deltaTime);
         orthographicCamera->update(perspectiveCamera, light->viewMatrix);
         characterAnimator->update(7.0f, renderer->deltaTime);
+
+        for (size_t i = 0; i < particles.size(); i++) {
+            if (!particles[i]->update(renderer->deltaTime)) {
+                delete particles[i];
+                particles.erase(particles.begin() + i);
+            }
+        }
+
+        if (Input::GetKey(GLFW_KEY_P)) {
+            particles.push_back(new Particle(glm::vec3(0.0f, 0.0f, 0.0f), 45.0f, glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(30.0f, -30.0f, 0.0f), 1.0f, 1.0f, renderer));
+        }
 
         renderer->beginDrawing();
 
@@ -84,13 +99,16 @@ void App::run() {
         entityRenderer->render(entities, light, perspectiveCamera, glm::vec4(0.0f, -1.0f, 0.0f, waterTile->position.y + 1.0f), renderer->offScreenCommandBuffers, false);
         animatedEntityRenderer->render(animatedEntities, light, perspectiveCamera, glm::vec4(0.0f, -1.0f, 0.0f, waterTile->position.y + 1.0f), renderer->offScreenCommandBuffers, false);
         skyboxRenderer->render(skybox, perspectiveCamera, glm::vec4(0.0f, -1.0f, 0.0f, waterTile->position.y + 1.0f), renderer->offScreenCommandBuffers, false);
+        particleRenderer->render(particles, perspectiveCamera, glm::vec4(0.0f, -1.0f, 0.0f, waterTile->position.y + 1.0f), renderer->offScreenCommandBuffers, false);
         perspectiveCamera->revert();
         renderer->endRendering(renderer->offScreenCommandBuffers);
 
         renderer->beginRendering(renderer->waterResources->renderPass, renderer->waterResources->refractionFramebuffer, renderer->offScreenCommandBuffers, true);
         terrainRenderer->render(terrains, light, perspectiveCamera, orthographicCamera, glm::vec4(0.0f, 1.0f, 0.0f, -waterTile->position.y), renderer->offScreenCommandBuffers, false);
         entityRenderer->render(entities, light, perspectiveCamera, glm::vec4(0.0f, 1.0f, 0.0f, -waterTile->position.y), renderer->offScreenCommandBuffers, false);
+        animatedEntityRenderer->render(animatedEntities, light, perspectiveCamera, glm::vec4(0.0f, -1.0f, 0.0f, waterTile->position.y + 1.0f), renderer->offScreenCommandBuffers, false);
         skyboxRenderer->render(skybox, perspectiveCamera, glm::vec4(0.0f, 1.0f, 0.0f, -waterTile->position.y), renderer->offScreenCommandBuffers, false);
+        particleRenderer->render(particles, perspectiveCamera, glm::vec4(0.0f, 1.0f, 0.0f, -waterTile->position.y), renderer->offScreenCommandBuffers, false);
         renderer->endRendering(renderer->offScreenCommandBuffers);
 
         renderer->endRecordingCommands(renderer->offScreenCommandBuffers);
@@ -103,6 +121,7 @@ void App::run() {
         animatedEntityRenderer->render(animatedEntities, light, perspectiveCamera, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), renderer->commandBuffers, true);
         skyboxRenderer->render(skybox, perspectiveCamera, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), renderer->commandBuffers, true);
         waterRenderer->render(waterTiles, perspectiveCamera, light, renderer->commandBuffers);
+        particleRenderer->render(particles, perspectiveCamera, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), renderer->commandBuffers, true);
         renderer->endRendering(renderer->commandBuffers);
 
         renderer->endRecordingCommands(renderer->commandBuffers);
@@ -111,6 +130,11 @@ void App::run() {
     }
 
     renderer->waitIdle();
+
+    for (size_t i = 0; i < particles.size(); i++) {
+        delete particles[i];
+    }
+    particles.clear();
 
     delete characterAnimator;
 
@@ -136,6 +160,7 @@ void App::run() {
     }
     terrains.clear();
 
+    delete particleRenderer;
     delete waterRenderer;
     delete skyboxRenderer;
     delete terrainRenderer;

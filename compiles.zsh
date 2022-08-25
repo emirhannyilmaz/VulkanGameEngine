@@ -13,3 +13,5 @@
 /Users/emirhanyilmaz/Development/VulkanSDK/1.2.198.1/macOS/bin/glslc res/shaders/water_shader.frag -o res/shaders/water_shader.frag.spv
 /Users/emirhanyilmaz/Development/VulkanSDK/1.2.198.1/macOS/bin/glslc res/shaders/terrain_shader.vert -o res/shaders/terrain_shader.vert.spv
 /Users/emirhanyilmaz/Development/VulkanSDK/1.2.198.1/macOS/bin/glslc res/shaders/terrain_shader.frag -o res/shaders/terrain_shader.frag.spv
+/Users/emirhanyilmaz/Development/VulkanSDK/1.2.198.1/macOS/bin/glslc res/shaders/particle_shader.vert -o res/shaders/particle_shader.vert.spv
+/Users/emirhanyilmaz/Development/VulkanSDK/1.2.198.1/macOS/bin/glslc res/shaders/particle_shader.frag -o res/shaders/particle_shader.frag.spv
