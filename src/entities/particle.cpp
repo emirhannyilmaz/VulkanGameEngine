@@ -33,10 +33,10 @@ Particle::~Particle() {
     delete descriptorPool;
 }
 
-bool Particle::update(float deltaTime) {
+bool Particle::update(float deltaTime, float realDeltaTime) {
     velocity.y += GRAVITY * gravityMultiplier * deltaTime;
     position += velocity * deltaTime;
-    elapsedTime += deltaTime;
+    elapsedTime += realDeltaTime;
     return elapsedTime < lifeLength;
 }
 
@@ -53,6 +53,25 @@ void Particle::updateDescriptorSetResources() {
     vkMapMemory(renderer->device->device, vertexUniformBuffers[renderer->currentFrame]->bufferMemory, 0, sizeof(vertexUbo), 0, &data);
     memcpy(data, &vertexUbo, sizeof(vertexUbo));
     vkUnmapMemory(renderer->device->device, vertexUniformBuffers[renderer->currentFrame]->bufferMemory);
+}
+
+void Particle::updatePushConstants(PerspectiveCamera* perspectiveCamera) {
+    glm::mat4 modelMatrix(1.0f);
+    modelMatrix = glm::translate(modelMatrix, position);
+    glm::mat4 viewMatrix = perspectiveCamera->createViewMatrix();
+    modelMatrix[0][0] = viewMatrix[0][0];
+    modelMatrix[0][1] = viewMatrix[1][0];
+    modelMatrix[0][2] = viewMatrix[2][0];
+    modelMatrix[1][0] = viewMatrix[0][1];
+    modelMatrix[1][1] = viewMatrix[1][1];
+    modelMatrix[1][2] = viewMatrix[2][1];
+    modelMatrix[2][0] = viewMatrix[0][2];
+    modelMatrix[2][1] = viewMatrix[1][2];
+    modelMatrix[2][2] = viewMatrix[2][2];
+    modelMatrix = glm::rotate(modelMatrix, glm::radians(rotation), glm::vec3(0.0f, 0.0f, 1.0f));
+    modelMatrix = glm::scale(modelMatrix, scale);
+
+    vertexPushConstants.modelViewMatrix = viewMatrix * modelMatrix;
 }
 
 void Particle::CreateDesriptorSetLayout(VkDevice& device) {

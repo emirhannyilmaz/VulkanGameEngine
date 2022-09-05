@@ -59,6 +59,7 @@ public:
     std::array<bool, 2> isFirstTimeFrameRender {true, true};
     std::vector<float> deltaTimes{};
     float deltaTime = 0.0f;
+    float realDeltaTime = 0.0f;
     float previousTime = -1.0f;
     uint32_t currentFrame = 0;
     uint32_t currentImageIndex;

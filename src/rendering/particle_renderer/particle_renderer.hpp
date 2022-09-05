@@ -17,9 +17,9 @@ struct ParticleRendererFragmentUniformBufferObject {
     alignas(16) glm::vec3 fogColor;
 };
 
-struct ParticleRendererVertexPushConstants {
-    alignas(16) glm::mat4 viewMatrix;
+struct VertexPushConstants {
     alignas(16) glm::vec4 clipPlane;
+    alignas(16) glm::mat4 modelViewMatrix;
 };
 
 class ParticleRenderer {
@@ -38,9 +38,9 @@ private:
     DescriptorSets* descriptorSets;
     std::vector<Buffer*> vertexUniformBuffers;
     std::vector<Buffer*> fragmentUniformBuffers;
-    ParticleRendererVertexPushConstants vertexPushConstants{};
+    VertexPushConstants vertexPushConstants{};
     void updateDescriptorSetResources(PerspectiveCamera* perspectiveCamera);
-    void updatePushConstants(PerspectiveCamera* perspectiveCamera, glm::vec4 clipPlane);
+    void updatePushConstants(glm::vec4 clipPlane, Particle* particle);
 };
 
 #endif

@@ -64,7 +64,8 @@ void App::run() {
     characterAnimator->setAnimation(&characterAnimationData.animation);
 
     std::vector<Particle*> particles;
-
+    std::vector<Particle*> particlesToDelete;
+    
     while (!glfwWindowShouldClose(window->window)) {
         glfwPollEvents();
 
@@ -73,15 +74,25 @@ void App::run() {
         orthographicCamera->update(perspectiveCamera, light->viewMatrix);
         characterAnimator->update(7.0f, renderer->deltaTime);
 
+        for (size_t i = 0; i < particlesToDelete.size(); i++) {
+            if (particlesToDelete[i]->deleteAtFrame.has_value()) {
+                if (particlesToDelete[i]->deleteAtFrame.value() == renderer->currentFrame) {
+                    delete particlesToDelete[i];
+                    particlesToDelete.erase(particlesToDelete.begin() + i);
+                }
+            }
+        }
+
         for (size_t i = 0; i < particles.size(); i++) {
-            if (!particles[i]->update(renderer->deltaTime)) {
-                delete particles[i];
+            if (!particles[i]->update(renderer->deltaTime, renderer->realDeltaTime)) {
+                particles[i]->deleteAtFrame = renderer->currentFrame;
+                particlesToDelete.push_back(particles[i]);
                 particles.erase(particles.begin() + i);
             }
         }
 
         if (Input::GetKey(GLFW_KEY_P)) {
-            particles.push_back(new Particle(glm::vec3(0.0f, 0.0f, 0.0f), 45.0f, glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(30.0f, -30.0f, 0.0f), 1.0f, 1.0f, renderer));
+            particles.push_back(new Particle(glm::vec3(0.0f, 0.0f, 0.0f), 25.0f, glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(0.0f, -400.0f, 0.0f), 3.0f, 0.1f, renderer));
         }
 
         renderer->beginDrawing();

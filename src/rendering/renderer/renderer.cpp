@@ -109,8 +109,9 @@ void Renderer::beginDrawing() {
         vkGetQueryPoolResults(device->device, queryPool->queryPool, currentFrame * 2, 2, sizeof(timestamps), timestamps.data(), sizeof(uint64_t), VK_QUERY_RESULT_64_BIT);
         double deltaTimeInNanoseconds = ((double) (timestamps[1] - timestamps[0])) * (double) device->timestampPeriod;
 
-        float newDeltaTime = deltaTimeInNanoseconds / 1000000000.0f;
+        float newDeltaTime = deltaTimeInNanoseconds / 1000000000.0;
         deltaTimes.push_back(newDeltaTime);
+        realDeltaTime = newDeltaTime;
     } else {
         isFirstTimeFrameRender[currentFrame] = false;
     }

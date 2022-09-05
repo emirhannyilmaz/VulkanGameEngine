@@ -14,10 +14,15 @@ struct ParticleVertexUniformBufferObject {
     alignas(16) glm::mat4 modelMatrix;
 };
 
+struct ParticleVertexPushConstants {
+    alignas(16) glm::mat4 modelViewMatrix;
+};
+
 class Particle {
 public:
     static DescriptorSetLayout* descriptorSetLayout;
     DescriptorSets* descriptorSets;
+    ParticleVertexPushConstants vertexPushConstants{};
     glm::vec3 position;
     float rotation;
     glm::vec3 scale;
@@ -25,10 +30,12 @@ public:
     float gravityMultiplier;
     float lifeLength;
     float elapsedTime = 0.0f;
+    std::optional<uint32_t> deleteAtFrame;
     Particle(glm::vec3 position, float rotation, glm::vec3 scale, glm::vec3 velocity, float gravityMultiplier, float lifeLength, Renderer* renderer);
     ~Particle();
-    bool update(float deltaTime);
+    bool update(float deltaTime, float realDeltaTime);
     void updateDescriptorSetResources();
+    void updatePushConstants(PerspectiveCamera* perspectiveCamera);
     static void CreateDesriptorSetLayout(VkDevice& device);
     static void DeleteDesriptorSetLayout();
 private:
