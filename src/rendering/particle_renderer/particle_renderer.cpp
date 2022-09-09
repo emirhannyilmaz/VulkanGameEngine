@@ -68,6 +68,7 @@ void ParticleRenderer::render(std::vector<Particle*> particles, PerspectiveCamer
     GraphicsPipeline* gp = onScreen ? graphicsPipeline : offScreenGraphicsPipeline;
 
     vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, gp->graphicsPipeline);
+    vkCmdSetDepthWriteEnableEXT(commandBuffer, VK_FALSE);
     
     std::array<VkDescriptorSet, 2> descriptorSetsToBind{};
     descriptorSetsToBind[0] = descriptorSets->descriptorSets[renderer->currentFrame];

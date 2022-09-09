@@ -9,6 +9,7 @@
 #include "../rendering/renderer/descriptor_set_layout.hpp"
 #include "../rendering/renderer/descriptor_sets.hpp"
 #include "../rendering/renderer/common.hpp"
+#include "../rendering/renderer/texture.hpp"
 
 struct ParticleVertexUniformBufferObject {
     alignas(16) glm::mat4 modelMatrix;
@@ -23,6 +24,7 @@ public:
     static DescriptorSetLayout* descriptorSetLayout;
     DescriptorSets* descriptorSets;
     ParticleVertexPushConstants vertexPushConstants{};
+    Texture* texture;
     glm::vec3 position;
     float rotation;
     glm::vec3 scale;
@@ -31,7 +33,7 @@ public:
     float lifeLength;
     float elapsedTime = 0.0f;
     std::optional<uint32_t> deleteAtFrame;
-    Particle(glm::vec3 position, float rotation, glm::vec3 scale, glm::vec3 velocity, float gravityMultiplier, float lifeLength, Renderer* renderer);
+    Particle(Texture* texture, glm::vec3 position, float rotation, glm::vec3 scale, glm::vec3 velocity, float gravityMultiplier, float lifeLength, Renderer* renderer);
     ~Particle();
     bool update(float deltaTime, float realDeltaTime);
     void updateDescriptorSetResources();

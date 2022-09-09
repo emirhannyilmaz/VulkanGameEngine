@@ -14,7 +14,8 @@ const std::vector<const char*> VALIDATION_LAYERS = {
 
 const std::vector<const char*> DEVICE_EXTENSIONS = {
     "VK_KHR_swapchain",
-    "VK_KHR_portability_subset"
+    "VK_KHR_portability_subset",
+    "VK_EXT_extended_dynamic_state"
 };
 
 const int MAX_FRAMES_IN_FLIGHT = 2;

@@ -23,9 +23,20 @@ layout(push_constant) uniform VertexPushConstants {
 } vpc;
 
 layout(location = 0) out float fragVisibility;
+layout(location = 1) out vec2 fragTextureCoordinates;
 
 const float fogDensity = 0.004;
 const float fogGradient = 1.5;
+
+vec2 convertVertexCoordinatesToTextureCoordinates (vec3 vertexCoordinates) {
+    float oldMax = 1.0;
+    float oldMin = -1.0;
+    float newMax = 1.0;
+    float newMin = 0.0;
+    float oldRange = (oldMax - oldMin);
+    float newRange = (newMax - newMin);
+    return vec2((((vertexCoordinates.x - oldMin) * newRange) / oldRange) + newMin, (((vertexCoordinates.y - oldMin) * newRange) / oldRange) + newMin);
+}
 
 void main() {
     gl_ClipDistance[0] = dot(pvubo.modelMatrix * vec4(vertices[gl_VertexIndex], 1.0), vpc.clipPlane);
@@ -35,4 +46,6 @@ void main() {
     float distance = length(positionRelativeToCamera.xyz);
     fragVisibility = exp(-pow(distance * fogDensity, fogGradient));
     fragVisibility = clamp(fragVisibility, 0.0, 1.0);
+
+    fragTextureCoordinates = convertVertexCoordinatesToTextureCoordinates(vertices[gl_VertexIndex]);
 }

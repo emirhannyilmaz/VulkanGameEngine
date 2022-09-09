@@ -63,6 +63,8 @@ void App::run() {
     Animator* characterAnimator = new Animator(character);
     characterAnimator->setAnimation(&characterAnimationData.animation);
 
+    ParticleSystem* particleSystem = new ParticleSystem("res/textures/star.png", 1, 150, 400.0f, 3.0f, 0.1f, renderer);
+
     std::vector<Particle*> particles;
     std::vector<Particle*> particlesToDelete;
     
@@ -91,9 +93,7 @@ void App::run() {
             }
         }
 
-        if (Input::GetKey(GLFW_KEY_P)) {
-            particles.push_back(new Particle(glm::vec3(0.0f, 0.0f, 0.0f), 25.0f, glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(0.0f, -400.0f, 0.0f), 3.0f, 0.1f, renderer));
-        }
+        particleSystem->emit(glm::vec3(0.0f, 0.0f, 0.0f), particles);
 
         renderer->beginDrawing();
 
@@ -142,11 +142,17 @@ void App::run() {
 
     renderer->waitIdle();
 
+    for (size_t i = 0; i < particlesToDelete.size(); i++) {
+        delete particlesToDelete[i];
+    }
+    particlesToDelete.clear();
+
     for (size_t i = 0; i < particles.size(); i++) {
         delete particles[i];
     }
     particles.clear();
 
+    delete particleSystem;
     delete characterAnimator;
 
     for (size_t i = 0; i < animatedEntities.size(); i++) {

@@ -111,13 +111,12 @@ GraphicsPipeline::GraphicsPipeline(VkDevice& device, const std::string& vertexSh
     colorBlendStateCreateInfo.blendConstants[3] = 0.0f;
 
     VkDynamicState dynamicStates[] = {
-        VK_DYNAMIC_STATE_VIEWPORT,
-        VK_DYNAMIC_STATE_LINE_WIDTH
+        VK_DYNAMIC_STATE_DEPTH_WRITE_ENABLE_EXT
     };
 
     VkPipelineDynamicStateCreateInfo dynamicStateCreateInfo{};
     dynamicStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
-    dynamicStateCreateInfo.dynamicStateCount = 2;
+    dynamicStateCreateInfo.dynamicStateCount = 1;
     dynamicStateCreateInfo.pDynamicStates = dynamicStates;
 
     VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo{};
