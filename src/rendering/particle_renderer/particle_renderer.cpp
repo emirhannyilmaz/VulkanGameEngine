@@ -52,8 +52,8 @@ void ParticleRenderer::CreateGraphicsPipelines() {
     std::array<VkPushConstantRange, 1> pushConstantRanges{};
     pushConstantRanges[0] = {VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(VertexPushConstants)};
 
-    graphicsPipeline = new GraphicsPipeline(renderer->device->device, "res/shaders/particle_shader.vert.spv", "res/shaders/particle_shader.frag.spv", 0, nullptr, 0, nullptr, static_cast<uint32_t>(descriptorSetLayouts.size()), descriptorSetLayouts.data(), static_cast<uint32_t>(pushConstantRanges.size()), pushConstantRanges.data(), renderer->swapchain->swapchainExtent, renderer->renderPass->renderPass, renderer->device->msaaSamples);
-    offScreenGraphicsPipeline = new GraphicsPipeline(renderer->device->device, "res/shaders/particle_shader.vert.spv", "res/shaders/particle_shader.frag.spv", 0, nullptr, 0, nullptr, static_cast<uint32_t>(descriptorSetLayouts.size()), descriptorSetLayouts.data(), static_cast<uint32_t>(pushConstantRanges.size()), pushConstantRanges.data(), renderer->swapchain->swapchainExtent, renderer->waterResources->renderPass->renderPass, VK_SAMPLE_COUNT_1_BIT);
+    graphicsPipeline = new GraphicsPipeline(renderer->device->device, "res/shaders/particle_shader.vert.spv", "res/shaders/particle_shader.frag.spv", 0, nullptr, 0, nullptr, static_cast<uint32_t>(descriptorSetLayouts.size()), descriptorSetLayouts.data(), static_cast<uint32_t>(pushConstantRanges.size()), pushConstantRanges.data(), renderer->swapchain->swapchainExtent, renderer->renderPass->renderPass, renderer->device->msaaSamples, VK_FALSE, VK_BLEND_FACTOR_ONE);
+    offScreenGraphicsPipeline = new GraphicsPipeline(renderer->device->device, "res/shaders/particle_shader.vert.spv", "res/shaders/particle_shader.frag.spv", 0, nullptr, 0, nullptr, static_cast<uint32_t>(descriptorSetLayouts.size()), descriptorSetLayouts.data(), static_cast<uint32_t>(pushConstantRanges.size()), pushConstantRanges.data(), renderer->swapchain->swapchainExtent, renderer->waterResources->renderPass->renderPass, VK_SAMPLE_COUNT_1_BIT, VK_FALSE, VK_BLEND_FACTOR_ONE);
 }
 
 void ParticleRenderer::DeleteGraphicsPipelines() {
@@ -68,7 +68,6 @@ void ParticleRenderer::render(std::vector<Particle*> particles, PerspectiveCamer
     GraphicsPipeline* gp = onScreen ? graphicsPipeline : offScreenGraphicsPipeline;
 
     vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, gp->graphicsPipeline);
-    vkCmdSetDepthWriteEnableEXT(commandBuffer, VK_FALSE);
     
     std::array<VkDescriptorSet, 2> descriptorSetsToBind{};
     descriptorSetsToBind[0] = descriptorSets->descriptorSets[renderer->currentFrame];

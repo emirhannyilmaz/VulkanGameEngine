@@ -63,7 +63,7 @@ void App::run() {
     Animator* characterAnimator = new Animator(character);
     characterAnimator->setAnimation(&characterAnimationData.animation);
 
-    ParticleSystem* particleSystem = new ParticleSystem("res/textures/star.png", 1, 150, 400.0f, 3.0f, 0.1f, renderer);
+    ParticleSystem* particleSystem = new ParticleSystem("res/textures/star.png", 1, 50, 50.0f, 4.0f, 0.4f, renderer);
 
     std::vector<Particle*> particles;
     std::vector<Particle*> particlesToDelete;
@@ -71,10 +71,10 @@ void App::run() {
     while (!glfwWindowShouldClose(window->window)) {
         glfwPollEvents();
 
-        light->update(1000.0f, renderer->deltaTime);
-        perspectiveCamera->update(400.0f, renderer->deltaTime);
+        light->update(500.0f, renderer->deltaTime);
+        perspectiveCamera->update(100.0f, renderer->deltaTime);
         orthographicCamera->update(perspectiveCamera, light->viewMatrix);
-        characterAnimator->update(7.0f, renderer->deltaTime);
+        characterAnimator->update(2.0f, renderer->deltaTime);
 
         for (size_t i = 0; i < particlesToDelete.size(); i++) {
             if (particlesToDelete[i]->deleteAtFrame.has_value()) {

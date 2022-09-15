@@ -19,8 +19,10 @@ Instance::Instance(std::string applicationName) {
     
     auto extensions = getRequiredExtensions();
     extensions.push_back("VK_KHR_get_physical_device_properties2");
+    extensions.push_back("VK_KHR_portability_enumeration");
     instanceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
     instanceCreateInfo.ppEnabledExtensionNames = extensions.data();
+    instanceCreateInfo.flags = VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
     
     VkDebugUtilsMessengerCreateInfoEXT messengerCreateInfo{};
     if (ENABLE_VALIDATION_LAYERS) {

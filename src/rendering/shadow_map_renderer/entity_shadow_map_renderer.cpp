@@ -42,7 +42,7 @@ void EntityShadowMapRenderer::CreateGraphicsPipeline() {
     descriptorSetLayouts[0] = descriptorSetLayout->descriptorSetLayout;
     descriptorSetLayouts[1] = Entity::descriptorSetLayout->descriptorSetLayout;
 
-    graphicsPipeline = new GraphicsPipeline(renderer->device->device, "res/shaders/entity_shadow_map_shader.vert.spv", "res/shaders/entity_shadow_map_shader.frag.spv", 1, &bindingDescription, static_cast<uint32_t>(attributeDescriptions.size()), attributeDescriptions.data(), static_cast<uint32_t>(descriptorSetLayouts.size()), descriptorSetLayouts.data(), 0, nullptr, renderer->shadowMapExtent, renderer->shadowMapResources->renderPass->renderPass, VK_SAMPLE_COUNT_1_BIT);
+    graphicsPipeline = new GraphicsPipeline(renderer->device->device, "res/shaders/entity_shadow_map_shader.vert.spv", "res/shaders/entity_shadow_map_shader.frag.spv", 1, &bindingDescription, static_cast<uint32_t>(attributeDescriptions.size()), attributeDescriptions.data(), static_cast<uint32_t>(descriptorSetLayouts.size()), descriptorSetLayouts.data(), 0, nullptr, renderer->shadowMapExtent, renderer->shadowMapResources->renderPass->renderPass, VK_SAMPLE_COUNT_1_BIT, VK_TRUE, VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA);
 }
 
 void EntityShadowMapRenderer::DeleteGraphicsPipeline() {
