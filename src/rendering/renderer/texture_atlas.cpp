@@ -1,8 +1,8 @@
-#include "texture.hpp"
+#include "texture_atlas.hpp"
 
-Texture::Texture(const std::string& fileName, float reflectivity, float shineDamper, Renderer* renderer) {
-    this->reflectivity = reflectivity;
-    this->shineDamper = shineDamper;
+TextureAtlas::TextureAtlas(const std::string& fileName, int rowCount, Renderer* renderer) {
+    this->rowCount = rowCount;
+    imageCount = rowCount * rowCount;
 
     int width;
     int height;
@@ -36,7 +36,13 @@ Texture::Texture(const std::string& fileName, float reflectivity, float shineDam
     delete stagingBuffer;
 }
 
-Texture::~Texture() {
+TextureAtlas::~TextureAtlas() {
     delete sampler;
     delete image;
+}
+
+glm::vec2 TextureAtlas::getOffsetAtIndex(int index) {
+    int column = fmod(index, rowCount);
+    int row = index / rowCount;
+    return glm::vec2((float) column / rowCount, (float) row / rowCount);
 }

@@ -52,8 +52,8 @@ void ParticleRenderer::CreateGraphicsPipelines() {
     std::array<VkPushConstantRange, 1> pushConstantRanges{};
     pushConstantRanges[0] = {VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(VertexPushConstants)};
 
-    graphicsPipeline = new GraphicsPipeline(renderer->device->device, "res/shaders/particle_shader.vert.spv", "res/shaders/particle_shader.frag.spv", 0, nullptr, 0, nullptr, static_cast<uint32_t>(descriptorSetLayouts.size()), descriptorSetLayouts.data(), static_cast<uint32_t>(pushConstantRanges.size()), pushConstantRanges.data(), renderer->swapchain->swapchainExtent, renderer->renderPass->renderPass, renderer->device->msaaSamples, VK_FALSE, VK_BLEND_FACTOR_ONE);
-    offScreenGraphicsPipeline = new GraphicsPipeline(renderer->device->device, "res/shaders/particle_shader.vert.spv", "res/shaders/particle_shader.frag.spv", 0, nullptr, 0, nullptr, static_cast<uint32_t>(descriptorSetLayouts.size()), descriptorSetLayouts.data(), static_cast<uint32_t>(pushConstantRanges.size()), pushConstantRanges.data(), renderer->swapchain->swapchainExtent, renderer->waterResources->renderPass->renderPass, VK_SAMPLE_COUNT_1_BIT, VK_FALSE, VK_BLEND_FACTOR_ONE);
+    graphicsPipeline = new GraphicsPipeline(renderer->device->device, "res/shaders/particle_shader.vert.spv", "res/shaders/particle_shader.frag.spv", 0, nullptr, 0, nullptr, static_cast<uint32_t>(descriptorSetLayouts.size()), descriptorSetLayouts.data(), static_cast<uint32_t>(pushConstantRanges.size()), pushConstantRanges.data(), renderer->swapchain->swapchainExtent, renderer->renderPass->renderPass, renderer->device->msaaSamples, VK_FALSE, VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA);
+    offScreenGraphicsPipeline = new GraphicsPipeline(renderer->device->device, "res/shaders/particle_shader.vert.spv", "res/shaders/particle_shader.frag.spv", 0, nullptr, 0, nullptr, static_cast<uint32_t>(descriptorSetLayouts.size()), descriptorSetLayouts.data(), static_cast<uint32_t>(pushConstantRanges.size()), pushConstantRanges.data(), renderer->swapchain->swapchainExtent, renderer->waterResources->renderPass->renderPass, VK_SAMPLE_COUNT_1_BIT, VK_FALSE, VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA);
 }
 
 void ParticleRenderer::DeleteGraphicsPipelines() {
@@ -61,7 +61,11 @@ void ParticleRenderer::DeleteGraphicsPipelines() {
     delete offScreenGraphicsPipeline;
 }
 
-void ParticleRenderer::render(std::vector<Particle*> particles, PerspectiveCamera* perspectiveCamera, glm::vec4 clipPlane, CommandBuffers* commandBuffers, bool onScreen) {
+void ParticleRenderer::render(std::vector<Particle*>& particles, PerspectiveCamera* perspectiveCamera, glm::vec4 clipPlane, CommandBuffers* commandBuffers, bool onScreen) {
+    std::sort(particles.begin(), particles.end(), [](Particle* p1, Particle* p2) {
+        return p1->distanceFromCamera > p2->distanceFromCamera;
+    });
+
     updateDescriptorSetResources(perspectiveCamera);
 
     VkCommandBuffer commandBuffer = commandBuffers->commandBuffers[renderer->currentFrame];

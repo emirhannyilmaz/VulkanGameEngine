@@ -2,8 +2,8 @@
 
 DescriptorSetLayout* Particle::descriptorSetLayout = nullptr;
 
-Particle::Particle(Texture* texture, glm::vec3 position, float rotation, glm::vec3 scale, glm::vec3 velocity, float gravityMultiplier, float lifeLength, Renderer* renderer) {
-    this->texture = texture;
+Particle::Particle(TextureAtlas* textureAtlas, glm::vec3 position, float rotation, glm::vec3 scale, glm::vec3 velocity, float gravityMultiplier, float lifeLength, Renderer* renderer) {
+    this->textureAtlas = textureAtlas;
     this->position = position;
     this->rotation = rotation;
     this->scale = scale;
@@ -13,7 +13,7 @@ Particle::Particle(Texture* texture, glm::vec3 position, float rotation, glm::ve
     this->renderer = renderer;
 
     std::array<VkDescriptorPoolSize, 2> poolSizes{};
-    poolSizes[0] = {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, MAX_FRAMES_IN_FLIGHT};
+    poolSizes[0] = {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 2 * MAX_FRAMES_IN_FLIGHT};
     poolSizes[1] = {VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, MAX_FRAMES_IN_FLIGHT};
     descriptorPool = new DescriptorPool(renderer->device->device, static_cast<uint32_t>(poolSizes.size()), poolSizes.data(), MAX_FRAMES_IN_FLIGHT);
 
@@ -21,27 +21,47 @@ Particle::Particle(Texture* texture, glm::vec3 position, float rotation, glm::ve
     descriptorSets = new DescriptorSets(renderer->device->device, descriptorPool->descriptorPool, layouts.data(), MAX_FRAMES_IN_FLIGHT);
 
     vertexUniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
+    fragmentUniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         vertexUniformBuffers[i] = new Buffer(renderer->device->physicalDevice, renderer->device->device, sizeof(ParticleVertexUniformBufferObject), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
         descriptorSets->updateBufferInfo(i, 0, 0, 1, vertexUniformBuffers[i]->buffer, sizeof(ParticleVertexUniformBufferObject));
-        descriptorSets->updateImageInfo(i, 1, 0, 1, texture->image->imageView, texture->sampler->sampler);
+
+        fragmentUniformBuffers[i] = new Buffer(renderer->device->physicalDevice, renderer->device->device, sizeof(ParticleFragmentUniformBufferObject), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+        descriptorSets->updateBufferInfo(i, 1, 0, 1, fragmentUniformBuffers[i]->buffer, sizeof(ParticleFragmentUniformBufferObject));
+
+        descriptorSets->updateImageInfo(i, 2, 0, 1, textureAtlas->image->imageView, textureAtlas->sampler->sampler);
     }
 }
 
 Particle::~Particle() {
-    delete texture;
+    delete textureAtlas;
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         delete vertexUniformBuffers[i];
+        delete fragmentUniformBuffers[i];
     }
     vertexUniformBuffers.clear();
+    fragmentUniformBuffers.clear();
     delete descriptorPool;
 }
 
-bool Particle::update(float deltaTime, float realDeltaTime) {
+bool Particle::update(PerspectiveCamera* perspectiveCamera, float deltaTime, float realDeltaTime) {
+    distanceFromCamera = glm::length(perspectiveCamera->position - position);
     velocity.y += GRAVITY * gravityMultiplier * deltaTime;
     position += velocity * deltaTime;
+    updateTextureAtlasInfo();
     elapsedTime += realDeltaTime;
+
     return elapsedTime < lifeLength;
+}
+
+void Particle::updateTextureAtlasInfo() {
+    float lifeFactor = elapsedTime / lifeLength;
+    float atlasProgression = lifeFactor * textureAtlas->imageCount;
+    int index1 = (int) std::floor(atlasProgression);
+    int index2 = index1 < textureAtlas->imageCount - 1 ? index1 + 1 : index1;
+    blendFactor = fmod(atlasProgression, 1);
+    textureOffset1 = textureAtlas->getOffsetAtIndex(index1);
+    textureOffset2 = textureAtlas->getOffsetAtIndex(index2);
 }
 
 void Particle::updateDescriptorSetResources() {
@@ -52,11 +72,22 @@ void Particle::updateDescriptorSetResources() {
 
     ParticleVertexUniformBufferObject vertexUbo{};
     vertexUbo.modelMatrix = matrix;
+    vertexUbo.textureOffset1 = textureOffset1;
+    vertexUbo.textureOffset2 = textureOffset2;
+    vertexUbo.rowCount = textureAtlas->rowCount;
 
     void* data;
     vkMapMemory(renderer->device->device, vertexUniformBuffers[renderer->currentFrame]->bufferMemory, 0, sizeof(vertexUbo), 0, &data);
     memcpy(data, &vertexUbo, sizeof(vertexUbo));
     vkUnmapMemory(renderer->device->device, vertexUniformBuffers[renderer->currentFrame]->bufferMemory);
+
+    ParticleFragmentUniformBufferObject fragmentUbo{};
+    fragmentUbo.blendFactor = blendFactor;
+
+    void* data2;
+    vkMapMemory(renderer->device->device, fragmentUniformBuffers[renderer->currentFrame]->bufferMemory, 0, sizeof(fragmentUbo), 0, &data2);
+    memcpy(data2, &fragmentUbo, sizeof(fragmentUbo));
+    vkUnmapMemory(renderer->device->device, fragmentUniformBuffers[renderer->currentFrame]->bufferMemory);
 }
 
 void Particle::updatePushConstants(PerspectiveCamera* perspectiveCamera) {
@@ -79,9 +110,10 @@ void Particle::updatePushConstants(PerspectiveCamera* perspectiveCamera) {
 }
 
 void Particle::CreateDesriptorSetLayout(VkDevice& device) {
-    std::array<VkDescriptorSetLayoutBinding, 2> layoutBindings{};
+    std::array<VkDescriptorSetLayoutBinding, 3> layoutBindings{};
     layoutBindings[0] = {0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT, nullptr};
-    layoutBindings[1] = {1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, nullptr};
+    layoutBindings[1] = {1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, nullptr};
+    layoutBindings[2] = {2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT, nullptr};
     descriptorSetLayout = new DescriptorSetLayout(device, static_cast<uint32_t>(layoutBindings.size()), layoutBindings.data());
 }
 

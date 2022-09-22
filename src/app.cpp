@@ -31,8 +31,8 @@ void App::run() {
     std::vector<Terrain*> terrains;
     terrains.push_back(terrain);
 
-    Texture* skyboxTexture = new Texture({"res/textures/skybox_front.tga", "res/textures/skybox_back.tga", "res/textures/skybox_up.tga", "res/textures/skybox_down.tga", "res/textures/skybox_right.tga", "res/textures/skybox_left.tga"}, renderer);
-    Skybox* skybox = new Skybox(skyboxTexture, 500.0f, renderer);
+    Cubemap* skyboxCubemap = new Cubemap({"res/textures/skybox_front.tga", "res/textures/skybox_back.tga", "res/textures/skybox_up.tga", "res/textures/skybox_down.tga", "res/textures/skybox_right.tga", "res/textures/skybox_left.tga"}, renderer);
+    Skybox* skybox = new Skybox(skyboxCubemap, 500.0f, renderer);
 
     WaterTile* waterTile = new WaterTile(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec2(800.0f, 800.0f), 0.6f, 20.0f, renderer);
 
@@ -63,7 +63,7 @@ void App::run() {
     Animator* characterAnimator = new Animator(character);
     characterAnimator->setAnimation(&characterAnimationData.animation);
 
-    ParticleSystem* particleSystem = new ParticleSystem("res/textures/star.png", 1, 50, 50.0f, 4.0f, 0.4f, renderer);
+    ParticleSystem* particleSystem = new ParticleSystem("res/textures/fire.png", 4, 50, 20.0f, 0.3f, 2.0f, renderer);
 
     std::vector<Particle*> particles;
     std::vector<Particle*> particlesToDelete;
@@ -86,7 +86,7 @@ void App::run() {
         }
 
         for (size_t i = 0; i < particles.size(); i++) {
-            if (!particles[i]->update(renderer->deltaTime, renderer->realDeltaTime)) {
+            if (!particles[i]->update(perspectiveCamera, renderer->deltaTime, renderer->realDeltaTime)) {
                 particles[i]->deleteAtFrame = renderer->currentFrame;
                 particlesToDelete.push_back(particles[i]);
                 particles.erase(particles.begin() + i);

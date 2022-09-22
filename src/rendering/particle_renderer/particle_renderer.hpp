@@ -28,7 +28,7 @@ public:
     ~ParticleRenderer();
     void CreateGraphicsPipelines();
     void DeleteGraphicsPipelines();
-    void render(std::vector<Particle*> particles, PerspectiveCamera* perspectiveCamera, glm::vec4 clipPlane, CommandBuffers* commandBuffers, bool onScreen);
+    void render(std::vector<Particle*>& particles, PerspectiveCamera* perspectiveCamera, glm::vec4 clipPlane, CommandBuffers* commandBuffers, bool onScreen);
 private:
     Renderer* renderer;
     DescriptorSetLayout* descriptorSetLayout;

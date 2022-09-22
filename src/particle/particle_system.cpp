@@ -1,8 +1,8 @@
 #include "particle_system.hpp"
 
-ParticleSystem::ParticleSystem(std::string textureFileName, int textureRowCount, int particlesPerSecond, float speed, float gravityMultiplier, float lifeLength, Renderer* renderer) {
-    this->textureFileName = textureFileName;
-    this->textureRowCount = textureRowCount;
+ParticleSystem::ParticleSystem(std::string textureAtlasFileName, int textureAtlasRowCount, int particlesPerSecond, float speed, float gravityMultiplier, float lifeLength, Renderer* renderer) {
+    this->textureAtlasFileName = textureAtlasFileName;
+    this->textureAtlasRowCount = textureAtlasRowCount;
     this->particlesPerSecond = particlesPerSecond;
     this->speed = speed;
     this->gravityMultiplier = gravityMultiplier;
@@ -23,9 +23,9 @@ void ParticleSystem::emit(glm::vec3 position, std::vector<Particle*>& particles)
 }
 
 void ParticleSystem::createParticle(glm::vec3 position, std::vector<Particle*>& particles) {
-    glm::vec3 velocity = glm::vec3(((float) rand() / (float) RAND_MAX) * 2.0f - 1.0f, -1.0f, ((float) rand() / (float) RAND_MAX) * 2.0f - 1.0f);
+    glm::vec3 velocity = glm::vec3(0.0f, -1.0f, 0.0f);
     velocity = glm::normalize(velocity);
     velocity *= speed;
-    Texture* texture = new Texture(textureFileName, textureRowCount, renderer);
-    particles.push_back(new Particle(texture, position, 0.0f, glm::vec3(1.0f, 1.0f, 1.0f), velocity, gravityMultiplier, lifeLength, renderer));
+    TextureAtlas* textureAtlas = new TextureAtlas(textureAtlasFileName, textureAtlasRowCount, renderer);
+    particles.push_back(new Particle(textureAtlas, position, 0.0f, glm::vec3(1.0f, 1.0f, 1.0f), velocity, gravityMultiplier, lifeLength, renderer));
 }

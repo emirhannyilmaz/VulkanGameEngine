@@ -2,8 +2,8 @@
 
 DescriptorSetLayout* Skybox::descriptorSetLayout = nullptr;
 
-Skybox::Skybox(Texture* texture, float size, Renderer* renderer) {
-    this->texture = texture;
+Skybox::Skybox(Cubemap* cubemap, float size, Renderer* renderer) {
+    this->cubemap = cubemap;
     this->size = size;
     this->renderer = renderer;
 
@@ -23,7 +23,7 @@ Skybox::Skybox(Texture* texture, float size, Renderer* renderer) {
         vertexUniformBuffers[i] = new Buffer(renderer->device->physicalDevice, renderer->device->device, sizeof(SkyboxVertexUniformBufferObject), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
         descriptorSets->updateBufferInfo(i, 0, 0, 1, vertexUniformBuffers[i]->buffer, sizeof(SkyboxVertexUniformBufferObject));
 
-        descriptorSets->updateImageInfo(i, 1, 0, 1, texture->image->imageView, texture->sampler->sampler);
+        descriptorSets->updateImageInfo(i, 1, 0, 1, cubemap->image->imageView, cubemap->sampler->sampler);
 
         void* data;
         vkMapMemory(renderer->device->device, vertexUniformBuffers[i]->bufferMemory, 0, sizeof(vertexUbo), 0, &data);
@@ -38,7 +38,7 @@ Skybox::~Skybox() {
     }
     vertexUniformBuffers.clear();
     delete descriptorPool;
-    delete texture;
+    delete cubemap;
 }
 
 void Skybox::CreateDesriptorSetLayout(VkDevice& device) {

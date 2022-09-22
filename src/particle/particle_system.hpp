@@ -6,11 +6,11 @@
 
 class ParticleSystem {
 public:
-    ParticleSystem(std::string textureFileName, int textureRowCount, int particlesPerSecond, float speed, float gravityMultiplier, float lifeLength, Renderer* renderer);
+    ParticleSystem(std::string textureAtlasFileName, int textureAtlasRowCount, int particlesPerSecond, float speed, float gravityMultiplier, float lifeLength, Renderer* renderer);
     void emit(glm::vec3 position, std::vector<Particle*>& particles);
 private:
-    std::string textureFileName;
-    int textureRowCount;
+    std::string textureAtlasFileName;
+    int textureAtlasRowCount;
     int particlesPerSecond;
     float speed;
     float gravityMultiplier;
