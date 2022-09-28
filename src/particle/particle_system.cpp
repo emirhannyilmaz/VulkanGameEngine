@@ -1,8 +1,10 @@
 #include "particle_system.hpp"
 
-ParticleSystem::ParticleSystem(std::string textureAtlasFileName, int textureAtlasRowCount, int particlesPerSecond, float speed, float gravityMultiplier, float lifeLength, Renderer* renderer) {
+ParticleSystem::ParticleSystem(std::string textureAtlasFileName, int textureAtlasRowCount, float rotation, float scale, int particlesPerSecond, float speed, float gravityMultiplier, float lifeLength, Renderer* renderer) {
     this->textureAtlasFileName = textureAtlasFileName;
     this->textureAtlasRowCount = textureAtlasRowCount;
+    this->rotation = rotation;
+    this->scale = scale;
     this->particlesPerSecond = particlesPerSecond;
     this->speed = speed;
     this->gravityMultiplier = gravityMultiplier;
@@ -27,5 +29,5 @@ void ParticleSystem::createParticle(glm::vec3 position, std::vector<Particle*>& 
     velocity = glm::normalize(velocity);
     velocity *= speed;
     TextureAtlas* textureAtlas = new TextureAtlas(textureAtlasFileName, textureAtlasRowCount, renderer);
-    particles.push_back(new Particle(textureAtlas, position, 0.0f, glm::vec3(1.0f, 1.0f, 1.0f), velocity, gravityMultiplier, lifeLength, renderer));
+    particles.push_back(new Particle(textureAtlas, position, rotation, glm::vec3(scale), velocity, gravityMultiplier, lifeLength, renderer));
 }

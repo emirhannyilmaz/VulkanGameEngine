@@ -63,18 +63,18 @@ void App::run() {
     Animator* characterAnimator = new Animator(character);
     characterAnimator->setAnimation(&characterAnimationData.animation);
 
-    ParticleSystem* particleSystem = new ParticleSystem("res/textures/fire.png", 4, 50, 20.0f, 0.3f, 2.0f, renderer);
+    ParticleSystem* particleSystem = new ParticleSystem("res/textures/smoke.png", 8, 0.0f, 40.0f, 5, 30.0f, 0.025f, 3.0f, renderer);
 
     std::vector<Particle*> particles;
     std::vector<Particle*> particlesToDelete;
-    
+
     while (!glfwWindowShouldClose(window->window)) {
         glfwPollEvents();
 
-        light->update(500.0f, renderer->deltaTime);
-        perspectiveCamera->update(100.0f, renderer->deltaTime);
+        light->update(1000.0f, renderer->deltaTime);
+        perspectiveCamera->update(250.0f, renderer->deltaTime);
         orthographicCamera->update(perspectiveCamera, light->viewMatrix);
-        characterAnimator->update(2.0f, renderer->deltaTime);
+        characterAnimator->update(4.0f, renderer->deltaTime);
 
         for (size_t i = 0; i < particlesToDelete.size(); i++) {
             if (particlesToDelete[i]->deleteAtFrame.has_value()) {
@@ -93,7 +93,7 @@ void App::run() {
             }
         }
 
-        particleSystem->emit(glm::vec3(0.0f, 0.0f, 0.0f), particles);
+        particleSystem->emit(glm::vec3(200.0f, terrain->getHeightOfTerrain(200.0f, 150.0f), 150.0f), particles);
 
         renderer->beginDrawing();
 
