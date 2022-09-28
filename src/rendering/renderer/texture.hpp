@@ -1,6 +1,7 @@
 #ifndef texture_hpp
 #define texture_hpp
 
+#include <stb_image.h>
 #include <string>
 #include "renderer.hpp"
 #include "image.hpp"
@@ -14,7 +15,6 @@ public:
     float reflectivity;
     float shineDamper;
     Texture(const std::string& fileName, float reflectivity, float shineDamper, Renderer* renderer);
-    Texture(const std::vector<std::string>& fileNames, Renderer* renderer);
     ~Texture();
 };
 

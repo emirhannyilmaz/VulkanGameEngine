@@ -6,6 +6,7 @@
 #include "../terrain_renderer/terrain_renderer.hpp"
 #include "../skybox_renderer/skybox_renderer.hpp"
 #include "../water_renderer/water_renderer.hpp"
+#include "../particle_renderer/particle_renderer.hpp"
 
 Renderer::Renderer(Window* window, PerspectiveCamera* perspectiveCamera) {
     this->window = window;
@@ -108,8 +109,9 @@ void Renderer::beginDrawing() {
         vkGetQueryPoolResults(device->device, queryPool->queryPool, currentFrame * 2, 2, sizeof(timestamps), timestamps.data(), sizeof(uint64_t), VK_QUERY_RESULT_64_BIT);
         double deltaTimeInNanoseconds = ((double) (timestamps[1] - timestamps[0])) * (double) device->timestampPeriod;
 
-        float newDeltaTime = deltaTimeInNanoseconds / 1000000000.0f;
+        float newDeltaTime = deltaTimeInNanoseconds / 1000000000.0;
         deltaTimes.push_back(newDeltaTime);
+        realDeltaTime = newDeltaTime;
     } else {
         isFirstTimeFrameRender[currentFrame] = false;
     }
@@ -269,12 +271,14 @@ void Renderer::recreateSwapchain() {
     skyboxRenderer->CreateGraphicsPipelines();
     terrainRenderer->CreateGraphicsPipelines();
     waterRenderer->CreateGraphicsPipeline();
+    particleRenderer->CreateGraphicsPipelines();
 
     perspectiveCamera->aspectRatio = (float) width / (float) height;
 }
 
 void Renderer::cleanUpSwapchain() {
     if (entityRenderer != nullptr) {
+        particleRenderer->DeleteGraphicsPipelines();
         waterRenderer->DeleteGraphicsPipeline();
         terrainRenderer->DeleteGraphicsPipelines();
         skyboxRenderer->DeleteGraphicsPipelines();

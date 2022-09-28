@@ -7,7 +7,7 @@
 #include "../rendering/renderer/descriptor_pool.hpp"
 #include "../rendering/renderer/descriptor_set_layout.hpp"
 #include "../rendering/renderer/descriptor_sets.hpp"
-#include "../rendering/renderer/renderer_info.hpp"
+#include "../rendering/renderer/common.hpp"
 
 class Texture;
 

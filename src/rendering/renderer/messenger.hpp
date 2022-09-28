@@ -3,7 +3,7 @@
 
 #include <vulkan/vulkan.h>
 #include <stdexcept>
-#include "renderer_info.hpp"
+#include "common.hpp"
 #include <iostream>
 
 class Messenger {

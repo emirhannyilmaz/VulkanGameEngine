@@ -1,6 +1,6 @@
 #include "graphics_pipeline.hpp"
 
-GraphicsPipeline::GraphicsPipeline(VkDevice& device, const std::string& vertexShaderFileName, const std::string& fragmentShaderFileName, uint32_t vertexBindingDescriptionCount, VkVertexInputBindingDescription* vertexBindingDescriptions, uint32_t vertexAttributeDescriptionCount, VkVertexInputAttributeDescription* vertexAttributeDescriptions, uint32_t descriptorSetLayoutCount, VkDescriptorSetLayout* descriptorSetLayouts, uint32_t pushConstantRangeCount, VkPushConstantRange* pushConstantRanges, VkExtent2D& swapchainExtent, VkRenderPass& renderPass, VkSampleCountFlagBits msaaSamples) {
+GraphicsPipeline::GraphicsPipeline(VkDevice& device, const std::string& vertexShaderFileName, const std::string& fragmentShaderFileName, uint32_t vertexBindingDescriptionCount, VkVertexInputBindingDescription* vertexBindingDescriptions, uint32_t vertexAttributeDescriptionCount, VkVertexInputAttributeDescription* vertexAttributeDescriptions, uint32_t descriptorSetLayoutCount, VkDescriptorSetLayout* descriptorSetLayouts, uint32_t pushConstantRangeCount, VkPushConstantRange* pushConstantRanges, VkExtent2D& swapchainExtent, VkRenderPass& renderPass, VkSampleCountFlagBits msaaSamples, VkBool32 depthWriteEnable, VkBlendFactor dstColorBlendFactor) {
     this->device = device;
 
     ShaderModule vertexShader(device, vertexShaderFileName);
@@ -18,7 +18,7 @@ GraphicsPipeline::GraphicsPipeline(VkDevice& device, const std::string& vertexSh
     fragmentShaderStageCreateInfo.module = fragmentShader.shaderModule;
     fragmentShaderStageCreateInfo.pName = "main";
 
-    VkPipelineShaderStageCreateInfo shaderStages[] = {
+    std::vector<VkPipelineShaderStageCreateInfo> shaderStages = {
         vertexShaderStageCreateInfo,
         fragmentShaderStageCreateInfo
     };
@@ -80,7 +80,7 @@ GraphicsPipeline::GraphicsPipeline(VkDevice& device, const std::string& vertexSh
     VkPipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo{};
     depthStencilStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
     depthStencilStateCreateInfo.depthTestEnable = VK_TRUE;
-    depthStencilStateCreateInfo.depthWriteEnable = VK_TRUE;
+    depthStencilStateCreateInfo.depthWriteEnable = depthWriteEnable;
     depthStencilStateCreateInfo.depthCompareOp = VK_COMPARE_OP_LESS;
     depthStencilStateCreateInfo.depthBoundsTestEnable = VK_FALSE;
     depthStencilStateCreateInfo.minDepthBounds = 0.0f;
@@ -93,7 +93,7 @@ GraphicsPipeline::GraphicsPipeline(VkDevice& device, const std::string& vertexSh
     colorBlendAttachmentState.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
     colorBlendAttachmentState.blendEnable = VK_TRUE;
     colorBlendAttachmentState.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
-    colorBlendAttachmentState.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+    colorBlendAttachmentState.dstColorBlendFactor = dstColorBlendFactor;
     colorBlendAttachmentState.colorBlendOp = VK_BLEND_OP_ADD;
     colorBlendAttachmentState.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
     colorBlendAttachmentState.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
@@ -110,16 +110,6 @@ GraphicsPipeline::GraphicsPipeline(VkDevice& device, const std::string& vertexSh
     colorBlendStateCreateInfo.blendConstants[2] = 0.0f;
     colorBlendStateCreateInfo.blendConstants[3] = 0.0f;
 
-    VkDynamicState dynamicStates[] = {
-        VK_DYNAMIC_STATE_VIEWPORT,
-        VK_DYNAMIC_STATE_LINE_WIDTH
-    };
-
-    VkPipelineDynamicStateCreateInfo dynamicStateCreateInfo{};
-    dynamicStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
-    dynamicStateCreateInfo.dynamicStateCount = 2;
-    dynamicStateCreateInfo.pDynamicStates = dynamicStates;
-
     VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo{};
     pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     pipelineLayoutCreateInfo.setLayoutCount = descriptorSetLayoutCount;
@@ -133,8 +123,8 @@ GraphicsPipeline::GraphicsPipeline(VkDevice& device, const std::string& vertexSh
     
     VkGraphicsPipelineCreateInfo graphicsPipelineCreateInfo{};
     graphicsPipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-    graphicsPipelineCreateInfo.stageCount = 2;
-    graphicsPipelineCreateInfo.pStages = shaderStages;
+    graphicsPipelineCreateInfo.stageCount = static_cast<uint32_t>(shaderStages.size());
+    graphicsPipelineCreateInfo.pStages = shaderStages.data();
     graphicsPipelineCreateInfo.pVertexInputState = &vertexInputStateCreateInfo;
     graphicsPipelineCreateInfo.pInputAssemblyState = &inputAssemblyStateCreateInfo;
     graphicsPipelineCreateInfo.pViewportState = &viewportStateCreateInfo;

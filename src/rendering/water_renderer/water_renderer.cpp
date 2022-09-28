@@ -68,7 +68,7 @@ void WaterRenderer::CreateGraphicsPipeline() {
     descriptorSetLayouts[0] = descriptorSetLayout->descriptorSetLayout;
     descriptorSetLayouts[1] = WaterTile::descriptorSetLayout->descriptorSetLayout;
 
-    graphicsPipeline = new GraphicsPipeline(renderer->device->device, "res/shaders/water_shader.vert.spv", "res/shaders/water_shader.frag.spv", 1, &bindingDescription, static_cast<uint32_t>(attributeDescriptions.size()), attributeDescriptions.data(), static_cast<uint32_t>(descriptorSetLayouts.size()), descriptorSetLayouts.data(), 0, nullptr, renderer->swapchain->swapchainExtent, renderer->renderPass->renderPass, renderer->device->msaaSamples);
+    graphicsPipeline = new GraphicsPipeline(renderer->device->device, "res/shaders/water_shader.vert.spv", "res/shaders/water_shader.frag.spv", 1, &bindingDescription, static_cast<uint32_t>(attributeDescriptions.size()), attributeDescriptions.data(), static_cast<uint32_t>(descriptorSetLayouts.size()), descriptorSetLayouts.data(), 0, nullptr, renderer->swapchain->swapchainExtent, renderer->renderPass->renderPass, renderer->device->msaaSamples, VK_TRUE, VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA);
 }
 
 void WaterRenderer::DeleteGraphicsPipeline() {
@@ -81,6 +81,7 @@ void WaterRenderer::render(std::vector<WaterTile*> waterTiles, PerspectiveCamera
     VkCommandBuffer commandBuffer = commandBuffers->commandBuffers[renderer->currentFrame];
 
     vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline->graphicsPipeline);
+
     std::array<VkDescriptorSet, 2> descriptorSetsToBind{};
     descriptorSetsToBind[0] = descriptorSets->descriptorSets[renderer->currentFrame];
     for (WaterTile* waterTile : waterTiles) {
