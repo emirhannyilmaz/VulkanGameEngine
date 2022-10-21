@@ -5,6 +5,8 @@ GaussianBlurResources::GaussianBlurResources(VkPhysicalDevice& physicalDevice, V
     rawDepthResources = new DepthResources(physicalDevice, device, extent, VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT);
     horizontalBlurColorResources = new ColorResources(physicalDevice, device, extent, VK_SAMPLE_COUNT_1_BIT, colorAttachmentFormat, VK_IMAGE_USAGE_SAMPLED_BIT);
 
+    sampler = new Sampler(physicalDevice, device, 0);
+
     rawRenderPass = new RenderPass(device, colorAttachmentFormat, DepthResources::findDepthFormat(physicalDevice), VK_SAMPLE_COUNT_1_BIT, false, true, true, false);
     horizontalBlurRenderPass = new RenderPass(device, colorAttachmentFormat, DepthResources::findDepthFormat(physicalDevice), VK_SAMPLE_COUNT_1_BIT, false, true, false, false);
 
@@ -25,6 +27,7 @@ GaussianBlurResources::~GaussianBlurResources() {
     delete rawFramebuffer;
     delete horizontalBlurRenderPass;
     delete rawRenderPass;
+    delete sampler;
     delete horizontalBlurColorResources;
     delete rawDepthResources;
     delete rawColorResources;

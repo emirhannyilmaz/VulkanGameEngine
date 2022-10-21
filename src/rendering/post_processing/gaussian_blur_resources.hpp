@@ -3,6 +3,7 @@
 
 #include "../renderer/color_resources.hpp"
 #include "../renderer/depth_resources.hpp"
+#include "../renderer/sampler.hpp"
 #include "../renderer/render_pass.hpp"
 #include "../renderer/framebuffer.hpp"
 #include <array>
@@ -12,6 +13,7 @@ public:
     ColorResources* rawColorResources;
     DepthResources* rawDepthResources;
     ColorResources* horizontalBlurColorResources;
+    Sampler* sampler;
     RenderPass* rawRenderPass;
     RenderPass* horizontalBlurRenderPass;
     Framebuffer* rawFramebuffer;
