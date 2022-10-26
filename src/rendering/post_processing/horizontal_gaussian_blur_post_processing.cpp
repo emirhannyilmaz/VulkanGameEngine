@@ -42,7 +42,7 @@ void HorizontalGaussianBlurPostProcessing::CreateGraphicsPipeline() {
     std::array<VkDescriptorSetLayout, 1> descriptorSetLayouts{};
     descriptorSetLayouts[0] = descriptorSetLayout->descriptorSetLayout;
 
-    graphicsPipeline = new GraphicsPipeline(renderer->device->device, "res/shaders/horizontal_gaussian_blur_shader.vert.spv", "res/shaders/common_gaussian_blur_shader.frag.spv", 0, nullptr, 0, nullptr, static_cast<uint32_t>(descriptorSetLayouts.size()), descriptorSetLayouts.data(), 0, nullptr, renderer->swapchain->swapchainExtent, renderer->gaussianBlurResources->renderPass->renderPass, VK_SAMPLE_COUNT_1_BIT, VK_FALSE, VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA);
+    graphicsPipeline = new GraphicsPipeline(renderer->device->device, "res/shaders/horizontal_gaussian_blur_shader.vert.spv", "res/shaders/common_gaussian_blur_shader.frag.spv", 0, nullptr, 0, nullptr, static_cast<uint32_t>(descriptorSetLayouts.size()), descriptorSetLayouts.data(), 0, nullptr, renderer->swapchain->swapchainExtent, renderer->gaussianBlurResources->horizontalBlurRenderPass->renderPass, VK_SAMPLE_COUNT_1_BIT, VK_FALSE, VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA);
 }
 
 void HorizontalGaussianBlurPostProcessing::DeleteGraphicsPipeline() {

@@ -2,8 +2,8 @@
 
 GaussianBlurResources::GaussianBlurResources(VkPhysicalDevice& physicalDevice, VkDevice& device, VkExtent2D& extent, VkFormat colorAttachmentFormat) {
     rawColorResources = new ColorResources(physicalDevice, device, extent, VK_SAMPLE_COUNT_1_BIT, colorAttachmentFormat, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT);
-    rawDepthResources = new DepthResources(physicalDevice, device, extent, VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT);
-    horizontalBlurColorResources = new ColorResources(physicalDevice, device, extent, VK_SAMPLE_COUNT_1_BIT, colorAttachmentFormat, VK_IMAGE_USAGE_SAMPLED_BIT);
+    rawDepthResources = new DepthResources(physicalDevice, device, extent, VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT);
+    horizontalBlurColorResources = new ColorResources(physicalDevice, device, extent, VK_SAMPLE_COUNT_1_BIT, colorAttachmentFormat, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT);
 
     sampler = new Sampler(physicalDevice, device, 0);
 

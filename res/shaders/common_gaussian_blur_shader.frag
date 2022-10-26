@@ -20,7 +20,7 @@ layout(location = 0) in vec2 fragTextureCoordinates[11];
 
 layout(location = 0) out vec4 outColor;
 
-int main() {
+void main() {
     outColor = vec4(0.0);
     for (int i = 0; i < 11; i++) {
         outColor += texture(textureSampler, fragTextureCoordinates[i]) * weights[i];

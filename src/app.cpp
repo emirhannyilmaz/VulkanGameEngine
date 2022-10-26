@@ -16,6 +16,8 @@ void App::run() {
     SkyboxRenderer* skyboxRenderer = new SkyboxRenderer(renderer);
     WaterRenderer* waterRenderer = new WaterRenderer(renderer);
     ParticleRenderer* particleRenderer = new ParticleRenderer(renderer);
+    HorizontalGaussianBlurPostProcessing* horizontalGaussianBlurPostProcessing = new HorizontalGaussianBlurPostProcessing(renderer);
+    VerticalGaussianBlurPostProcessing* verticalGaussianBlurPostProcessing = new VerticalGaussianBlurPostProcessing(renderer);
     renderer->entityRenderer = entityRenderer;
     renderer->animatedEntityRenderer = animatedEntityRenderer;
     renderer->entityShadowMapRenderer = entityShadowMapRenderer;
@@ -24,6 +26,8 @@ void App::run() {
     renderer->skyboxRenderer = skyboxRenderer;
     renderer->waterRenderer = waterRenderer;
     renderer->particleRenderer = particleRenderer;
+    renderer->horizontalGaussianBlurPostProcessing = horizontalGaussianBlurPostProcessing;
+    renderer->verticalGaussianBlurPostProcessing = verticalGaussianBlurPostProcessing;
     
     Texture* terrainTexture = new Texture("res/textures/grass.png", 0.0f, 0.0f, renderer);
     Terrain* terrain = new Terrain(terrainTexture, "res/textures/terrain_heightmap.png", glm::vec2(0.0f, 0.0f), renderer);
@@ -99,12 +103,12 @@ void App::run() {
 
         renderer->beginRecordingCommands(renderer->offScreenCommandBuffers);
 
-        renderer->beginRendering(renderer->shadowMapResources->renderPass, renderer->shadowMapResources->framebuffer, renderer->offScreenCommandBuffers, false);
+        renderer->beginRendering(renderer->shadowMapResources->renderPass, renderer->shadowMapResources->framebuffer, renderer->offScreenCommandBuffers, false, true);
         entityShadowMapRenderer->render(entities, light, perspectiveCamera, orthographicCamera, renderer->offScreenCommandBuffers);
         animatedEntityShadowMapRenderer->render(animatedEntities, light, perspectiveCamera, orthographicCamera, renderer->offScreenCommandBuffers);
         renderer->endRendering(renderer->offScreenCommandBuffers);
 
-        renderer->beginRendering(renderer->waterResources->renderPass, renderer->waterResources->reflectionFramebuffer, renderer->offScreenCommandBuffers, true);
+        renderer->beginRendering(renderer->waterResources->renderPass, renderer->waterResources->reflectionFramebuffer, renderer->offScreenCommandBuffers, true, true);
         perspectiveCamera->invert(2 * (std::abs(perspectiveCamera->position.y) - std::abs(waterTile->position.y)));
         terrainRenderer->render(terrains, light, perspectiveCamera, orthographicCamera, glm::vec4(0.0f, -1.0f, 0.0f, waterTile->position.y + 1.0f), renderer->offScreenCommandBuffers, false);
         entityRenderer->render(entities, light, perspectiveCamera, glm::vec4(0.0f, -1.0f, 0.0f, waterTile->position.y + 1.0f), renderer->offScreenCommandBuffers, false);
@@ -114,7 +118,7 @@ void App::run() {
         perspectiveCamera->revert();
         renderer->endRendering(renderer->offScreenCommandBuffers);
 
-        renderer->beginRendering(renderer->waterResources->renderPass, renderer->waterResources->refractionFramebuffer, renderer->offScreenCommandBuffers, true);
+        renderer->beginRendering(renderer->waterResources->renderPass, renderer->waterResources->refractionFramebuffer, renderer->offScreenCommandBuffers, true, true);
         terrainRenderer->render(terrains, light, perspectiveCamera, orthographicCamera, glm::vec4(0.0f, 1.0f, 0.0f, -waterTile->position.y), renderer->offScreenCommandBuffers, false);
         entityRenderer->render(entities, light, perspectiveCamera, glm::vec4(0.0f, 1.0f, 0.0f, -waterTile->position.y), renderer->offScreenCommandBuffers, false);
         animatedEntityRenderer->render(animatedEntities, light, perspectiveCamera, glm::vec4(0.0f, -1.0f, 0.0f, waterTile->position.y + 1.0f), renderer->offScreenCommandBuffers, false);
@@ -125,7 +129,7 @@ void App::run() {
         renderer->endRecordingCommands(renderer->offScreenCommandBuffers);
 
         renderer->beginRecordingCommands(renderer->commandBuffers);
-
+/*
         renderer->beginRendering(renderer->renderPass, renderer->framebuffers[renderer->currentImageIndex], renderer->commandBuffers, true);
         terrainRenderer->render(terrains, light, perspectiveCamera, orthographicCamera, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), renderer->commandBuffers, true);
         entityRenderer->render(entities, light, perspectiveCamera, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), renderer->commandBuffers, true);
@@ -133,6 +137,23 @@ void App::run() {
         skyboxRenderer->render(skybox, perspectiveCamera, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), renderer->commandBuffers, true);
         waterRenderer->render(waterTiles, perspectiveCamera, light, renderer->commandBuffers);
         particleRenderer->render(particles, perspectiveCamera, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), renderer->commandBuffers, true);
+        renderer->endRendering(renderer->commandBuffers);
+*/
+        renderer->beginRendering(renderer->gaussianBlurResources->rawRenderPass, renderer->gaussianBlurResources->rawFramebuffer, renderer->commandBuffers, true, true);
+        terrainRenderer->render(terrains, light, perspectiveCamera, orthographicCamera, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), renderer->commandBuffers, false);
+        entityRenderer->render(entities, light, perspectiveCamera, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), renderer->commandBuffers, false);
+        animatedEntityRenderer->render(animatedEntities, light, perspectiveCamera, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), renderer->commandBuffers, false);
+        skyboxRenderer->render(skybox, perspectiveCamera, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), renderer->commandBuffers, false);
+        waterRenderer->render(waterTiles, perspectiveCamera, light, renderer->commandBuffers, false);
+        particleRenderer->render(particles, perspectiveCamera, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), renderer->commandBuffers, false);
+        renderer->endRendering(renderer->commandBuffers);
+
+        renderer->beginRendering(renderer->gaussianBlurResources->horizontalBlurRenderPass, renderer->gaussianBlurResources->horizontalBlurFramebuffer, renderer->commandBuffers, true, false);
+        horizontalGaussianBlurPostProcessing->process(static_cast<int>(renderer->swapchain->swapchainExtent.width), renderer->commandBuffers);
+        renderer->endRendering(renderer->commandBuffers);
+
+        renderer->beginRendering(renderer->renderPass, renderer->framebuffers[renderer->currentImageIndex], renderer->commandBuffers, true, true);
+        verticalGaussianBlurPostProcessing->process(static_cast<int>(renderer->swapchain->swapchainExtent.height), renderer->commandBuffers);
         renderer->endRendering(renderer->commandBuffers);
 
         renderer->endRecordingCommands(renderer->commandBuffers);
@@ -177,6 +198,8 @@ void App::run() {
     }
     terrains.clear();
 
+    delete verticalGaussianBlurPostProcessing;
+    delete horizontalGaussianBlurPostProcessing;
     delete particleRenderer;
     delete waterRenderer;
     delete skyboxRenderer;
@@ -192,6 +215,9 @@ void App::run() {
     renderer->terrainRenderer = nullptr;
     renderer->skyboxRenderer = nullptr;
     renderer->waterRenderer = nullptr;
+    renderer->particleRenderer = nullptr;
+    renderer->horizontalGaussianBlurPostProcessing = nullptr;
+    renderer->verticalGaussianBlurPostProcessing = nullptr;
     delete renderer;
     delete orthographicCamera;
     delete perspectiveCamera;

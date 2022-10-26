@@ -11,6 +11,8 @@
 #include "rendering/skybox_renderer/skybox_renderer.hpp"
 #include "rendering/water_renderer/water_renderer.hpp"
 #include "rendering/particle_renderer/particle_renderer.hpp"
+#include "rendering/post_processing/horizontal_gaussian_blur_post_processing.hpp"
+#include "rendering/post_processing/vertical_gaussian_blur_post_processing.hpp"
 #include "utils/collada_loader.hpp"
 #include "animation/animator.hpp"
 #include "particle/particle_system.hpp"

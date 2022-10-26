@@ -7,6 +7,8 @@
 #include "../skybox_renderer/skybox_renderer.hpp"
 #include "../water_renderer/water_renderer.hpp"
 #include "../particle_renderer/particle_renderer.hpp"
+#include "../post_processing/horizontal_gaussian_blur_post_processing.hpp"
+#include "../post_processing/vertical_gaussian_blur_post_processing.hpp"
 
 Renderer::Renderer(Window* window, PerspectiveCamera* perspectiveCamera) {
     this->window = window;
@@ -21,7 +23,7 @@ Renderer::Renderer(Window* window, PerspectiveCamera* perspectiveCamera) {
     surface = new Surface(instance->instance, window->window);
     device = new Device(instance->instance, surface->surface);
     swapchain = new Swapchain(device->device, surface->surface, device->swapchainSupportDetails, window->window, device->indices);
-    renderPass = new RenderPass(device->device, swapchain->swapchainImageFormat, DepthResources::findDepthFormat(device->physicalDevice), device->msaaSamples, true, true);
+    renderPass = new RenderPass(device->device, swapchain->swapchainImageFormat, DepthResources::findDepthFormat(device->physicalDevice), device->msaaSamples, true, true, true, true);
     commandPool = new CommandPool(device->device, device->indices.graphicsFamily.value(), VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
     queryPool = new QueryPool(device->device, 2 * MAX_FRAMES_IN_FLIGHT);
     colorResources = new ColorResources(device->physicalDevice, device->device, swapchain->swapchainExtent, device->msaaSamples, swapchain->swapchainImageFormat, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT);
@@ -39,6 +41,7 @@ Renderer::Renderer(Window* window, PerspectiveCamera* perspectiveCamera) {
 
     waterResources = new WaterResources(device->physicalDevice, device->device, swapchain->swapchainExtent, swapchain->swapchainImageFormat);
     shadowMapResources = new ShadowMapResources(device->physicalDevice, device->device, shadowMapExtent);
+    gaussianBlurResources = new GaussianBlurResources(device->physicalDevice, device->device, swapchain->swapchainExtent, swapchain->swapchainImageFormat);
     commandBuffers = new CommandBuffers(device->device, commandPool->commandPool, MAX_FRAMES_IN_FLIGHT);
     offScreenCommandBuffers = new CommandBuffers(device->device, commandPool->commandPool, MAX_FRAMES_IN_FLIGHT);
 
@@ -204,7 +207,7 @@ void Renderer::endRecordingCommands(CommandBuffers* commandBuffers) {
     }
 }
 
-void Renderer::beginRendering(RenderPass* renderPass, Framebuffer* framebuffer, CommandBuffers* commandBuffers, bool hasColorAttachment) {
+void Renderer::beginRendering(RenderPass* renderPass, Framebuffer* framebuffer, CommandBuffers* commandBuffers, bool hasColorAttachment, bool hasDepthAttachment) {
     if (acquireNextImageResult == VK_ERROR_OUT_OF_DATE_KHR) {
         return;
     }
@@ -219,7 +222,9 @@ void Renderer::beginRendering(RenderPass* renderPass, Framebuffer* framebuffer, 
     if (hasColorAttachment) {
         clearValues.push_back({{0.0f, 0.0f, 0.0f, 1.0f}});
     }
-    clearValues.push_back({{1.0f, 0}});
+    if (hasDepthAttachment) {
+        clearValues.push_back({{1.0f, 0}});
+    }
     renderPassBeginInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
     renderPassBeginInfo.pClearValues = clearValues.data();
     vkCmdBeginRenderPass(commandBuffers->commandBuffers[currentFrame], &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
@@ -246,7 +251,7 @@ void Renderer::recreateSwapchain() {
     cleanUpSwapchain();
 
     swapchain = new Swapchain(device->device, surface->surface, device->swapchainSupportDetails, window->window, device->indices);
-    renderPass = new RenderPass(device->device, swapchain->swapchainImageFormat, DepthResources::findDepthFormat(device->physicalDevice), device->msaaSamples, true, true);
+    renderPass = new RenderPass(device->device, swapchain->swapchainImageFormat, DepthResources::findDepthFormat(device->physicalDevice), device->msaaSamples, true, true, true, true);
     colorResources = new ColorResources(device->physicalDevice, device->device, swapchain->swapchainExtent, device->msaaSamples, swapchain->swapchainImageFormat, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT);
     depthResources = new DepthResources(device->physicalDevice, device->device, swapchain->swapchainExtent, device->msaaSamples, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT);
 
@@ -262,8 +267,11 @@ void Renderer::recreateSwapchain() {
 
     waterResources = new WaterResources(device->physicalDevice, device->device, swapchain->swapchainExtent, swapchain->swapchainImageFormat);
     shadowMapResources = new ShadowMapResources(device->physicalDevice, device->device, shadowMapExtent);
+    gaussianBlurResources = new GaussianBlurResources(device->physicalDevice, device->device, swapchain->swapchainExtent, swapchain->swapchainImageFormat);
     waterRenderer->updateDescriptorSetImageInfos();
     terrainRenderer->updateDescriptorSetImageInfos();
+    horizontalGaussianBlurPostProcessing->updateDescriptorSetImageInfos();
+    verticalGaussianBlurPostProcessing->updateDescriptorSetImageInfos();
     entityRenderer->CreateGraphicsPipelines();
     animatedEntityRenderer->CreateGraphicsPipelines();
     entityShadowMapRenderer->CreateGraphicsPipeline();
@@ -272,12 +280,16 @@ void Renderer::recreateSwapchain() {
     terrainRenderer->CreateGraphicsPipelines();
     waterRenderer->CreateGraphicsPipeline();
     particleRenderer->CreateGraphicsPipelines();
+    horizontalGaussianBlurPostProcessing->CreateGraphicsPipeline();
+    verticalGaussianBlurPostProcessing->CreateGraphicsPipeline();
 
     perspectiveCamera->aspectRatio = (float) width / (float) height;
 }
 
 void Renderer::cleanUpSwapchain() {
     if (entityRenderer != nullptr) {
+        verticalGaussianBlurPostProcessing->DeleteGraphicsPipeline();
+        horizontalGaussianBlurPostProcessing->DeleteGraphicsPipeline();
         particleRenderer->DeleteGraphicsPipelines();
         waterRenderer->DeleteGraphicsPipeline();
         terrainRenderer->DeleteGraphicsPipelines();
@@ -287,6 +299,7 @@ void Renderer::cleanUpSwapchain() {
         animatedEntityRenderer->DeleteGraphicsPipelines();
         entityRenderer->DeleteGraphicsPipelines();
     }
+    delete gaussianBlurResources;
     delete shadowMapResources;
     delete waterResources;
 

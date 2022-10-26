@@ -15,3 +15,6 @@
 /Users/emirhanyilmaz/Development/VulkanSDK/macOS/bin/glslc res/shaders/terrain_shader.frag -o res/shaders/terrain_shader.frag.spv
 /Users/emirhanyilmaz/Development/VulkanSDK/macOS/bin/glslc res/shaders/particle_shader.vert -o res/shaders/particle_shader.vert.spv
 /Users/emirhanyilmaz/Development/VulkanSDK/macOS/bin/glslc res/shaders/particle_shader.frag -o res/shaders/particle_shader.frag.spv
+/Users/emirhanyilmaz/Development/VulkanSDK/macOS/bin/glslc res/shaders/horizontal_gaussian_blur_shader.vert -o res/shaders/horizontal_gaussian_blur_shader.vert.spv
+/Users/emirhanyilmaz/Development/VulkanSDK/macOS/bin/glslc res/shaders/vertical_gaussian_blur_shader.vert -o res/shaders/vertical_gaussian_blur_shader.vert.spv
+/Users/emirhanyilmaz/Development/VulkanSDK/macOS/bin/glslc res/shaders/common_gaussian_blur_shader.frag -o res/shaders/common_gaussian_blur_shader.frag.spv

@@ -22,6 +22,7 @@
 #include "../../entities/perspective_camera.hpp"
 #include "../water_renderer/water_resources.hpp"
 #include "../shadow_map_renderer/shadow_map_resources.hpp"
+#include "../post_processing/gaussian_blur_resources.hpp"
 #include <array>
 #include "query_pool.hpp"
 
@@ -33,6 +34,8 @@ class TerrainRenderer;
 class SkyboxRenderer;
 class WaterRenderer;
 class ParticleRenderer;
+class HorizontalGaussianBlurPostProcessing;
+class VerticalGaussianBlurPostProcessing;
 
 class Renderer {
 public:
@@ -49,6 +52,7 @@ public:
     std::vector<Framebuffer*> framebuffers;
     WaterResources* waterResources;
     ShadowMapResources* shadowMapResources;
+    GaussianBlurResources* gaussianBlurResources;
     CommandBuffers* commandBuffers;
     CommandBuffers* offScreenCommandBuffers;
     std::vector<Semaphore*> imageAvailableSemaphores;
@@ -71,6 +75,8 @@ public:
     SkyboxRenderer* skyboxRenderer;
     WaterRenderer* waterRenderer;
     ParticleRenderer* particleRenderer;
+    HorizontalGaussianBlurPostProcessing* horizontalGaussianBlurPostProcessing;
+    VerticalGaussianBlurPostProcessing* verticalGaussianBlurPostProcessing;
     Renderer(Window* window, PerspectiveCamera* perspectiveCamera);
     ~Renderer();
     void waitIdle();
@@ -78,7 +84,7 @@ public:
     void endDrawing();
     void beginRecordingCommands(CommandBuffers* commandBuffers);
     void endRecordingCommands(CommandBuffers* commandBuffers);
-    void beginRendering(RenderPass* renderPass, Framebuffer* framebuffer, CommandBuffers* commandBuffers, bool hasColorAttachment);
+    void beginRendering(RenderPass* renderPass, Framebuffer* framebuffer, CommandBuffers* commandBuffers, bool hasColorAttachment, bool hasDepthAttachment);
     void endRendering(CommandBuffers* commandBuffers);
 private:
     Window* window;
