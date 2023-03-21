@@ -6,7 +6,7 @@ WaterResources::WaterResources(VkPhysicalDevice& physicalDevice, VkDevice& devic
     refractionColorResources = new ColorResources(physicalDevice, device, extent, VK_SAMPLE_COUNT_1_BIT, colorAttachmentFormat, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT);
     refractionDepthResources = new DepthResources(physicalDevice, device, extent, VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT);
     sampler = new Sampler(physicalDevice, device, 0);
-    renderPass = new RenderPass(device, colorAttachmentFormat, DepthResources::findDepthFormat(physicalDevice), VK_SAMPLE_COUNT_1_BIT, false, true);
+    renderPass = new WaterRendererRenderPass(device, colorAttachmentFormat, DepthResources::findDepthFormat(physicalDevice));
 
     std::array<VkImageView, 2> reflectionAttachments = {
         reflectionColorResources->image->imageView,

@@ -24,16 +24,17 @@ struct SkyboxRendererVertexPushConstants {
 
 class SkyboxRenderer {
 public:
+    GraphicsPipeline* graphicsPipeline;
+    GraphicsPipeline* graphicsPipelineForWater;
+    GraphicsPipeline* graphicsPipelineForGaussianBlur;
     SkyboxRenderer(Renderer* renderer);
     ~SkyboxRenderer();
     void CreateGraphicsPipelines();
     void DeleteGraphicsPipelines();
-    void render(Skybox* skybox, PerspectiveCamera* perspectiveCamera, glm::vec4 clipPlane, CommandBuffers* commandBuffers, bool onScreen);
+    void render(Skybox* skybox, PerspectiveCamera* perspectiveCamera, glm::vec4 clipPlane, CommandBuffers* commandBuffers, GraphicsPipeline* graphicsPipeline);
 private:
     Renderer* renderer;
     DescriptorSetLayout* descriptorSetLayout;
-    GraphicsPipeline* graphicsPipeline;
-    GraphicsPipeline* offScreenGraphicsPipeline;
     DescriptorPool* descriptorPool;
     DescriptorSets* descriptorSets;
     std::vector<Buffer*> vertexUniformBuffers;

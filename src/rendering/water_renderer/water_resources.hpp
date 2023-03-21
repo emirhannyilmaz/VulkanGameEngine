@@ -4,7 +4,7 @@
 #include "../renderer/color_resources.hpp"
 #include "../renderer/depth_resources.hpp"
 #include "../renderer/sampler.hpp"
-#include "../renderer/render_pass.hpp"
+#include "water_renderer_render_pass.hpp"
 #include "../renderer/framebuffer.hpp"
 #include <array>
 
@@ -15,10 +15,10 @@ public:
     ColorResources* refractionColorResources;
     DepthResources* refractionDepthResources;
     Sampler* sampler;
-    RenderPass* renderPass;
+    WaterRendererRenderPass* renderPass;
     Framebuffer* reflectionFramebuffer;
     Framebuffer* refractionFramebuffer;
-    WaterResources(VkPhysicalDevice& physicalDevice, VkDevice& device, VkExtent2D& extent, VkFormat colorFormat);
+    WaterResources(VkPhysicalDevice& physicalDevice, VkDevice& device, VkExtent2D& extent, VkFormat colorAttachmentFormat);
     ~WaterResources();
 };
 

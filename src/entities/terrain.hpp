@@ -8,7 +8,7 @@
 #include "../rendering/renderer/descriptor_set_layout.hpp"
 #include "../rendering/renderer/descriptor_sets.hpp"
 #include "../rendering/renderer/common.hpp"
-#include <stb_image.h>
+#include <stb/stb_image.h>
 
 class Texture;
 

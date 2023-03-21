@@ -31,17 +31,18 @@ struct TerrainRendererVertexPushConstants {
 
 class TerrainRenderer {
 public:
+    GraphicsPipeline* graphicsPipeline;
+    GraphicsPipeline* graphicsPipelineForWater;
+    GraphicsPipeline* graphicsPipelineForGaussianBlur;
     TerrainRenderer(Renderer* renderer);
     ~TerrainRenderer();
     void CreateGraphicsPipelines();
     void DeleteGraphicsPipelines();
-    void render(std::vector<Terrain*> terrains, Light* light, PerspectiveCamera* perspectiveCamera, OrthographicCamera* orthographicCamera, glm::vec4 clipPlane, CommandBuffers* commandBuffers, bool onScreen);
+    void render(std::vector<Terrain*> terrains, Light* light, PerspectiveCamera* perspectiveCamera, OrthographicCamera* orthographicCamera, glm::vec4 clipPlane, CommandBuffers* commandBuffers, GraphicsPipeline* graphicsPipeline);
     void updateDescriptorSetImageInfos();
 private:
     Renderer* renderer;
     DescriptorSetLayout* descriptorSetLayout;
-    GraphicsPipeline* graphicsPipeline;
-    GraphicsPipeline* offScreenGraphicsPipeline;
     DescriptorPool* descriptorPool;
     DescriptorSets* descriptorSets;
     std::vector<Buffer*> vertexUniformBuffers;

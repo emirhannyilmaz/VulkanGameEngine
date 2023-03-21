@@ -1,7 +1,7 @@
 #ifndef texture_atlas_hpp
 #define texture_atlas_hpp
 
-#include <stb_image.h>
+#include <stb/stb_image.h>
 #include <string>
 #include "renderer.hpp"
 #include "image.hpp"
