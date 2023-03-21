@@ -68,6 +68,7 @@ void App::run() {
     characterAnimator->setAnimation(&characterAnimationData.animation);
 
     ParticleSystem* particleSystem = new ParticleSystem("res/textures/smoke.png", 8, 0.0f, 40.0f, 5, 30.0f, 0.025f, 3.0f, renderer);
+    PostProcessingManager* postProcessingManager = new PostProcessingManager();
 
     std::vector<Particle*> particles;
     std::vector<Particle*> particlesToDelete;
@@ -75,6 +76,7 @@ void App::run() {
     while (!glfwWindowShouldClose(window->window)) {
         glfwPollEvents();
 
+        postProcessingManager->update();
         light->update(1000.0f, renderer->deltaTime);
         perspectiveCamera->update(250.0f, renderer->deltaTime);
         orthographicCamera->update(perspectiveCamera, light->viewMatrix);
@@ -110,51 +112,53 @@ void App::run() {
 
         renderer->beginRendering(renderer->waterResources->renderPass, renderer->waterResources->reflectionFramebuffer, renderer->offScreenCommandBuffers, true, true);
         perspectiveCamera->invert(2 * (std::abs(perspectiveCamera->position.y) - std::abs(waterTile->position.y)));
-        terrainRenderer->render(terrains, light, perspectiveCamera, orthographicCamera, glm::vec4(0.0f, -1.0f, 0.0f, waterTile->position.y + 1.0f), renderer->offScreenCommandBuffers, false);
-        entityRenderer->render(entities, light, perspectiveCamera, glm::vec4(0.0f, -1.0f, 0.0f, waterTile->position.y + 1.0f), renderer->offScreenCommandBuffers, false);
-        animatedEntityRenderer->render(animatedEntities, light, perspectiveCamera, glm::vec4(0.0f, -1.0f, 0.0f, waterTile->position.y + 1.0f), renderer->offScreenCommandBuffers, false);
-        skyboxRenderer->render(skybox, perspectiveCamera, glm::vec4(0.0f, -1.0f, 0.0f, waterTile->position.y + 1.0f), renderer->offScreenCommandBuffers, false);
-        particleRenderer->render(particles, perspectiveCamera, glm::vec4(0.0f, -1.0f, 0.0f, waterTile->position.y + 1.0f), renderer->offScreenCommandBuffers, false);
+        terrainRenderer->render(terrains, light, perspectiveCamera, orthographicCamera, glm::vec4(0.0f, -1.0f, 0.0f, waterTile->position.y + 1.0f), renderer->offScreenCommandBuffers, terrainRenderer->graphicsPipelineForWater);
+        entityRenderer->render(entities, light, perspectiveCamera, glm::vec4(0.0f, -1.0f, 0.0f, waterTile->position.y + 1.0f), renderer->offScreenCommandBuffers, entityRenderer->graphicsPipelineForWater);
+        animatedEntityRenderer->render(animatedEntities, light, perspectiveCamera, glm::vec4(0.0f, -1.0f, 0.0f, waterTile->position.y + 1.0f), renderer->offScreenCommandBuffers, animatedEntityRenderer->graphicsPipelineForWater);
+        skyboxRenderer->render(skybox, perspectiveCamera, glm::vec4(0.0f, -1.0f, 0.0f, waterTile->position.y + 1.0f), renderer->offScreenCommandBuffers, skyboxRenderer->graphicsPipelineForWater);
+        particleRenderer->render(particles, perspectiveCamera, glm::vec4(0.0f, -1.0f, 0.0f, waterTile->position.y + 1.0f), renderer->offScreenCommandBuffers, particleRenderer->graphicsPipelineForWater);
         perspectiveCamera->revert();
         renderer->endRendering(renderer->offScreenCommandBuffers);
 
         renderer->beginRendering(renderer->waterResources->renderPass, renderer->waterResources->refractionFramebuffer, renderer->offScreenCommandBuffers, true, true);
-        terrainRenderer->render(terrains, light, perspectiveCamera, orthographicCamera, glm::vec4(0.0f, 1.0f, 0.0f, -waterTile->position.y), renderer->offScreenCommandBuffers, false);
-        entityRenderer->render(entities, light, perspectiveCamera, glm::vec4(0.0f, 1.0f, 0.0f, -waterTile->position.y), renderer->offScreenCommandBuffers, false);
-        animatedEntityRenderer->render(animatedEntities, light, perspectiveCamera, glm::vec4(0.0f, -1.0f, 0.0f, waterTile->position.y + 1.0f), renderer->offScreenCommandBuffers, false);
-        skyboxRenderer->render(skybox, perspectiveCamera, glm::vec4(0.0f, 1.0f, 0.0f, -waterTile->position.y), renderer->offScreenCommandBuffers, false);
-        particleRenderer->render(particles, perspectiveCamera, glm::vec4(0.0f, 1.0f, 0.0f, -waterTile->position.y), renderer->offScreenCommandBuffers, false);
+        terrainRenderer->render(terrains, light, perspectiveCamera, orthographicCamera, glm::vec4(0.0f, 1.0f, 0.0f, -waterTile->position.y), renderer->offScreenCommandBuffers, terrainRenderer->graphicsPipelineForWater);
+        entityRenderer->render(entities, light, perspectiveCamera, glm::vec4(0.0f, 1.0f, 0.0f, -waterTile->position.y), renderer->offScreenCommandBuffers, entityRenderer->graphicsPipelineForWater);
+        animatedEntityRenderer->render(animatedEntities, light, perspectiveCamera, glm::vec4(0.0f, -1.0f, 0.0f, waterTile->position.y + 1.0f), renderer->offScreenCommandBuffers, animatedEntityRenderer->graphicsPipelineForWater);
+        skyboxRenderer->render(skybox, perspectiveCamera, glm::vec4(0.0f, 1.0f, 0.0f, -waterTile->position.y), renderer->offScreenCommandBuffers, skyboxRenderer->graphicsPipelineForWater);
+        particleRenderer->render(particles, perspectiveCamera, glm::vec4(0.0f, 1.0f, 0.0f, -waterTile->position.y), renderer->offScreenCommandBuffers, particleRenderer->graphicsPipelineForWater);
         renderer->endRendering(renderer->offScreenCommandBuffers);
 
         renderer->endRecordingCommands(renderer->offScreenCommandBuffers);
 
         renderer->beginRecordingCommands(renderer->commandBuffers);
-/*
-        renderer->beginRendering(renderer->renderPass, renderer->framebuffers[renderer->currentImageIndex], renderer->commandBuffers, true);
-        terrainRenderer->render(terrains, light, perspectiveCamera, orthographicCamera, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), renderer->commandBuffers, true);
-        entityRenderer->render(entities, light, perspectiveCamera, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), renderer->commandBuffers, true);
-        animatedEntityRenderer->render(animatedEntities, light, perspectiveCamera, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), renderer->commandBuffers, true);
-        skyboxRenderer->render(skybox, perspectiveCamera, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), renderer->commandBuffers, true);
-        waterRenderer->render(waterTiles, perspectiveCamera, light, renderer->commandBuffers);
-        particleRenderer->render(particles, perspectiveCamera, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), renderer->commandBuffers, true);
-        renderer->endRendering(renderer->commandBuffers);
-*/
-        renderer->beginRendering(renderer->gaussianBlurResources->rawRenderPass, renderer->gaussianBlurResources->rawFramebuffer, renderer->commandBuffers, true, true);
-        terrainRenderer->render(terrains, light, perspectiveCamera, orthographicCamera, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), renderer->commandBuffers, false);
-        entityRenderer->render(entities, light, perspectiveCamera, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), renderer->commandBuffers, false);
-        animatedEntityRenderer->render(animatedEntities, light, perspectiveCamera, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), renderer->commandBuffers, false);
-        skyboxRenderer->render(skybox, perspectiveCamera, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), renderer->commandBuffers, false);
-        waterRenderer->render(waterTiles, perspectiveCamera, light, renderer->commandBuffers, false);
-        particleRenderer->render(particles, perspectiveCamera, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), renderer->commandBuffers, false);
-        renderer->endRendering(renderer->commandBuffers);
 
-        renderer->beginRendering(renderer->gaussianBlurResources->horizontalBlurRenderPass, renderer->gaussianBlurResources->horizontalBlurFramebuffer, renderer->commandBuffers, true, false);
-        horizontalGaussianBlurPostProcessing->process(static_cast<int>(renderer->swapchain->swapchainExtent.width), renderer->commandBuffers);
-        renderer->endRendering(renderer->commandBuffers);
+        if (!postProcessingManager->enableGaussianBlur) {
+            renderer->beginRendering(renderer->renderPass, renderer->framebuffers[renderer->currentImageIndex], renderer->commandBuffers, true, true);
+            terrainRenderer->render(terrains, light, perspectiveCamera, orthographicCamera, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), renderer->commandBuffers, terrainRenderer->graphicsPipeline);
+            entityRenderer->render(entities, light, perspectiveCamera, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), renderer->commandBuffers, entityRenderer->graphicsPipeline);
+            animatedEntityRenderer->render(animatedEntities, light, perspectiveCamera, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), renderer->commandBuffers, animatedEntityRenderer->graphicsPipeline);
+            skyboxRenderer->render(skybox, perspectiveCamera, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), renderer->commandBuffers, skyboxRenderer->graphicsPipeline);
+            waterRenderer->render(waterTiles, perspectiveCamera, light, renderer->commandBuffers, waterRenderer->graphicsPipeline);
+            particleRenderer->render(particles, perspectiveCamera, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), renderer->commandBuffers, particleRenderer->graphicsPipeline);
+            renderer->endRendering(renderer->commandBuffers);
+        } else {
+            renderer->beginRendering(renderer->gaussianBlurResources->rawRenderPass, renderer->gaussianBlurResources->rawFramebuffer, renderer->commandBuffers, true, true);
+            terrainRenderer->render(terrains, light, perspectiveCamera, orthographicCamera, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), renderer->commandBuffers, terrainRenderer->graphicsPipelineForGaussianBlur);
+            entityRenderer->render(entities, light, perspectiveCamera, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), renderer->commandBuffers, entityRenderer->graphicsPipelineForGaussianBlur);
+            animatedEntityRenderer->render(animatedEntities, light, perspectiveCamera, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), renderer->commandBuffers, animatedEntityRenderer->graphicsPipelineForGaussianBlur);
+            skyboxRenderer->render(skybox, perspectiveCamera, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), renderer->commandBuffers, skyboxRenderer->graphicsPipelineForGaussianBlur);
+            waterRenderer->render(waterTiles, perspectiveCamera, light, renderer->commandBuffers, waterRenderer->graphicsPipelineForGaussianBlur);
+            particleRenderer->render(particles, perspectiveCamera, glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), renderer->commandBuffers, particleRenderer->graphicsPipelineForGaussianBlur);
+            renderer->endRendering(renderer->commandBuffers);
 
-        renderer->beginRendering(renderer->renderPass, renderer->framebuffers[renderer->currentImageIndex], renderer->commandBuffers, true, true);
-        verticalGaussianBlurPostProcessing->process(static_cast<int>(renderer->swapchain->swapchainExtent.height), renderer->commandBuffers);
-        renderer->endRendering(renderer->commandBuffers);
+            renderer->beginRendering(renderer->gaussianBlurResources->horizontalBlurRenderPass, renderer->gaussianBlurResources->horizontalBlurFramebuffer, renderer->commandBuffers, true, false);
+            horizontalGaussianBlurPostProcessing->process(static_cast<int>(renderer->swapchain->swapchainExtent.width), renderer->commandBuffers);
+            renderer->endRendering(renderer->commandBuffers);
+
+            renderer->beginRendering(renderer->renderPass, renderer->framebuffers[renderer->currentImageIndex], renderer->commandBuffers, true, true);
+            verticalGaussianBlurPostProcessing->process(static_cast<int>(renderer->swapchain->swapchainExtent.height), renderer->commandBuffers);
+            renderer->endRendering(renderer->commandBuffers);
+        }
 
         renderer->endRecordingCommands(renderer->commandBuffers);
 
@@ -173,6 +177,7 @@ void App::run() {
     }
     particles.clear();
 
+    delete postProcessingManager;
     delete particleSystem;
     delete characterAnimator;
 

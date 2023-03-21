@@ -6,7 +6,7 @@
 #include "surface.hpp"
 #include "device.hpp"
 #include "swapchain.hpp"
-#include "render_pass.hpp"
+#include "default_render_pass.hpp"
 #include "command_pool.hpp"
 #include "color_resources.hpp"
 #include "depth_resources.hpp"
@@ -44,7 +44,7 @@ public:
     Surface* surface;
     Device* device;
     Swapchain* swapchain;
-    RenderPass* renderPass;
+    DefaultRenderPass* renderPass;
     CommandPool* commandPool;
     QueryPool* queryPool;
     ColorResources* colorResources;
@@ -84,7 +84,7 @@ public:
     void endDrawing();
     void beginRecordingCommands(CommandBuffers* commandBuffers);
     void endRecordingCommands(CommandBuffers* commandBuffers);
-    void beginRendering(RenderPass* renderPass, Framebuffer* framebuffer, CommandBuffers* commandBuffers, bool hasColorAttachment, bool hasDepthAttachment);
+    void beginRendering(RenderPass* renderPasss, Framebuffer* framebufferr, CommandBuffers* commandBuffers, bool hasColorAttachment, bool hasDepthAttachment);
     void endRendering(CommandBuffers* commandBuffers);
 private:
     Window* window;

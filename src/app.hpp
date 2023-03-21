@@ -16,6 +16,7 @@
 #include "utils/collada_loader.hpp"
 #include "animation/animator.hpp"
 #include "particle/particle_system.hpp"
+#include "post_processing_manager.hpp"
 
 class App {
 public:

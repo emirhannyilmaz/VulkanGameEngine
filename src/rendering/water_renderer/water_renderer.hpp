@@ -27,17 +27,17 @@ struct WaterRendererFragmentUniformBufferObject {
 
 class WaterRenderer {
 public:
+    GraphicsPipeline* graphicsPipeline;
+    GraphicsPipeline* graphicsPipelineForGaussianBlur;
     WaterRenderer(Renderer* renderer);
     ~WaterRenderer();
-    void CreateGraphicsPipeline();
-    void DeleteGraphicsPipeline();
-    void render(std::vector<WaterTile*> waterTiles, PerspectiveCamera* perspectiveCamera, Light* light, CommandBuffers* commandBuffers, bool onScreen);
+    void CreateGraphicsPipelines();
+    void DeleteGraphicsPipelines();
+    void render(std::vector<WaterTile*> waterTiles, PerspectiveCamera* perspectiveCamera, Light* light, CommandBuffers* commandBuffers, GraphicsPipeline* graphicsPipeline);
     void updateDescriptorSetImageInfos();
 private:
     Renderer* renderer;
     DescriptorSetLayout* descriptorSetLayout;
-    GraphicsPipeline* graphicsPipeline;
-    GraphicsPipeline* offScreenGraphicsPipeline;
     DescriptorPool* descriptorPool;
     DescriptorSets* descriptorSets;
     Texture* dudvMap;

@@ -27,16 +27,17 @@ struct AnimatedEntityRendererVertexPushConstants {
 
 class AnimatedEntityRenderer {
 public:
+    GraphicsPipeline* graphicsPipeline;
+    GraphicsPipeline* graphicsPipelineForWater;
+    GraphicsPipeline* graphicsPipelineForGaussianBlur;
     AnimatedEntityRenderer(Renderer* renderer);
     ~AnimatedEntityRenderer();
     void CreateGraphicsPipelines();
     void DeleteGraphicsPipelines();
-    void render(std::vector<AnimatedEntity*> animatedEntities, Light* light, PerspectiveCamera* perspectiveCamera, glm::vec4 clipPlane, CommandBuffers* commandBuffers, bool onScreen);
+    void render(std::vector<AnimatedEntity*> animatedEntities, Light* light, PerspectiveCamera* perspectiveCamera, glm::vec4 clipPlane, CommandBuffers* commandBuffers, GraphicsPipeline* graphicsPipeline);
 private:
     Renderer* renderer;
     DescriptorSetLayout* descriptorSetLayout;
-    GraphicsPipeline* graphicsPipeline;
-    GraphicsPipeline* offScreenGraphicsPipeline;
     DescriptorPool* descriptorPool;
     DescriptorSets* descriptorSets;
     std::vector<Buffer*> vertexUniformBuffers;

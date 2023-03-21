@@ -56,23 +56,24 @@ void EntityRenderer::CreateGraphicsPipelines() {
     pushConstantRanges[0] = {VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(EntityRendererVertexPushConstants)};
 
     graphicsPipeline = new GraphicsPipeline(renderer->device->device, "res/shaders/entity_shader.vert.spv", "res/shaders/entity_shader.frag.spv", 1, &bindingDescription, static_cast<uint32_t>(attributeDescriptions.size()), attributeDescriptions.data(), static_cast<uint32_t>(descriptorSetLayouts.size()), descriptorSetLayouts.data(), static_cast<uint32_t>(pushConstantRanges.size()), pushConstantRanges.data(), renderer->swapchain->swapchainExtent, renderer->renderPass->renderPass, renderer->device->msaaSamples, VK_TRUE, VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA);
-    offScreenGraphicsPipeline = new GraphicsPipeline(renderer->device->device, "res/shaders/entity_shader.vert.spv", "res/shaders/entity_shader.frag.spv", 1, &bindingDescription, static_cast<uint32_t>(attributeDescriptions.size()), attributeDescriptions.data(), static_cast<uint32_t>(descriptorSetLayouts.size()), descriptorSetLayouts.data(), static_cast<uint32_t>(pushConstantRanges.size()), pushConstantRanges.data(), renderer->swapchain->swapchainExtent, renderer->waterResources->renderPass->renderPass, VK_SAMPLE_COUNT_1_BIT, VK_TRUE, VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA);
+    graphicsPipelineForWater = new GraphicsPipeline(renderer->device->device, "res/shaders/entity_shader.vert.spv", "res/shaders/entity_shader.frag.spv", 1, &bindingDescription, static_cast<uint32_t>(attributeDescriptions.size()), attributeDescriptions.data(), static_cast<uint32_t>(descriptorSetLayouts.size()), descriptorSetLayouts.data(), static_cast<uint32_t>(pushConstantRanges.size()), pushConstantRanges.data(), renderer->swapchain->swapchainExtent, renderer->waterResources->renderPass->renderPass, VK_SAMPLE_COUNT_1_BIT, VK_TRUE, VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA);
+    graphicsPipelineForGaussianBlur = new GraphicsPipeline(renderer->device->device, "res/shaders/entity_shader.vert.spv", "res/shaders/entity_shader.frag.spv", 1, &bindingDescription, static_cast<uint32_t>(attributeDescriptions.size()), attributeDescriptions.data(), static_cast<uint32_t>(descriptorSetLayouts.size()), descriptorSetLayouts.data(), static_cast<uint32_t>(pushConstantRanges.size()), pushConstantRanges.data(), renderer->swapchain->swapchainExtent, renderer->gaussianBlurResources->rawRenderPass->renderPass, VK_SAMPLE_COUNT_1_BIT, VK_TRUE, VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA);
 }
 
 void EntityRenderer::DeleteGraphicsPipelines() {
+    delete graphicsPipelineForGaussianBlur;
+    delete graphicsPipelineForWater;
     delete graphicsPipeline;
-    delete offScreenGraphicsPipeline;
 }
 
-void EntityRenderer::render(std::vector<Entity*> entities, Light* light, PerspectiveCamera* perspectiveCamera, glm::vec4 clipPlane, CommandBuffers* commandBuffers, bool onScreen) {
+void EntityRenderer::render(std::vector<Entity*> entities, Light* light, PerspectiveCamera* perspectiveCamera, glm::vec4 clipPlane, CommandBuffers* commandBuffers, GraphicsPipeline* graphicsPipeline) {
     updateDescriptorSetResources(light, perspectiveCamera);
     updatePushConstants(perspectiveCamera, clipPlane);
 
     VkCommandBuffer commandBuffer = commandBuffers->commandBuffers[renderer->currentFrame];
-    GraphicsPipeline* gp = onScreen ? graphicsPipeline : offScreenGraphicsPipeline;
 
-    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, gp->graphicsPipeline);
-    vkCmdPushConstants(commandBuffer, gp->pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(EntityRendererVertexPushConstants), &vertexPushConstants);
+    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline->graphicsPipeline);
+    vkCmdPushConstants(commandBuffer, graphicsPipeline->pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(EntityRendererVertexPushConstants), &vertexPushConstants);
 
     std::array<VkDescriptorSet, 2> descriptorSetsToBind{};
     descriptorSetsToBind[0] = descriptorSets->descriptorSets[renderer->currentFrame];
@@ -83,7 +84,7 @@ void EntityRenderer::render(std::vector<Entity*> entities, Light* light, Perspec
         vkCmdBindVertexBuffers(commandBuffer, 0, 1, &entity->mesh->vertexBuffer->buffer, &offsets);
         vkCmdBindIndexBuffer(commandBuffer, entity->mesh->indexBuffer->buffer, 0, VK_INDEX_TYPE_UINT32);
         descriptorSetsToBind[1] = entity->descriptorSets->descriptorSets[renderer->currentFrame];
-        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, gp->pipelineLayout, 0, static_cast<uint32_t>(descriptorSetsToBind.size()), descriptorSetsToBind.data(), 0, nullptr);
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline->pipelineLayout, 0, static_cast<uint32_t>(descriptorSetsToBind.size()), descriptorSetsToBind.data(), 0, nullptr);
         vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(entity->mesh->indicesSize), 1, 0, 0, 0);
     }
 }

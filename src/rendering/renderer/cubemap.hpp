@@ -1,7 +1,7 @@
 #ifndef cubemap_hpp
 #define cubemap_hpp
 
-#include <stb_image.h>
+#include <stb/stb_image.h>
 #include <string>
 #include "renderer.hpp"
 #include "image.hpp"

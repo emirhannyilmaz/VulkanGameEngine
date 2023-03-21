@@ -15,7 +15,7 @@ WaterRenderer::WaterRenderer(Renderer* renderer) {
 
     WaterTile::CreateDesriptorSetLayout(renderer->device->device);
 
-    CreateGraphicsPipeline();
+    CreateGraphicsPipelines();
 
     std::array<VkDescriptorPoolSize, 2> poolSizes{};
     poolSizes[0] = {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 2 * MAX_FRAMES_IN_FLIGHT};
@@ -55,12 +55,12 @@ WaterRenderer::~WaterRenderer() {
     delete normalMap;
     delete dudvMap;
     delete descriptorPool;
-    DeleteGraphicsPipeline();
+    DeleteGraphicsPipelines();
     WaterTile::DeleteDesriptorSetLayout();
     delete descriptorSetLayout;
 }
 
-void WaterRenderer::CreateGraphicsPipeline() {
+void WaterRenderer::CreateGraphicsPipelines() {
     auto bindingDescription = WaterVertex::getBindingDescription();
     auto attributeDescriptions = WaterVertex::getAttributeDescriptions();
 
@@ -69,21 +69,20 @@ void WaterRenderer::CreateGraphicsPipeline() {
     descriptorSetLayouts[1] = WaterTile::descriptorSetLayout->descriptorSetLayout;
 
     graphicsPipeline = new GraphicsPipeline(renderer->device->device, "res/shaders/water_shader.vert.spv", "res/shaders/water_shader.frag.spv", 1, &bindingDescription, static_cast<uint32_t>(attributeDescriptions.size()), attributeDescriptions.data(), static_cast<uint32_t>(descriptorSetLayouts.size()), descriptorSetLayouts.data(), 0, nullptr, renderer->swapchain->swapchainExtent, renderer->renderPass->renderPass, renderer->device->msaaSamples, VK_TRUE, VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA);
-    offScreenGraphicsPipeline = new GraphicsPipeline(renderer->device->device, "res/shaders/water_shader.vert.spv", "res/shaders/water_shader.frag.spv", 1, &bindingDescription, static_cast<uint32_t>(attributeDescriptions.size()), attributeDescriptions.data(), static_cast<uint32_t>(descriptorSetLayouts.size()), descriptorSetLayouts.data(), 0, nullptr, renderer->swapchain->swapchainExtent, renderer->gaussianBlurResources->rawRenderPass->renderPass, VK_SAMPLE_COUNT_1_BIT, VK_TRUE, VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA);
+    graphicsPipelineForGaussianBlur = new GraphicsPipeline(renderer->device->device, "res/shaders/water_shader.vert.spv", "res/shaders/water_shader.frag.spv", 1, &bindingDescription, static_cast<uint32_t>(attributeDescriptions.size()), attributeDescriptions.data(), static_cast<uint32_t>(descriptorSetLayouts.size()), descriptorSetLayouts.data(), 0, nullptr, renderer->swapchain->swapchainExtent, renderer->gaussianBlurResources->rawRenderPass->renderPass, VK_SAMPLE_COUNT_1_BIT, VK_TRUE, VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA);
 }
 
-void WaterRenderer::DeleteGraphicsPipeline() {
-    delete offScreenGraphicsPipeline;
+void WaterRenderer::DeleteGraphicsPipelines() {
+    delete graphicsPipelineForGaussianBlur;
     delete graphicsPipeline;
 }
 
-void WaterRenderer::render(std::vector<WaterTile*> waterTiles, PerspectiveCamera* perspectiveCamera, Light* light, CommandBuffers* commandBuffers, bool onScreen) {
+void WaterRenderer::render(std::vector<WaterTile*> waterTiles, PerspectiveCamera* perspectiveCamera, Light* light, CommandBuffers* commandBuffers, GraphicsPipeline* graphicsPipeline) {
     updateDescriptorSetResources(perspectiveCamera, light);
 
     VkCommandBuffer commandBuffer = commandBuffers->commandBuffers[renderer->currentFrame];
-    GraphicsPipeline* gp = onScreen ? graphicsPipeline : offScreenGraphicsPipeline;
 
-    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, gp->graphicsPipeline);
+    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline->graphicsPipeline);
 
     std::array<VkDescriptorSet, 2> descriptorSetsToBind{};
     descriptorSetsToBind[0] = descriptorSets->descriptorSets[renderer->currentFrame];
@@ -94,7 +93,7 @@ void WaterRenderer::render(std::vector<WaterTile*> waterTiles, PerspectiveCamera
         vkCmdBindVertexBuffers(commandBuffer, 0, 1, &waterTile->mesh->vertexBuffer->buffer, &offsets);
         vkCmdBindIndexBuffer(commandBuffer, waterTile->mesh->indexBuffer->buffer, 0, VK_INDEX_TYPE_UINT32);
         descriptorSetsToBind[1] = waterTile->descriptorSets->descriptorSets[renderer->currentFrame];
-        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, gp->pipelineLayout, 0, static_cast<uint32_t>(descriptorSetsToBind.size()), descriptorSetsToBind.data(), 0, nullptr);
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline->pipelineLayout, 0, static_cast<uint32_t>(descriptorSetsToBind.size()), descriptorSetsToBind.data(), 0, nullptr);
         vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(waterTile->mesh->indicesSize), 1, 0, 0, 0);
     }
 }

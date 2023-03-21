@@ -23,7 +23,7 @@ Renderer::Renderer(Window* window, PerspectiveCamera* perspectiveCamera) {
     surface = new Surface(instance->instance, window->window);
     device = new Device(instance->instance, surface->surface);
     swapchain = new Swapchain(device->device, surface->surface, device->swapchainSupportDetails, window->window, device->indices);
-    renderPass = new RenderPass(device->device, swapchain->swapchainImageFormat, DepthResources::findDepthFormat(device->physicalDevice), device->msaaSamples, true, true, true, true);
+    renderPass = new DefaultRenderPass(device->device, swapchain->swapchainImageFormat, DepthResources::findDepthFormat(device->physicalDevice), device->msaaSamples);
     commandPool = new CommandPool(device->device, device->indices.graphicsFamily.value(), VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
     queryPool = new QueryPool(device->device, 2 * MAX_FRAMES_IN_FLIGHT);
     colorResources = new ColorResources(device->physicalDevice, device->device, swapchain->swapchainExtent, device->msaaSamples, swapchain->swapchainImageFormat, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT);
@@ -207,17 +207,17 @@ void Renderer::endRecordingCommands(CommandBuffers* commandBuffers) {
     }
 }
 
-void Renderer::beginRendering(RenderPass* renderPass, Framebuffer* framebuffer, CommandBuffers* commandBuffers, bool hasColorAttachment, bool hasDepthAttachment) {
+void Renderer::beginRendering(RenderPass* renderPasss, Framebuffer* framebufferr, CommandBuffers* commandBuffers, bool hasColorAttachment, bool hasDepthAttachment) {
     if (acquireNextImageResult == VK_ERROR_OUT_OF_DATE_KHR) {
         return;
     }
 
     VkRenderPassBeginInfo renderPassBeginInfo{};
     renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-    renderPassBeginInfo.renderPass = renderPass->renderPass;
-    renderPassBeginInfo.framebuffer = framebuffer->framebuffer;
+    renderPassBeginInfo.renderPass = renderPasss->renderPass;
+    renderPassBeginInfo.framebuffer = framebufferr->framebuffer;
     renderPassBeginInfo.renderArea.offset = {0, 0};
-    renderPassBeginInfo.renderArea.extent = framebuffer->extent;
+    renderPassBeginInfo.renderArea.extent = framebufferr->extent;
     std::vector<VkClearValue> clearValues{};
     if (hasColorAttachment) {
         clearValues.push_back({{0.0f, 0.0f, 0.0f, 1.0f}});
@@ -251,7 +251,7 @@ void Renderer::recreateSwapchain() {
     cleanUpSwapchain();
 
     swapchain = new Swapchain(device->device, surface->surface, device->swapchainSupportDetails, window->window, device->indices);
-    renderPass = new RenderPass(device->device, swapchain->swapchainImageFormat, DepthResources::findDepthFormat(device->physicalDevice), device->msaaSamples, true, true, true, true);
+    renderPass = new DefaultRenderPass(device->device, swapchain->swapchainImageFormat, DepthResources::findDepthFormat(device->physicalDevice), device->msaaSamples);
     colorResources = new ColorResources(device->physicalDevice, device->device, swapchain->swapchainExtent, device->msaaSamples, swapchain->swapchainImageFormat, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT);
     depthResources = new DepthResources(device->physicalDevice, device->device, swapchain->swapchainExtent, device->msaaSamples, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT);
 
@@ -278,7 +278,7 @@ void Renderer::recreateSwapchain() {
     animatedEntityShadowMapRenderer->CreateGraphicsPipeline();
     skyboxRenderer->CreateGraphicsPipelines();
     terrainRenderer->CreateGraphicsPipelines();
-    waterRenderer->CreateGraphicsPipeline();
+    waterRenderer->CreateGraphicsPipelines();
     particleRenderer->CreateGraphicsPipelines();
     horizontalGaussianBlurPostProcessing->CreateGraphicsPipeline();
     verticalGaussianBlurPostProcessing->CreateGraphicsPipeline();
@@ -291,7 +291,7 @@ void Renderer::cleanUpSwapchain() {
         verticalGaussianBlurPostProcessing->DeleteGraphicsPipeline();
         horizontalGaussianBlurPostProcessing->DeleteGraphicsPipeline();
         particleRenderer->DeleteGraphicsPipelines();
-        waterRenderer->DeleteGraphicsPipeline();
+        waterRenderer->DeleteGraphicsPipelines();
         terrainRenderer->DeleteGraphicsPipelines();
         skyboxRenderer->DeleteGraphicsPipelines();
         animatedEntityShadowMapRenderer->DeleteGraphicsPipeline();

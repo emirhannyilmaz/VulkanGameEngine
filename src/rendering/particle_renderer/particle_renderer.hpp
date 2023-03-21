@@ -24,16 +24,17 @@ struct VertexPushConstants {
 
 class ParticleRenderer {
 public:
+    GraphicsPipeline* graphicsPipeline;
+    GraphicsPipeline* graphicsPipelineForWater;
+    GraphicsPipeline* graphicsPipelineForGaussianBlur;
     ParticleRenderer(Renderer* renderer);
     ~ParticleRenderer();
     void CreateGraphicsPipelines();
     void DeleteGraphicsPipelines();
-    void render(std::vector<Particle*>& particles, PerspectiveCamera* perspectiveCamera, glm::vec4 clipPlane, CommandBuffers* commandBuffers, bool onScreen);
+    void render(std::vector<Particle*>& particles, PerspectiveCamera* perspectiveCamera, glm::vec4 clipPlane, CommandBuffers* commandBuffers, GraphicsPipeline* graphicsPipeline);
 private:
     Renderer* renderer;
     DescriptorSetLayout* descriptorSetLayout;
-    GraphicsPipeline* graphicsPipeline;
-    GraphicsPipeline* offScreenGraphicsPipeline;
     DescriptorPool* descriptorPool;
     DescriptorSets* descriptorSets;
     std::vector<Buffer*> vertexUniformBuffers;

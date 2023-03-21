@@ -1,7 +1,7 @@
 #ifndef texture_hpp
 #define texture_hpp
 
-#include <stb_image.h>
+#include <stb/stb_image.h>
 #include <string>
 #include "renderer.hpp"
 #include "image.hpp"
